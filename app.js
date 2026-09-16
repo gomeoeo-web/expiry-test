@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.15
+ * Smart Quick Add & On-Device NER Parser v1.8.16
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -2016,7 +2016,7 @@ function preprocessImageForOcr(source) {
   const sw = source.videoWidth || source.naturalWidth || source.width || 800;
   const sh = source.videoHeight || source.naturalHeight || source.height || 600;
 
-  // 1. 影像縮放：將圖片最大寬/高限制在 1200px 內
+  // 1. 影像縮放：將圖片最大寬/高限制在 1200px 內，避免 WebAssembly 記憶體溢出
   const maxDim = 1200;
   let scale = 1;
   if (sw > maxDim || sh > maxDim) {
@@ -2025,11 +2025,9 @@ function preprocessImageForOcr(source) {
   const dw = Math.round(sw * scale);
   const dh = Math.round(sh * scale);
 
-  // 2. 中央區域對焦：預設以中央 75% 範圍為主分析區
-  const cropW = Math.round(dw * 0.75);
-  const cropH = Math.round(dh * 0.75);
-  const cropX = Math.round((dw - cropW) / 2);
-  const cropY = Math.round((dh - cropH) / 2);
+  // 2. 高解析全幅優化分析區 (保留包裝頂端、邊緣、瓶蓋與底部印刷之效期小字)
+  const cropW = dw;
+  const cropH = dh;
 
   let canvas = null;
   if (typeof document !== 'undefined') {
@@ -2042,12 +2040,7 @@ function preprocessImageForOcr(source) {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return source;
 
-  // 映射回原始影像座標
-  const srcCropX = cropX / scale;
-  const srcCropY = cropY / scale;
-  const srcCropW = cropW / scale;
-  const srcCropH = cropH / scale;
-  ctx.drawImage(source, srcCropX, srcCropY, srcCropW, srcCropH, 0, 0, cropW, cropH);
+  ctx.drawImage(source, 0, 0, sw, sh, 0, 0, cropW, cropH);
 
   // 3. 影像前處理強化：灰階化與動態對比拉伸 (Dynamic Contrast Stretching，濾除塑膠包裝反光與雜訊，提高微小字體與日文假名識別率)
   try {
@@ -2071,7 +2064,7 @@ function preprocessImageForOcr(source) {
       if (gray > maxG) maxG = gray;
     }
 
-    // 計算 2% 與 98% 累積百分位數，濾除塑膠反光折射眩光並保留假名微小字體
+    // 計算 2% 與 98% 累積百分位數，濾除塑膠反光折射眩光並保留微小字體
     let pLow = minG;
     let pHigh = maxG;
     let acc = 0;
@@ -2118,81 +2111,221 @@ function preprocessImageForOcr(source) {
  * 3. 日月年倒序：16-09-2026、16/09/26。
  * 4. 抓取到有效期限後，自動轉換為 YYYY-MM-DD 填入彈窗的 expiryDate 欄位。
  */
-function extractDateFromText(text) {
-  if (!text || typeof text !== 'string') return null;
+/**
+ * 輔助函式：確保 OCR 輸入為 Drawable 之 Image 或 Canvas 物件 (支援 photoDataUrl base64 字串)
+ */
+async function ensureOcrDrawableSource(imgSource) {
+  if (!imgSource) return null;
+  if (typeof imgSource === 'string') {
+    if (typeof Image !== 'undefined') {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = imgSource;
+      if (img.decode) {
+        try {
+          await img.decode();
+        } catch (_) {}
+      } else {
+        await new Promise(res => { img.onload = res; img.onerror = res; });
+      }
+      return img;
+    }
+  }
+  return imgSource;
+}
 
-  // 全形轉半形並清理
-  const clean = text
-    .replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
-    .replace(/\u3000/g, ' ')
+/**
+ * 【OCR 效期日期關鍵字庫】
+ * 涵蓋：EXP, EXP., EXP DATE, Expiry, Expiration, Best Before, Best By, Use By,
+ * 有效期限, 有效日期, 賞味期限, 消費期限, 保存期限, 到期日, 有効期限, BBD
+ */
+const OCR_DATE_KEYWORDS = [
+  'EXP DATE',
+  'EXP\\.',
+  'EXP',
+  'EXPIRY',
+  'EXPIRATION',
+  'BEST BEFORE',
+  'BEST BY',
+  'USE BY',
+  '有效期限',
+  '有效日期',
+  '賞味期限',
+  '消費期限',
+  '保存期限',
+  '到期日',
+  '有効期限',
+  'BBD'
+];
+
+/**
+ * 【OCR 多格式日期候選提取器】
+ * 支援格式：
+ * - YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
+ * - YYYY-MM, YYYY/MM (月度效期，以當月末日為準)
+ * - DD/MM/YYYY, MM/DD/YYYY
+ * - YYYY年MM月DD日 (及民國年)
+ * - YY/MM/DD (合理西元年 24~35 轉 2024~2035)
+ * - 連號 8位/6位
+ * 優先抓取關鍵字附近的日期候選
+ */
+function extractOcrDateCandidates(rawText) {
+  if (!rawText || typeof rawText !== 'string') {
+    return { candidates: [], bestDate: null, rawText: '' };
+  }
+
+  const clean = rawText
+    .replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/　/g, ' ')
     .trim();
 
-  // 1. 民國年格式：民國115年9月16日、115/09/16、115.09.16、115-09-16 (支援 90~150 年)
-  const rocRegex = /(?:民國|ROC)?\s*([1-9]\d{1,2})\s*[-/.年]\s*(1[0-2]|0?[1-9])\s*[-/.月]\s*([12]\d|3[01]|0?[1-9])\s*日?/i;
-  const rocMatch = clean.match(rocRegex);
-  if (rocMatch) {
-    const rocYear = parseInt(rocMatch[1], 10);
-    if (rocYear >= 90 && rocYear <= 150) {
-      const y = rocYear + 1911;
-      const m = String(parseInt(rocMatch[2], 10)).padStart(2, '0');
-      const d = String(parseInt(rocMatch[3], 10)).padStart(2, '0');
-      return `${y}-${m}-${d}`;
+  const candidates = [];
+  const keywordCandidates = [];
+
+  function toStandardDate(yearStr, monthStr, dayStr) {
+    let y = parseInt(yearStr, 10);
+    const m = parseInt(monthStr, 10);
+    let d = (dayStr !== undefined && dayStr !== null && dayStr !== '') ? parseInt(dayStr, 10) : null;
+
+    // 雙位數年份合理轉換 (24 ~ 35 -> 2024 ~ 2035)
+    if (y >= 24 && y <= 35) {
+      y = 2000 + y;
+    } else if (y >= 90 && y <= 150) {
+      // 民國年 (90 ~ 150 -> +1911)
+      y = y + 1911;
+    }
+
+    if (y < 2020 || y > 2040) return null;
+    if (m < 1 || m > 12) return null;
+
+    if (d === null) {
+      // 只有 YYYY-MM / YYYY/MM: 依食品法規以當月末日為到期日
+      d = new Date(y, m, 0).getDate();
+    } else {
+      if (d < 1 || d > 31) return null;
+      const maxDays = new Date(y, m, 0).getDate();
+      if (d > maxDays) return null;
+    }
+
+    const mm = String(m).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    return `${y}-${mm}-${dd}`;
+  }
+
+  function addCandidate(dateStr, isKeywordNearby) {
+    if (!candidates.includes(dateStr)) {
+      candidates.push(dateStr);
+    }
+    if (isKeywordNearby && !keywordCandidates.includes(dateStr)) {
+      keywordCandidates.push(dateStr);
     }
   }
 
-  // 2. 西元常用標準格式 (支援日文定錨詞：賞味期限、消費期限、有効期限)
-  const ceStdRegex = /(?:EXP|有效|到期|保存|BEST\s*BEFORE|USE\s*BY|MFG|BBD|賞味期限|消費期限|有効期限|期限)?\s*[:.]?\s*(20[2-3]\d)\s*[-/.年]\s*(1[0-2]|0?[1-9])\s*[-/.月]\s*([12]\d|3[01]|0?[1-9])\s*日?/i;
-  const ceStdMatch = clean.match(ceStdRegex);
-  if (ceStdMatch) {
-    const y = ceStdMatch[1];
-    const m = String(parseInt(ceStdMatch[2], 10)).padStart(2, '0');
-    const d = String(parseInt(ceStdMatch[3], 10)).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+  function parseDatesFromSnippet(text, isKeywordNearby) {
+    if (!text) return;
+
+    // A. 民國年格式：民國115年9月16日、115/09/16、115.09.16、115-09-16
+    const rocRegex = /(?:民國|ROC)?\s*([1-9]\d{1,2})\s*[-/.年]\s*(1[0-2]|0?[1-9])\s*[-/.月]\s*([12]\d|3[01]|0?[1-9])\s*日?/gi;
+    let m;
+    while ((m = rocRegex.exec(text)) !== null) {
+      const std = toStandardDate(m[1], m[2], m[3]);
+      if (std) addCandidate(std, isKeywordNearby);
+    }
+
+    // B. YYYY年MM月DD日
+    const zhRegex = /(20[2-3]\d)\s*年\s*(1[0-2]|0?[1-9])\s*月\s*([12]\d|3[01]|0?[1-9])\s*日?/gi;
+    while ((m = zhRegex.exec(text)) !== null) {
+      const std = toStandardDate(m[1], m[2], m[3]);
+      if (std) addCandidate(std, isKeywordNearby);
+    }
+
+    // C. YYYY-MM-DD / YYYY/MM/DD / YYYY.MM.DD
+    const ceStdRegex = /\b(20[2-3]\d)\s*[-/.]\s*(1[0-2]|0?[1-9])\s*[-/.]\s*([12]\d|3[01]|0?[1-9])\b/gi;
+    while ((m = ceStdRegex.exec(text)) !== null) {
+      const std = toStandardDate(m[1], m[2], m[3]);
+      if (std) addCandidate(std, isKeywordNearby);
+    }
+
+    // D. DD/MM/YYYY 或 MM/DD/YYYY (4位西元年)
+    const dmyRegex = /\b([0-3]?\d)\s*[-/.]\s*([0-3]?\d)\s*[-/.]\s*(20[2-3]\d)\b/gi;
+    while ((m = dmyRegex.exec(text)) !== null) {
+      const p1 = parseInt(m[1], 10);
+      const p2 = parseInt(m[2], 10);
+      const y = m[3];
+      if (p1 > 12 && p2 <= 12) {
+        const std = toStandardDate(y, String(p2), String(p1));
+        if (std) addCandidate(std, isKeywordNearby);
+      } else if (p1 <= 12 && p2 > 12) {
+        const std = toStandardDate(y, String(p1), String(p2));
+        if (std) addCandidate(std, isKeywordNearby);
+      } else if (p1 <= 12 && p2 <= 12 && p1 > 0 && p2 > 0) {
+        const std = toStandardDate(y, String(p2), String(p1));
+        if (std) addCandidate(std, isKeywordNearby);
+      }
+    }
+
+    // E. YYYY-MM / YYYY/MM (月度效期)
+    const ymRegex = /\b(20[2-3]\d)\s*[-/.]\s*(1[0-2]|0?[1-9])(?!\s*[-/.]\s*\d)\b/gi;
+    while ((m = ymRegex.exec(text)) !== null) {
+      const std = toStandardDate(m[1], m[2], null);
+      if (std) addCandidate(std, isKeywordNearby);
+    }
+
+    // F. YY/MM/DD / YY-MM-DD / YY.MM.DD (合理西元年 24~35)
+    const yyRegex = /\b([2-3]\d)\s*[-/.]\s*(1[0-2]|0?[1-9])\s*[-/.]\s*([12]\d|3[01]|0?[1-9])\b/gi;
+    while ((m = yyRegex.exec(text)) !== null) {
+      const std = toStandardDate(m[1], m[2], m[3]);
+      if (std) addCandidate(std, isKeywordNearby);
+    }
+
+    // G. 8位連續數字 (20260916)
+    const num8Regex = /\b(20[2-3]\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\b/gi;
+    while ((m = num8Regex.exec(text)) !== null) {
+      const std = toStandardDate(m[1], m[2], m[3]);
+      if (std) addCandidate(std, isKeywordNearby);
+    }
+
+    // H. 6位連續數字 (260916)，僅在關鍵字附近採納
+    if (isKeywordNearby) {
+      const num6Regex = /(?:^|[^\d])([2-3]\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)/gi;
+      while ((m = num6Regex.exec(text)) !== null) {
+        const std = toStandardDate(m[1], m[2], m[3]);
+        if (std) addCandidate(std, isKeywordNearby);
+      }
+    }
   }
 
-  // 3. 日文定錨詞搭配雙位西元年 (例如 賞味期限 26.09.16 或 26-09-16)
-  const jp2Regex = /(?:賞味期限|消費期限|有効期限|期限)\s*[:.]?\s*([2-3]\d)\s*[-/.年]\s*(1[0-2]|0?[1-9])\s*[-/.月]\s*([12]\d|3[01]|0?[1-9])\s*日?/i;
-  const jp2Match = clean.match(jp2Regex);
-  if (jp2Match) {
-    const y = '20' + jp2Match[1];
-    const m = String(parseInt(jp2Match[2], 10)).padStart(2, '0');
-    const d = String(parseInt(jp2Match[3], 10)).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+  // 1. 搜尋所有效期關鍵字位置，優先分析其後續 40 字元之日期視窗
+  const kwRegex = new RegExp(
+    `(?:${OCR_DATE_KEYWORDS.join('|')})\\s*[:：.]?\\s*([\\s\\S]{0,40})`,
+    'gi'
+  );
+
+  let kwMatch;
+  while ((kwMatch = kwRegex.exec(clean)) !== null) {
+    const snippet = kwMatch[1] || '';
+    parseDatesFromSnippet(snippet, true);
   }
 
-  // 4. 日月年倒序 (4位西元年)：16-09-2026、16/09/2026、16.09.2026
-  const dmy4Regex = /(?:EXP|有效|到期|保存|BEST\s*BEFORE|賞味期限|消費期限|有効期限)?\s*[:.]?\s*([12]\d|3[01]|0?[1-9])\s*[-/.]\s*(1[0-2]|0?[1-9])\s*[-/.]\s*(20[2-3]\d)/i;
-  const dmy4Match = clean.match(dmy4Regex);
-  if (dmy4Match) {
-    const y = dmy4Match[3];
-    const m = String(parseInt(dmy4Match[2], 10)).padStart(2, '0');
-    const d = String(parseInt(dmy4Match[1], 10)).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
+  // 2. 針對全文進行全域搜尋
+  parseDatesFromSnippet(clean, false);
 
-  // 5. 日月年倒序 (雙位西元年)：16-09-26、16/09/26、16.09.26
-  const dmy2Regex = /(?:EXP|有效|到期|保存|BEST\s*BEFORE|賞味期限|消費期限|有効期限)?\s*[:.]?\s*([12]\d|3[01]|0?[1-9])\s*[-/.]\s*(1[0-2]|0?[1-9])\s*[-/.]\s*([2-3]\d)(?!\d)/i;
-  const dmy2Match = clean.match(dmy2Regex);
-  if (dmy2Match) {
-    const y = '20' + dmy2Match[3];
-    const m = String(parseInt(dmy2Match[2], 10)).padStart(2, '0');
-    const d = String(parseInt(dmy2Match[1], 10)).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
+  const bestDate = keywordCandidates.length > 0 ? keywordCandidates[0] : (candidates.length > 0 ? candidates[0] : null);
 
-  // 6. 西元 8 位連號格式 (如 20260916 或 賞味期限 20260916)
-  const num8Match = clean.match(/(?:EXP|有效|到期|保存|賞味期限|消費期限|有効期限)?\s*[:.]?\s*(20[2-3]\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])/i);
-  if (num8Match) {
-    return `${num8Match[1]}-${num8Match[2]}-${num8Match[3]}`;
-  }
+  return {
+    candidates,
+    bestDate,
+    rawText: clean
+  };
+}
 
-  // 7. 西元 6 位連號格式 (YYMMDD 如 260916 或 消費期限 260916)
-  const num6Match = clean.match(/(?:EXP|有效|到期|保存|BBD|賞味期限|消費期限|有効期限)?\s*[:.]?\s*(?:^|[^\d])([2-3]\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)/i);
-  if (num6Match) {
-    return `20${num6Match[1]}-${num6Match[2]}-${num6Match[3]}`;
-  }
-
-  return null;
+/**
+ * 相容性效期解析函式 (調用 extractOcrDateCandidates 並回傳 bestDate)
+ */
+function extractDateFromText(text) {
+  if (!text || typeof text !== 'string') return null;
+  const res = extractOcrDateCandidates(text);
+  return res.bestDate;
 }
 
 /**
@@ -2203,11 +2336,13 @@ async function runTextAndDateOcr(imgSource) {
   let text = '';
   let barcodeData = null;
 
-  // 1. 原生條碼掃描最優先判定
-  barcodeData = await scanBarcodePriority(imgSource);
+  const drawableSource = await ensureOcrDrawableSource(imgSource);
 
-  // 2. 進行 Canvas 標準化三道前處理 (縮放、中央對焦、灰階二值化)
-  const preprocessedCanvas = preprocessImageForOcr(imgSource);
+  // 1. 原生條碼掃描最優先判定
+  barcodeData = await scanBarcodePriority(drawableSource || imgSource);
+
+  // 2. 進行 Canvas 前處理 (縮放限制 1200px + 灰階二值化/動態對比拉伸)
+  const preprocessedCanvas = preprocessImageForOcr(drawableSource || imgSource);
 
   // 若原圖未掃到條碼，嘗試在二值化後之中心畫布再檢測一次
   if (!barcodeData && preprocessedCanvas) {
@@ -2218,7 +2353,7 @@ async function runTextAndDateOcr(imgSource) {
   if (typeof window !== 'undefined' && window.Tesseract) {
     try {
       console.log('[OCR] 正在以前處理優化影像執行 Tesseract OCR 文字辨識...');
-      const targetInput = preprocessedCanvas || imgSource;
+      const targetInput = preprocessedCanvas || drawableSource || imgSource;
       let ocrResult = null;
       try {
         ocrResult = await window.Tesseract.recognize(targetInput, 'chi_tra+eng+jpn', {
@@ -2242,7 +2377,7 @@ async function runTextAndDateOcr(imgSource) {
   if (typeof window !== 'undefined' && typeof window.TextDetector === 'function') {
     try {
       const textDetector = new window.TextDetector();
-      const detected = await textDetector.detect(preprocessedCanvas || imgSource);
+      const detected = await textDetector.detect(preprocessedCanvas || drawableSource || imgSource);
       if (detected && detected.length > 0) {
         text += ' ' + detected.map(t => t.rawValue).join(' ');
       }
@@ -2253,11 +2388,13 @@ async function runTextAndDateOcr(imgSource) {
 
   text = text.trim();
   const rawBarcode = barcodeData ? barcodeData.barcode : null;
-  const detectedDate = extractDateFromText(text + (rawBarcode ? ' ' + rawBarcode : ''));
+  const ocrDetails = extractOcrDateCandidates(text + (rawBarcode ? ' ' + rawBarcode : ''));
+  const detectedDate = ocrDetails.bestDate;
 
   return {
     text,
     date: detectedDate,
+    dateCandidates: ocrDetails.candidates,
     barcode: rawBarcode,
     barcodeData: barcodeData,
     preprocessedCanvas: preprocessedCanvas
@@ -2873,7 +3010,7 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
 }
 
 // ==========================================
-// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.15
+// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.16
 // ==========================================
 let vlmProcessor = null;
 let vlmModel = null;
@@ -3554,6 +3691,8 @@ function parseVLMResponse(rawText) {
     }
   }
 
+  const vlmExpiryCandidate = parsedExpiry;
+
   const resultObj = {
     ...(parsedObject || {}),
     name: parsedName,
@@ -3561,10 +3700,12 @@ function parseVLMResponse(rawText) {
     subCategory: parsedSubCategory,
     emoji: parsedEmoji,
     expiry: parsedExpiry,
+    vlmExpiryCandidate: vlmExpiryCandidate,
     parsedName,
     parsedCategory,
     parsedSubCategory,
-    parsedExpiry
+    parsedExpiry,
+    parsedVlmExpiryCandidate: vlmExpiryCandidate
   };
 
   console.log('[VLM DEBUG] 最終解析結果:', resultObj);
@@ -3672,22 +3813,26 @@ function applyVlmDomValues(parsedName, parsedCategory, parsedExpiry) {
       nlpCatSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    // 有效期限：
+    // 有效期限 (若無效期或 finalExpiry === null 保持空白，嚴禁填入假日期)：
     const formattedExpiry = parsedExpiry ? String(parsedExpiry).replace(/\//g, '-') : '';
     const expiryInput = document.getElementById('itemExpiryDateInput');
-    if (expiryInput && parsedExpiry) {
+    if (expiryInput) {
       expiryInput.value = formattedExpiry;
       expiryInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
     const altExpiryInput = document.getElementById('itemEndDate');
-    if (altExpiryInput && altExpiryInput !== expiryInput && parsedExpiry) {
+    if (altExpiryInput && altExpiryInput !== expiryInput) {
       altExpiryInput.value = formattedExpiry;
       altExpiryInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
     const nlpExpiryInput = document.getElementById('nlpConfirmDate');
-    if (nlpExpiryInput && nlpExpiryInput !== expiryInput && nlpExpiryInput !== altExpiryInput && parsedExpiry) {
+    if (nlpExpiryInput && nlpExpiryInput !== expiryInput && nlpExpiryInput !== altExpiryInput) {
       nlpExpiryInput.value = formattedExpiry;
       nlpExpiryInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    const nlpDaysInput = document.getElementById('nlpConfirmDays');
+    if (nlpDaysInput && !parsedExpiry) {
+      nlpDaysInput.value = '';
     }
 
     // 【三、除錯日誌】
@@ -3783,22 +3928,17 @@ function formatVlmResult(result, photoDataUrl, skipDom = false) {
     if (!subCategory || subCategory === '未分類') subCategory = '未分類';
   }
 
-  // 效期計算：若有有效日期字串則採用，否則以今天 + shelf_life_days 計算
-  let expiryDate = '';
+  // 效期計算：僅採用真實讀取之 OCR 日期，禁止依商品類型自動猜測保存天數 (milk -> 7天等)
+  let expiryDate = null;
   const candidateExpiry = (result && (result.expiry || result.parsedExpiry)) ? String(result.expiry || result.parsedExpiry).trim().replace(/\//g, '-') : '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(candidateExpiry)) {
     expiryDate = candidateExpiry;
   } else {
-    const shelfLife = (result && typeof result.shelf_life_days === 'number' && result.shelf_life_days > 0)
-      ? Math.round(result.shelf_life_days)
-      : (category === 'food' ? 14 : 30);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expiryDate = formatDate(offsetDays(today, shelfLife));
+    expiryDate = null;
   }
 
   if (!skipDom) {
-    applyVlmDomValues(name, rawCat, candidateExpiry || expiryDate);
+    applyVlmDomValues(name, rawCat, expiryDate);
   }
 
   return {
@@ -3809,13 +3949,17 @@ function formatVlmResult(result, photoDataUrl, skipDom = false) {
     subCategory: subCategory,
     emoji: emoji,
     expiryDate: expiryDate,
-    hasEndDate: true,
+    hasEndDate: !!expiryDate,
     remindDaysBefore: 3,
     remindTime: '09:00',
     confidence: 0.95,
     visualMatch: 'SmolVLM 端側多模態大模型',
     fusionMode: 'vlm_webgpu',
-    image: photoDataUrl || null
+    image: photoDataUrl || null,
+    vlmExpiryCandidate: (result && result.vlmExpiryCandidate) || null,
+    ocrText: (result && result.ocrRawText) || '',
+    dateCandidates: (result && result.ocrDateCandidates) || [],
+    dateSource: (result && result.dateSource) || (expiryDate ? 'OCR' : 'none')
   };
 }
 
@@ -3869,8 +4013,17 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
       throw pipeErr;
     }
 
-    // 壓縮輸入影像 (限制寬高最大 768px 以提升生成速度)
+    // 壓縮輸入影像 (限制寬高最大 768px 供 SmolVLM 進行品名與分類推論)
     const compressedImg = compressImageForVlm(imageSource, 768);
+
+    // 2. 啟動既有 Tesseract OCR (使用原始高解析照片 photoDataUrl 或未壓縮之 imageSource 畫布，絕不使用壓縮至 768px 之圖片)
+    const ocrTargetImage = photoDataUrl || imageSource;
+    const ocrPromise = (typeof runTextAndDateOcr === 'function')
+      ? runTextAndDateOcr(ocrTargetImage).catch(ocrErr => {
+          console.warn('[OCR] runTextAndDateOcr 執行異常：', ocrErr);
+          return null;
+        })
+      : Promise.resolve(null);
 
     // 8 秒推論超時控制器 (Promise.race)
     const timeoutPromise = new Promise((_, reject) => {
@@ -3878,9 +4031,13 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
     });
 
     let rawOutput;
+    let ocrData = null;
     try {
       const inferencePromise = runVlmInference(pipe, compressedImg, VLM_PROMPT);
-      rawOutput = await Promise.race([inferencePromise, timeoutPromise]);
+      [rawOutput, ocrData] = await Promise.all([
+        Promise.race([inferencePromise, timeoutPromise]),
+        ocrPromise
+      ]);
     } catch (infErr) {
       if (isDebug) {
         if (infErr && (infErr.message === 'VLM_TIMEOUT_8S' || infErr.message?.includes('timeout'))) {
@@ -3906,13 +4063,59 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
     const parsedName = parsed ? (parsed.name || parsed.parsedName || '') : '';
     const parsedCategory = parsed ? (parsed.category || parsed.parsedCategory || '') : '';
     const parsedSubCategory = parsed ? (parsed.subCategory || parsed.parsedSubCategory || '') : '';
-    const parsedExpiry = parsed ? (parsed.expiry || parsed.parsedExpiry || null) : null;
+    const vlmExpiryCandidate = parsed ? (parsed.vlmExpiryCandidate || parsed.expiry || parsed.parsedExpiry || null) : null;
 
-    // 【四、除錯日誌與 Toast 提示】：印出解析結果
-    if (isDebug) {
-      console.log('[VLM DEBUG] 13. parseVLMResponse() 解析後內容:', { parsedName, parsedCategory, parsedSubCategory, parsedExpiry });
+    // 【二、既有 Tesseract OCR 日期與文字提取】
+    const ocrRawText = (ocrData && ocrData.text) ? ocrData.text : '';
+    const ocrDateCandidates = (ocrData && Array.isArray(ocrData.dateCandidates)) ? ocrData.dateCandidates : [];
+    const ocrFinalDate = (ocrData && ocrData.date) ? ocrData.date : null;
+
+    // 【三、最終日期決策規則】
+    // A. OCR 有找到日期 -> 使用 OCR 日期
+    // B. OCR 沒找到日期 -> finalExpiry = null
+    // C. VLM 有日期但 OCR 完全沒有看到日期 -> 不得使用 VLM 日期
+    // D. VLM 日期與 OCR 日期相同 -> 記錄為高可信
+    // E. VLM 日期與 OCR 日期不同 -> 一律以 OCR 為主，並輸出 Debug 警告
+    let finalExpiry = null;
+    let dateSource = 'none';
+
+    if (ocrFinalDate) {
+      finalExpiry = ocrFinalDate;
+      dateSource = 'OCR';
+      if (vlmExpiryCandidate && vlmExpiryCandidate !== ocrFinalDate) {
+        console.warn('[VLM DEBUG] VLM 日期與 OCR 不一致，已採用 OCR');
+      } else if (vlmExpiryCandidate && vlmExpiryCandidate === ocrFinalDate) {
+        console.log('[VLM DEBUG] VLM 日期與 OCR 日期相同（高可信）:', finalExpiry);
+      }
+    } else {
+      finalExpiry = null;
+      dateSource = 'none';
+      if (vlmExpiryCandidate) {
+        console.log('[VLM DEBUG] OCR 未發現日期，已捨棄 VLM 猜測日期:', vlmExpiryCandidate);
+      }
     }
-    console.log('[VLM Parsed]:', { parsedName, parsedCategory, parsedSubCategory, parsedExpiry });
+
+    // 【7. Debug 資訊輸出】
+    console.log('[VLM DEBUG] VLM 日期候選:', vlmExpiryCandidate);
+    console.log('[OCR DEBUG] OCR 原始文字:', ocrRawText);
+    console.log('[OCR DEBUG] OCR 找到的日期候選:', ocrDateCandidates);
+    console.log('[OCR DEBUG] OCR 最終日期:', ocrFinalDate);
+    console.log('[VLM DEBUG] 最終採用 expiry:', finalExpiry);
+    console.log('[VLM DEBUG] 日期來源:', dateSource);
+
+    parsed.expiry = finalExpiry;
+    parsed.parsedExpiry = finalExpiry;
+    parsed.vlmExpiryCandidate = vlmExpiryCandidate;
+    parsed.ocrRawText = ocrRawText;
+    parsed.ocrDateCandidates = ocrDateCandidates;
+    parsed.ocrFinalDate = ocrFinalDate;
+    parsed.dateSource = dateSource;
+
+    // 【四、除錯日誌】：印出解析結果
+    if (isDebug) {
+      console.log('[VLM DEBUG] 13. parseVLMResponse() 解析後內容:', { parsedName, parsedCategory, parsedSubCategory, vlmExpiryCandidate, finalExpiry });
+    }
+    console.log('[VLM Parsed]:', { parsedName, parsedCategory, parsedSubCategory, vlmExpiryCandidate, finalExpiry });
 
     // 5. 修改失敗條件：只有在「連 parsedName 都無法取得」時，才視為 VLM 回答無法使用。只要能取得物品名稱，就不要因 category 缺失而 fallback。
     if (!parsedName) {
@@ -3924,15 +4127,21 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
       throw jsonErr;
     }
 
-    // 【三、精確 DOM 賦值與觸發連動】及 Toast 提示
-    applyVlmDomValues(parsedName, parsedCategory, parsedExpiry);
+    // 【精確 DOM 賦值與觸發連動】及 Toast 提示 (傳入 finalExpiry，null 則保持空白)
+    applyVlmDomValues(parsedName, parsedCategory, finalExpiry);
 
     const finalResult = formatVlmResult(parsed, photoDataUrl, true);
+    finalResult.ocrText = ocrRawText;
+    finalResult.dateCandidates = ocrDateCandidates;
+    finalResult.dateSource = dateSource;
+    finalResult.vlmExpiryCandidate = vlmExpiryCandidate;
+
     if (isDebug) {
-      console.log('[VLM DEBUG] 14. 最終 name / category / subCategory / confidence:', {
+      console.log('[VLM DEBUG] 14. 最終 name / category / subCategory / expiryDate / confidence:', {
         name: finalResult.name,
         category: finalResult.category,
         subCategory: finalResult.subCategory,
+        expiryDate: finalResult.expiryDate,
         confidence: finalResult.confidence
       });
     }
@@ -3992,6 +4201,8 @@ if (typeof window !== 'undefined') {
   window.scanBarcodePriority = scanBarcodePriority;
   window.preprocessImageForOcr = preprocessImageForOcr;
   window.extractDateFromText = extractDateFromText;
+  window.extractOcrDateCandidates = extractOcrDateCandidates;
+  window.OCR_DATE_KEYWORDS = OCR_DATE_KEYWORDS;
   window.runTextAndDateOcr = runTextAndDateOcr;
   window.fuseVisualAndOcrDecision = fuseVisualAndOcrDecision;
   window.analyzeSmartCameraDualTrack = analyzeSmartCameraDualTrack;
@@ -4060,6 +4271,8 @@ if (typeof module !== 'undefined' && module.exports) {
     scanBarcodePriority,
     preprocessImageForOcr,
     extractDateFromText,
+    extractOcrDateCandidates,
+    OCR_DATE_KEYWORDS,
     runTextAndDateOcr,
     fuseVisualAndOcrDecision,
     analyzeSmartCameraDualTrack,
