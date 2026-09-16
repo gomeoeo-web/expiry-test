@@ -262,11 +262,11 @@ const SMART_KEYWORD_MAP = [
   ], emoji: '🍞', cat: 'food', subCat: '麵包烘焙' },
 
   // 日用 (pao)
-  { keywords: ['沐浴', '洗髮', '潤髮', '肥皂', '洗沐', '沐浴乳', '洗髮精', '潤髮乳'], emoji: '🧴', cat: 'pao', subCat: '洗沐' },
+  { keywords: ['沐浴', '洗髮', '潤髮', '肥皂', '洗沐', '沐浴乳', '洗髮精', '潤髮乳', 'shampoo'], emoji: '🧴', cat: 'pao', subCat: '洗沐' },
   { keywords: ['防曬', '隔離', '防曬乳', '防曬露', '防曬噴霧'], emoji: '☀️', cat: 'pao', subCat: '防曬' },
   { keywords: ['精華', '乳液', '面膜', '化妝水', '保濕', '眼霜', '面霜', '精華液', '保養品', '洗面乳', '潔顏乳', '卸妝水', '卸妝油', '化妝棉'], emoji: '✨', cat: 'pao', subCat: '保養' },
   { keywords: ['護手霜', '護唇膏', '身體乳', '護足霜'], emoji: '👐', cat: 'pao', subCat: '護手霜' },
-  { keywords: ['牙膏', '漱口水', '牙線', '牙線棒'], emoji: '🪥', cat: 'pao', subCat: '牙膏' },
+  { keywords: ['牙膏', '漱口水', '牙線', '牙線棒', 'toothpaste'], emoji: '🪥', cat: 'pao', subCat: '牙膏' },
   { keywords: ['刮鬍刀', '刀頭', '刮鬍泡', '電鬍刀'], emoji: '🪒', cat: 'pao', subCat: '刮鬍刀' },
   { keywords: ['香水', '淡香水', '香氛', '香膏'], emoji: '🌸', cat: 'pao', subCat: '香水' },
   { keywords: ['唇膏', '口紅', '粉底', '遮瑕', '眼影', '腮紅', '彩妝'], emoji: '💄', cat: 'pao', subCat: '彩妝' },
@@ -3433,12 +3433,15 @@ function parseVLMResponse(rawText) {
 
   let parsedName = '';
   let parsedCategory = '';
+  let parsedSubCategory = '';
+  let parsedEmoji = '';
   let parsedExpiry = null;
   let parsedObject = null;
   let jsonParseError = null;
+  let isNaturalLanguageName = false;
+  let isNaturalLanguageExpiry = false;
 
-  // 3. 雙重解析機制：
-  // - 優先嘗試 JSON.parse(extractedJson)。
+  // 1. 保留現有 JSON 解析：如果模型真的回 {"name":"milk", ...} 仍然優先使用 JSON.parse
   if (extractedJson) {
     try {
       parsedObject = JSON.parse(extractedJson);
@@ -3469,30 +3472,102 @@ function parseVLMResponse(rawText) {
     console.warn('[VLM DEBUG] 15. Fallback 警告: JSON parse failed (標準 JSON.parse 解析失敗，轉用寬鬆正則逐欄抽取備援)\n完整 Error Stack:', jsonParseError && jsonParseError.stack ? jsonParseError.stack : jsonParseError);
   }
 
-  // - 若解析失敗（如字串未閉合），改用寬鬆的正規表達式逐欄抓取：
+  // 2. 新增自然語言回答解析（若 JSON 未取得 name）
   if (!parsedName) {
-    parsedName = rawText.match(/(?:name|品名|物品名稱|商品名稱)["':\s]+["']?([^"'\n,}]+)/i)?.[1]?.trim() || '';
+    // 寬鬆 key-value 形式
+    const kvMatch = cleanedText.match(/(?:name|品名|物品名稱|商品名稱)["':\s]+["']?([^"'\n,}]+)/i);
+    if (kvMatch && kvMatch[1]) {
+      parsedName = kvMatch[1].trim();
+    }
   }
+
+  if (!parsedName) {
+    // 自然語言回答模式 (英文與中文模式)
+    const namePatterns = [
+      /the product is\s*["']?([^"'.\n]+)["']?/i,
+      /the item is\s*["']?([^"'.\n]+)["']?/i,
+      /this is\s+(?:an|a)?\s*["']?([^"'.\n]+)["']?/i,
+      /product\s*[:：]\s*["']?([^"'\n,.]+)/i,
+      /(?:品名是|商品是|物品是|這是)\s*([^，。,\n]+)/
+    ];
+
+    for (const pattern of namePatterns) {
+      const m = cleanedText.match(pattern);
+      if (m && m[1]) {
+        let n = m[1].trim().replace(/^["']+|["']+$/g, '').trim();
+        // 防護：若未以引號包裹且後續接 and its expiry ... 截斷處理
+        n = n.replace(/\s+(?:and\s+(?:its\s+)?(?:expiry|expiration)|with\s+expiry).*$/i, '').trim();
+        if (n) {
+          parsedName = n;
+          isNaturalLanguageName = true;
+          break;
+        }
+      }
+    }
+
+    if (parsedName) {
+      console.log('[VLM DEBUG] 自然語言解析取得 name:', parsedName);
+    }
+  }
+
+  // category 解析 (JSON 或 key-value 欄位)
   if (!parsedCategory) {
-    parsedCategory = rawText.match(/(?:category|分類|類別)["':\s]+["']?([^"'\n,}]+)/i)?.[1]?.trim() || '';
+    const catMatch = cleanedText.match(/(?:category|分類|類別)["':\s]+["']?([^"'\n,}]+)/i);
+    if (catMatch && catMatch[1]) {
+      parsedCategory = catMatch[1].trim();
+    }
   }
+
+  // 3. 自然語言日期解析
   if (!parsedExpiry) {
-    parsedExpiry = rawText.match(/(?:expiry|到期日|有效期限)["':\s]+["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/i)?.[1]?.trim() || null;
+    const expiryPatterns = [
+      /(?:expiry\s*date\s*is|expiration\s*date\s*is|expires\s*on)\s*["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/i,
+      /(?:有效期限(?:是|：|:)?|到期日(?:是|：|:)?)\s*["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/,
+      /(?:expiry|expiration|expires|到期日|有效期限)["':\s]+["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/i
+    ];
+
+    for (const pattern of expiryPatterns) {
+      const em = cleanedText.match(pattern);
+      if (em && em[1]) {
+        parsedExpiry = em[1].trim().replace(/\//g, '-');
+        isNaturalLanguageExpiry = true;
+        console.log('[VLM DEBUG] 自然語言解析取得 expiry:', parsedExpiry);
+        break;
+      }
+    }
+  }
+
+  // 4. category 不應因 VLM 沒回而整體失敗：改用 matchCategoryAndSubCategory(parsedName) 從 SMART_KEYWORD_MAP 推算
+  if (parsedName && !parsedCategory) {
+    if (typeof matchCategoryAndSubCategory === 'function') {
+      const matched = matchCategoryAndSubCategory(parsedName);
+      parsedCategory = matched.category || 'other';
+      parsedSubCategory = matched.subCat || matched.subCategory || '';
+      parsedEmoji = matched.emoji || '📦';
+      console.log('[VLM DEBUG] category 由本地分類器推算:', {
+        category: parsedCategory,
+        subCategory: parsedSubCategory,
+        emoji: parsedEmoji
+      });
+    } else {
+      parsedCategory = 'other';
+    }
   }
 
   const resultObj = {
     ...(parsedObject || {}),
     name: parsedName,
     category: parsedCategory,
+    subCategory: parsedSubCategory,
+    emoji: parsedEmoji,
     expiry: parsedExpiry,
     parsedName,
     parsedCategory,
+    parsedSubCategory,
     parsedExpiry
   };
 
-  if (isDebug) {
-    console.log('[VLM DEBUG] 13. parseVLMResponse() 解析後內容:', resultObj);
-  }
+  console.log('[VLM DEBUG] 最終解析結果:', resultObj);
 
   return resultObj;
 }
@@ -3516,7 +3591,7 @@ function normalizeCategory(rawCat) {
   if (/遊戲|game|console|switch|playstation|xbox/.test(c)) return '遊戲';
   if (/二次元|figure|toy|谷子|立牌|徽章|模型|黏土人/.test(c)) return '二次元';
   if (/票券|ticket|門票|電影票|展覽/.test(c)) return '票券/活動';
-  if (/日用|清潔|cleaning|detergent|shampoo|日常/.test(c)) return '日用品';
+  if (/日用|清潔|cleaning|detergent|shampoo|日常|pao/.test(c)) return '日用品';
   return '其他';
 }
 
@@ -3658,46 +3733,54 @@ function formatVlmResult(result, photoDataUrl, skipDom = false) {
   const targetCategory = normalizeCategory(rawCat);
 
   // 映射合法分類
-  let category = 'other';
+  let category = (result && (result.category || result.parsedCategory)) || 'other';
   let categoryLabel = targetCategory;
-  let emoji = '📦';
-  let subCategory = '未分類';
+  let emoji = (result && result.emoji) || '📦';
+  let subCategory = (result && (result.subCategory || result.parsedSubCategory)) || '未分類';
 
   if (targetCategory === '食品') {
     category = 'food';
     categoryLabel = '食品';
-    emoji = /飲料|飲品|水|酒|茶|咖啡|乳品|鮮奶/i.test(rawCat) ? '🧃' : '🥦';
-    subCategory = /飲料|飲品|水|酒|茶|咖啡|乳品|鮮奶/i.test(rawCat) ? '飲品' : '生鮮/食品';
+    if (!emoji || emoji === '📦') {
+      emoji = /飲料|飲品|水|酒|茶|咖啡|乳品|鮮奶|milk/i.test(rawCat + ' ' + name) ? '🥛' : '🥦';
+    }
+    if (!subCategory || subCategory === '未分類') {
+      subCategory = /飲料|飲品|水|酒|茶|咖啡|乳品|鮮奶|milk/i.test(rawCat + ' ' + name) ? '鮮乳' : '生鮮/食品';
+    }
   } else if (targetCategory === '日用品') {
-    category = 'cleaning';
+    category = (category === 'pao') ? 'pao' : 'cleaning';
     categoryLabel = '日用品';
-    emoji = '🧼';
-    subCategory = '日常用品';
+    if (!emoji || emoji === '📦') {
+      emoji = '🧴';
+    }
+    if (!subCategory || subCategory === '未分類') {
+      subCategory = '日常用品';
+    }
   } else if (targetCategory === '動畫') {
     category = 'animation';
     categoryLabel = '動畫';
-    emoji = '🎬';
-    subCategory = '動漫周邊';
+    if (!emoji || emoji === '📦') emoji = '🎬';
+    if (!subCategory || subCategory === '未分類') subCategory = '動漫周邊';
   } else if (targetCategory === '遊戲') {
     category = 'game';
     categoryLabel = '遊戲';
-    emoji = '🎮';
-    subCategory = '遊戲卡帶/光碟';
+    if (!emoji || emoji === '📦') emoji = '🎮';
+    if (!subCategory || subCategory === '未分類') subCategory = '遊戲卡帶/光碟';
   } else if (targetCategory === '二次元') {
     category = 'otaku';
     categoryLabel = '二次元';
-    emoji = '✨';
-    subCategory = '二次元周邊';
+    if (!emoji || emoji === '📦') emoji = '✨';
+    if (!subCategory || subCategory === '未分類') subCategory = '二次元周邊';
   } else if (targetCategory === '票券/活動') {
     category = 'ticket';
     categoryLabel = '票券/活動';
-    emoji = '🎟️';
-    subCategory = '票券/活動';
+    if (!emoji || emoji === '📦') emoji = '🎟️';
+    if (!subCategory || subCategory === '未分類') subCategory = '票券/活動';
   } else {
     category = 'other';
     categoryLabel = '其他';
-    emoji = '📦';
-    subCategory = '未分類';
+    if (!emoji || emoji === '📦') emoji = '📦';
+    if (!subCategory || subCategory === '未分類') subCategory = '未分類';
   }
 
   // 效期計算：若有有效日期字串則採用，否則以今天 + shelf_life_days 計算
@@ -3822,18 +3905,20 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
     const parsed = parseVLMResponse(rawText);
     const parsedName = parsed ? (parsed.name || parsed.parsedName || '') : '';
     const parsedCategory = parsed ? (parsed.category || parsed.parsedCategory || '') : '';
+    const parsedSubCategory = parsed ? (parsed.subCategory || parsed.parsedSubCategory || '') : '';
     const parsedExpiry = parsed ? (parsed.expiry || parsed.parsedExpiry || null) : null;
 
     // 【四、除錯日誌與 Toast 提示】：印出解析結果
     if (isDebug) {
-      console.log('[VLM DEBUG] 13. parseVLMResponse() 解析後內容:', { parsedName, parsedCategory, parsedExpiry });
+      console.log('[VLM DEBUG] 13. parseVLMResponse() 解析後內容:', { parsedName, parsedCategory, parsedSubCategory, parsedExpiry });
     }
-    console.log('[VLM Parsed]:', { parsedName, parsedCategory, parsedExpiry });
+    console.log('[VLM Parsed]:', { parsedName, parsedCategory, parsedSubCategory, parsedExpiry });
 
-    if (!parsedName && !parsedCategory) {
-      const jsonErr = new Error('JSON parse failed (無法從 VLM 原始輸出擷取出 name 或 category)');
+    // 5. 修改失敗條件：只有在「連 parsedName 都無法取得」時，才視為 VLM 回答無法使用。只要能取得物品名稱，就不要因 category 缺失而 fallback。
+    if (!parsedName) {
+      const jsonErr = new Error('JSON parse failed (無法從 VLM 原始輸出擷取出物品名稱 name)');
       if (isDebug) {
-        console.error('[VLM DEBUG] 15. Fallback 原因: JSON parse failed (品名與類別皆為空)\n[VLM DEBUG] 原始輸出內容:', rawText);
+        console.error('[VLM DEBUG] 15. Fallback 原因: JSON parse failed (連物品名稱 parsedName 都無法取得)\n[VLM DEBUG] 原始輸出內容:', rawText);
         console.error('[VLM DEBUG] 完整 Error Stack:', jsonErr.stack);
       }
       throw jsonErr;
