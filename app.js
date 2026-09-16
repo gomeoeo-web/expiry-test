@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.17
+ * Smart Quick Add & On-Device NER Parser v1.8.18
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -2992,11 +2992,20 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
     };
   }
 
-  // 2. 雙軌並行分析：視覺外觀分類 + 前處理文字效期 OCR
-  const [visualPredictions, ocrData] = await Promise.all([
-    classifyImageVisual(imageSource),
-    runTextAndDateOcr(imageSource)
-  ]);
+  // 2. 視覺外觀分類 + 文字效期 OCR
+  // Mobile Stable Mode uses sequential execution to reduce peak memory usage on iOS/Android browsers.
+  let visualPredictions = [];
+  let ocrData = null;
+  if (isMobileDevice()) {
+    console.log('[MOBILE AI] Sequential recognition: MobileNet -> OCR');
+    visualPredictions = await classifyImageVisual(imageSource);
+    ocrData = await runTextAndDateOcr(imageSource);
+  } else {
+    [visualPredictions, ocrData] = await Promise.all([
+      classifyImageVisual(imageSource),
+      runTextAndDateOcr(imageSource)
+    ]);
+  }
 
   if (barcodeImmediate && (!ocrData || !ocrData.barcodeData)) {
     if (ocrData) {
@@ -3022,7 +3031,7 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
 }
 
 // ==========================================
-// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.17
+// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.18
 // ==========================================
 let vlmProcessor = null;
 let vlmModel = null;
@@ -3161,6 +3170,12 @@ function getVlmMaxDim() {
  * 支援 Mobile VLM Low Memory Mode (量化載入、順序降級備援、顯存保護)
  */
 async function initVlmModel(onProgress) {
+  // Mobile Stable Mode: never load SmolVLM on phones/tablets.
+  // iOS Safari can terminate the whole page during VLM load/inference, so mobile uses MobileNet + OCR only.
+  if (isMobileDevice()) {
+    console.log('[MOBILE AI] SmolVLM disabled on mobile; initVlmModel skipped');
+    return null;
+  }
   const isDebug = isCameraDebug();
   const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
   const isMobile = isMobileDevice();
@@ -3437,6 +3452,12 @@ async function initVisionModel(onProgress) {
     console.log('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，略過 SmolVLM / MobileNet 預載');
     return null;
   }
+  // Mobile Stable Mode: do not preload models while camera/album UI is active.
+  // Recognition models are started only after the captured image is ready and the camera stream is closed.
+  if (isMobileDevice()) {
+    console.log('[MOBILE AI] Stable mode enabled; skip camera-time model preload');
+    return null;
+  }
   const isDebug = isCameraDebug();
   const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
   if (isDebug) {
@@ -3532,6 +3553,9 @@ function extractTextFromOutput(out) {
  * 執行 VLM 視覺推論 (Hugging Face 官方 SmolVLM WebGPU 流程)
  */
 async function runVlmInference(pipeOrInstance, imgDataUrl, promptText = VLM_PROMPT) {
+  if (isMobileDevice()) {
+    throw new Error('MOBILE_VLM_DISABLED');
+  }
   const isDebug = isCameraDebug();
   if (isDebug) {
     console.log('[VLM DEBUG] 11. 是否真的執行 runVlmInference(): 是', {
@@ -4128,6 +4152,11 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
   if (isMobileClipTestMode()) {
     console.warn('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，跳過 analyzeSmartCameraWithVlm');
     return null;
+  }
+  // Mobile Stable Mode: phones/tablets never enter SmolVLM.
+  if (isMobileDevice()) {
+    console.log('[MOBILE AI] Stable mode: bypass SmolVLM -> MobileNet + OCR');
+    return await analyzeSmartCameraDualTrack(imageSource, photoDataUrl);
   }
   const isDebug = isCameraDebug();
 

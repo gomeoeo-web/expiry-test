@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.8.17">
+  <link rel="stylesheet" href="style.css?v=1.8.18">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7223,7 +7223,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.17</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.18</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -8814,7 +8814,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.8.17';
+  const APP_VERSION = '1.8.18';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -16661,8 +16661,11 @@ function extractCleanName(rawText) {
     }
     if (btnAlbum && fileInput) {
       btnAlbum.addEventListener('click', () => {
-        if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
+        const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
+        if (!mobileStable && typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
           window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
+        } else if (mobileStable) {
+          console.log('[MOBILE AI] Stable mode: skip album-time model preload');
         }
         fileInput.click();
       });
@@ -16721,8 +16724,11 @@ function extractCleanName(rawText) {
     setCameraZoom(1);
     // 自動預先觸發下載（無感快取）：
     // 使用者一「點擊開啟相機」或進入辨識畫面時，立即於背景靜默或以進度條觸發 initVisionModel()，不要等到拍照按下的瞬間才卡住下載。
-    if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
+    const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
+    if (!mobileStable && typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
       window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
+    } else if (mobileStable) {
+      console.log('[MOBILE AI] Stable mode: skip camera-time model preload');
     }
     await startCameraStream(currentCameraFacing);
   }
@@ -16826,9 +16832,12 @@ function extractCleanName(rawText) {
 
     if (img && photoDataUrl) img.src = photoDataUrl;
     if (desc) {
-      desc.textContent = (typeof navigator !== 'undefined' && navigator.gpu)
-        ? '正在啟動端側 SmolVLM 視覺多模態大模型...'
-        : '正在啟動輕量相機雙軌辨識管線...';
+      const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
+      desc.textContent = mobileStable
+        ? '正在啟動手機穩定辨識：MobileNet + OCR...'
+        : ((typeof navigator !== 'undefined' && navigator.gpu)
+          ? '正在啟動端側 SmolVLM 視覺多模態大模型...'
+          : '正在啟動輕量相機雙軌辨識管線...');
     }
     if (stepVlm) { stepVlm.className = 'ai-scan-step-item active'; }
     if (stepVisual) { stepVisual.className = 'ai-scan-step-item active'; }
@@ -16960,8 +16969,12 @@ function extractCleanName(rawText) {
 
     let parsed = null;
     try {
-      // 最優先呼叫端側視覺語言大模型 (VLM)，若環境不支援、推論超時或異常則無縫降級
-      if (typeof window.analyzeSmartCameraWithVlm === 'function') {
+      // 手機使用穩定模式：直接 MobileNet + OCR，完全不進入 SmolVLM。桌面才優先 VLM。
+      const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
+      if (mobileStable && typeof window.analyzeSmartCameraDualTrack === 'function') {
+        console.log('[MOBILE AI] Capture path: direct MobileNet + OCR');
+        parsed = await window.analyzeSmartCameraDualTrack(canvas, photoDataUrl);
+      } else if (typeof window.analyzeSmartCameraWithVlm === 'function') {
         parsed = await window.analyzeSmartCameraWithVlm(canvas, photoDataUrl);
       } else if (typeof window.analyzeSmartCameraDualTrack === 'function') {
         parsed = await window.analyzeSmartCameraDualTrack(canvas, photoDataUrl);
@@ -17301,6 +17314,6 @@ function extractCleanName(rawText) {
   <!-- Tesseract.js 本地/離線 OCR 文字辨識引擎 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <!-- 本地自然語言實體抽取與速記控制器 -->
-  <script type="module" src="app.js?v=1.8.17"></script>
+  <script type="module" src="app.js?v=1.8.18"></script>
 </body>
 </html>
