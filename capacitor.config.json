@@ -1,0 +1,14 @@
+{
+  "appId": "com.myapp.tracker",
+  "appName": "我的APP",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_name",
+      "iconColor": "#488AFF"
+    }
+  }
+}

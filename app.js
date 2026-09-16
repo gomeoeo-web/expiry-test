@@ -1905,6 +1905,10 @@ let isMobileNetLoading = false;
  * 非同步初始化本地 MobileNet 視覺模型
  */
 async function initMobileNet() {
+  if (typeof isVlmLoading !== 'undefined' && isVlmLoading && typeof isIosSafari === 'function' && isIosSafari()) {
+    console.log('[iOS Safari 保護] VLM 模型正在下載中，暫緩 MobileNet 載入');
+    return null;
+  }
   if (mobileNetModel) return mobileNetModel;
   if (typeof window === 'undefined') return null;
   if (!window.mobilenet) return null;
@@ -2333,6 +2337,10 @@ function extractDateFromText(text) {
  * 整合 Canvas 三道前處理 (縮放限制 1200px + 中央 75% 裁切對焦 + 灰階二值化)
  */
 async function runTextAndDateOcr(imgSource) {
+  if (typeof isVlmLoading !== 'undefined' && isVlmLoading && typeof isIosSafari === 'function' && isIosSafari()) {
+    console.log('[iOS Safari 保護] VLM 模型正在下載中，暫緩 OCR 載入');
+    return { text: '', date: null, dateCandidates: [], barcode: null, barcodeData: null };
+  }
   let text = '';
   let barcodeData = null;
 
@@ -3114,12 +3122,50 @@ function hideVlmLoadingCard(withFadeOut = true) {
 }
 
 /**
+ * 判斷當前裝置是否為行動裝置 (iPhone, iPad, Android, Mobile UA)
+ */
+function isMobileDevice() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = (navigator.userAgent || navigator.vendor || (typeof window !== 'undefined' && window.opera) || '').toLowerCase();
+  const isIPhone = /iphone/.test(ua);
+  const isIPad = /ipad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /android/.test(ua);
+  const isMobileUa = /mobile|touch|webos|blackberry|iemobile|opera mini/.test(ua);
+  return isIPhone || isIPad || isAndroid || isMobileUa;
+}
+
+/**
+ * 判斷當前裝置是否為 iOS Safari / WebKit 核心 (用於防範 Safari 嚴格記憶體限制)
+ */
+function isIosSafari() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return isIOS;
+}
+
+/**
+ * 取得當前裝置環境對應之 VLM 影像最大邊長限制 (手機 512px，桌面 768px)
+ */
+function getVlmMaxDim() {
+  return isMobileDevice() ? 512 : 768;
+}
+
+/**
  * 非同步載入端側視覺語言大模型 (SmolVLM-256M-Instruct with WebGPU)
  * 依照 Hugging Face 官方 SmolVLM WebGPU 規範，使用 AutoProcessor 與 AutoModelForVision2Seq
+ * 支援 Mobile VLM Low Memory Mode (量化載入、順序降級備援、顯存保護)
  */
 async function initVlmModel(onProgress) {
   const isDebug = isCameraDebug();
   const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
+  const isMobile = isMobileDevice();
+  const deviceClass = isMobile ? 'mobile' : 'desktop';
+  const mobileLowMem = isMobile;
+
+  // 7. Debug 裝置與記憶體模式資訊
+  console.log(`[VLM DEBUG] device class: ${deviceClass}`);
+  console.log(`[VLM DEBUG] mobile low memory mode: ${mobileLowMem}`);
 
   if (isDebug) {
     console.log('[VLM DEBUG] 1. navigator.gpu 是否存在:', hasWebGpu);
@@ -3230,15 +3276,108 @@ async function initVlmModel(onProgress) {
       console.log('[VLM DEBUG] AutoProcessor 建立成功');
     }
 
-    vlmModel = await AutoModelForVision2Seq.from_pretrained(
-      'HuggingFaceTB/SmolVLM-256M-Instruct',
-      {
-        device: 'webgpu',
-        progress_callback: progressCallback
+    if (!isMobile) {
+      // 桌面仍維持目前設定 (不指定 dtype)
+      console.log('[VLM DEBUG] requested dtype: none');
+      console.log('[VLM DEBUG] actual dtype fallback: none');
+      vlmModel = await AutoModelForVision2Seq.from_pretrained(
+        'HuggingFaceTB/SmolVLM-256M-Instruct',
+        {
+          device: 'webgpu',
+          progress_callback: progressCallback
+        }
+      );
+      if (isDebug) {
+        console.log('[VLM DEBUG] AutoModelForVision2Seq 建立成功 (Desktop Mode)');
       }
-    );
-    if (isDebug) {
-      console.log('[VLM DEBUG] AutoModelForVision2Seq 建立成功');
+    } else {
+      // 手機模式 (Mobile VLM Low Memory Mode)
+      const requestedDtype = {
+        embed_tokens: 'fp32',
+        vision_encoder: 'q4',
+        decoder_model_merged: 'q4'
+      };
+      console.log('[VLM DEBUG] requested dtype:', JSON.stringify(requestedDtype));
+
+      let modelLoaded = false;
+      let lastErr = null;
+
+      // 嘗試初始 Requested Dtype Mapping
+      try {
+        vlmModel = await AutoModelForVision2Seq.from_pretrained(
+          'HuggingFaceTB/SmolVLM-256M-Instruct',
+          {
+            device: 'webgpu',
+            dtype: requestedDtype,
+            progress_callback: progressCallback
+          }
+        );
+        console.log('[VLM DEBUG] actual dtype fallback: none');
+        modelLoaded = true;
+      } catch (errMapping) {
+        lastErr = errMapping;
+        console.warn('[VLM DEBUG] 初始 requested dtype mapping 載入失敗，觸發第 1 順位 fallback (q4)：', errMapping?.message || errMapping);
+        console.log('[VLM DEBUG] actual dtype fallback: q4');
+
+        // 第一順位: dtype: 'q4'
+        try {
+          vlmModel = await AutoModelForVision2Seq.from_pretrained(
+            'HuggingFaceTB/SmolVLM-256M-Instruct',
+            {
+              device: 'webgpu',
+              dtype: 'q4',
+              progress_callback: progressCallback
+            }
+          );
+          modelLoaded = true;
+        } catch (errQ4) {
+          lastErr = errQ4;
+          console.warn('[VLM DEBUG] 第 1 順位 dtype: q4 載入失敗，觸發第 2 順位 fallback (q8)：', errQ4?.message || errQ4);
+          console.log('[VLM DEBUG] actual dtype fallback: q8');
+
+          // 第二順位: dtype: 'q8'
+          try {
+            vlmModel = await AutoModelForVision2Seq.from_pretrained(
+              'HuggingFaceTB/SmolVLM-256M-Instruct',
+              {
+                device: 'webgpu',
+                dtype: 'q8',
+                progress_callback: progressCallback
+              }
+            );
+            modelLoaded = true;
+          } catch (errQ8) {
+            lastErr = errQ8;
+            console.warn('[VLM DEBUG] 第 2 順位 dtype: q8 載入失敗，觸發第 3 順位 fallback (不指定 dtype)：', errQ8?.message || errQ8);
+            console.log('[VLM DEBUG] actual dtype fallback: default (none)');
+
+            // 第三順位: 不指定 dtype
+            try {
+              vlmModel = await AutoModelForVision2Seq.from_pretrained(
+                'HuggingFaceTB/SmolVLM-256M-Instruct',
+                {
+                  device: 'webgpu',
+                  progress_callback: progressCallback
+                }
+              );
+              modelLoaded = true;
+            } catch (errDefault) {
+              lastErr = errDefault;
+              console.error('[VLM DEBUG] 第 3 順位 fallback 亦載入失敗：', errDefault?.message || errDefault);
+            }
+          }
+        }
+      }
+
+      if (modelLoaded && vlmModel) {
+        console.log('[VLM DEBUG] mobile VLM load success');
+        if (isDebug) {
+          console.log('[VLM DEBUG] AutoModelForVision2Seq 建立成功 (Mobile Mode)');
+        }
+      } else {
+        console.error('[VLM DEBUG] mobile VLM load failed');
+        throw (lastErr || new Error('Mobile VLM load failed all fallback attempts'));
+      }
     }
 
     vlmPipeline = { processor: vlmProcessor, model: vlmModel };
@@ -3265,6 +3404,9 @@ async function initVlmModel(onProgress) {
     console.log('[VLM] ✅ SmolVLM 端側多模態大模型加載完成！');
     return { processor: vlmProcessor, model: vlmModel };
   } catch (err) {
+    if (isMobile) {
+      console.error('[VLM DEBUG] mobile VLM load failed');
+    }
     if (isDebug) {
       const isGpuError = err && String(err).toLowerCase().includes('webgpu');
       console.error(`[VLM DEBUG] 15. Fallback 原因: ${isGpuError ? 'WebGPU unavailable' : 'VLM model load failed'}`);
@@ -3325,19 +3467,20 @@ async function initVisionModel(onProgress) {
 /**
  * 壓縮輸入影像 (限制寬高最大 768px 以提升生成速度與降低顯存佔用)
  */
-function compressImageForVlm(imageSource, maxDim = 768) {
+function compressImageForVlm(imageSource, maxDim) {
+  const targetMaxDim = (typeof maxDim === 'number' && maxDim > 0) ? maxDim : getVlmMaxDim();
   if (typeof document === 'undefined') return imageSource;
   let sw = imageSource.videoWidth || imageSource.naturalWidth || imageSource.width || 800;
   let sh = imageSource.videoHeight || imageSource.naturalHeight || imageSource.height || 600;
   let dw = sw;
   let dh = sh;
-  if (dw > maxDim || dh > maxDim) {
+  if (dw > targetMaxDim || dh > targetMaxDim) {
     if (dw > dh) {
-      dh = Math.round((dh * maxDim) / dw);
-      dw = maxDim;
+      dh = Math.round((dh * targetMaxDim) / dw);
+      dw = targetMaxDim;
     } else {
-      dw = Math.round((dw * maxDim) / dh);
-      dh = maxDim;
+      dw = Math.round((dw * targetMaxDim) / dh);
+      dh = targetMaxDim;
     }
   }
   const vlmCanvas = document.createElement('canvas');
@@ -3463,6 +3606,10 @@ async function runVlmInference(pipeOrInstance, imgDataUrl, promptText = VLM_PROM
 
   // E. 使用 model.generate() 進行推論
   let outputs;
+  const isMobile = isMobileDevice();
+  const maxTokens = isMobile ? 64 : 160;
+  console.log(`[VLM DEBUG] max_new_tokens: ${maxTokens}`);
+
   try {
     if (isDebug) {
       console.log('[VLM DEBUG] model.generate 開始');
@@ -3470,7 +3617,7 @@ async function runVlmInference(pipeOrInstance, imgDataUrl, promptText = VLM_PROM
     outputs = await model.generate({
       ...inputs,
       do_sample: false,
-      max_new_tokens: 160
+      max_new_tokens: maxTokens
     });
     if (isDebug) {
       console.log('[VLM DEBUG] model.generate 完成');
@@ -4013,17 +4160,15 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
       throw pipeErr;
     }
 
-    // 壓縮輸入影像 (限制寬高最大 768px 供 SmolVLM 進行品名與分類推論)
-    const compressedImg = compressImageForVlm(imageSource, 768);
+    const isMobile = isMobileDevice();
+    const vlmMaxDim = isMobile ? 512 : 768;
+    console.log(`[VLM DEBUG] VLM image maxDim: ${vlmMaxDim}`);
 
-    // 2. 啟動既有 Tesseract OCR (使用原始高解析照片 photoDataUrl 或未壓縮之 imageSource 畫布，絕不使用壓縮至 768px 之圖片)
+    // 壓縮輸入影像 (手機限制 512px，桌面限制 768px 供 SmolVLM 進行品名與分類推論)
+    const compressedImg = compressImageForVlm(imageSource, vlmMaxDim);
+
+    // 2. 啟動既有 Tesseract OCR (使用原始高解析照片 photoDataUrl 或未壓縮之 imageSource 畫布，絕不使用壓縮至 512px/768px 之圖片)
     const ocrTargetImage = photoDataUrl || imageSource;
-    const ocrPromise = (typeof runTextAndDateOcr === 'function')
-      ? runTextAndDateOcr(ocrTargetImage).catch(ocrErr => {
-          console.warn('[OCR] runTextAndDateOcr 執行異常：', ocrErr);
-          return null;
-        })
-      : Promise.resolve(null);
 
     // 8 秒推論超時控制器 (Promise.race)
     const timeoutPromise = new Promise((_, reject) => {
@@ -4032,12 +4177,41 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
 
     let rawOutput;
     let ocrData = null;
+    const inferencePromise = runVlmInference(pipe, compressedImg, VLM_PROMPT);
+
     try {
-      const inferencePromise = runVlmInference(pipe, compressedImg, VLM_PROMPT);
-      [rawOutput, ocrData] = await Promise.all([
-        Promise.race([inferencePromise, timeoutPromise]),
-        ocrPromise
-      ]);
+      if (isIosSafari()) {
+        // iOS Safari 特別保護：
+        // 1. 不同時初始化 MobileNet、OCR、VLM 三套模型
+        // 2. 先只載入/執行 SmolVLM 推論
+        // 3. SmolVLM 推論完成後再按需要啟動 OCR，避免同時間佔用過多記憶體
+        if (isDebug) {
+          console.log('[iOS Safari 保護] 啟用序列推論模式：先執行 SmolVLM，推論結束後再按需啟動 OCR');
+        }
+        rawOutput = await Promise.race([inferencePromise, timeoutPromise]);
+
+        if (typeof runTextAndDateOcr === 'function') {
+          try {
+            ocrData = await runTextAndDateOcr(ocrTargetImage);
+          } catch (ocrErr) {
+            console.warn('[OCR] runTextAndDateOcr 執行異常：', ocrErr);
+            ocrData = null;
+          }
+        }
+      } else {
+        // 桌面及非 iOS 模式維持雙軌並行 (Promise.all)
+        const ocrPromise = (typeof runTextAndDateOcr === 'function')
+          ? runTextAndDateOcr(ocrTargetImage).catch(ocrErr => {
+              console.warn('[OCR] runTextAndDateOcr 執行異常：', ocrErr);
+              return null;
+            })
+          : Promise.resolve(null);
+
+        [rawOutput, ocrData] = await Promise.all([
+          Promise.race([inferencePromise, timeoutPromise]),
+          ocrPromise
+        ]);
+      }
     } catch (infErr) {
       if (isDebug) {
         if (infErr && (infErr.message === 'VLM_TIMEOUT_8S' || infErr.message?.includes('timeout'))) {
@@ -4216,6 +4390,9 @@ if (typeof window !== 'undefined') {
   window.showModelLoadingOverlay = showModelLoadingOverlay;
   window.updateModelLoadingProgress = updateModelLoadingProgress;
   window.hideModelLoadingOverlay = hideModelLoadingOverlay;
+  window.isMobileDevice = isMobileDevice;
+  window.isIosSafari = isIosSafari;
+  window.getVlmMaxDim = getVlmMaxDim;
   window.initVlmModel = initVlmModel;
   window.compressImageForVlm = compressImageForVlm;
   window.runVlmInference = runVlmInference;
@@ -4286,6 +4463,9 @@ if (typeof module !== 'undefined' && module.exports) {
     showModelLoadingOverlay,
     updateModelLoadingProgress,
     hideModelLoadingOverlay,
+    isMobileDevice,
+    isIosSafari,
+    getVlmMaxDim,
     initVlmModel,
     vlmProcessor: () => vlmProcessor,
     vlmModel: () => vlmModel,

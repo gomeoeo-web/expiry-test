@@ -1,0 +1,23 @@
+{
+  "name": "my-app-tracker",
+  "version": "1.8.16",
+  "description": "期效管家 - 極簡物品生命週期與保固管家",
+  "private": true,
+  "main": "index.html",
+  "scripts": {
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('www',{recursive:true}); fs.copyFileSync('index.html','www/index.html'); fs.copyFileSync('app.js','www/app.js'); if (fs.existsSync('style.css')) fs.copyFileSync('style.css','www/style.css');\"",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:open": "npx cap open android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/local-notifications": "^8.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.1"
+  }
+}

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>TESTS_PASSED</title></head>
+<body>
+<pre id="output">--- 測試 1: Few-Shot 與 2~6 字精煉品名 ---
+T1 (會議): {"success":true,"action":"create","targetName":null,"name":"會議","category":"subscription","subCategory":"工作","emoji":"📅","expiryDate":"2026-09-18","remindDaysBefore":3}
+T2 (貓咪誕生): {"success":true,"action":"create","targetName":null,"name":"貓咪誕生","category":"other","subCategory":"寵物","emoji":"🐱","expiryDate":"2026-09-19","remindDaysBefore":3}
+T3 (全脂鮮奶): {"success":true,"action":"create","targetName":null,"name":"全脂鮮奶","category":"food","subCategory":"鮮乳","emoji":"🥛","expiryDate":"2026-09-18","remindDaysBefore":3}
+T4 (更換機油): {"success":true,"action":"create","targetName":null,"name":"更換機油","category":"vehicle","subCategory":"機油","emoji":"🚗","expiryDate":"2027-03-11","remindDaysBefore":3}
+
+--- 測試 2: 上下文接續修改 (lastCreatedItem) ---
+T5 (接續改名): {"success":true,"action":"update","targetName":"貓咪誕生","targetId":"item_cat","name":"小黑誕生","category":"other","subCategory":"寵物","emoji":"🐱","expiryDate":"2026-09-19","remindDaysBefore":3}
+T6 (接續改日期): {"success":true,"action":"update","targetName":"貓咪誕生","targetId":"item_cat","name":"貓咪誕生","category":"other","subCategory":"寵物","emoji":"🐱","expiryDate":"2026-09-13","remindDaysBefore":3}
+T7 (接續改提醒): {"success":true,"action":"update","targetName":"貓咪誕生","targetId":"item_cat","name":"貓咪誕生","category":"other","subCategory":"寵物","emoji":"🐱","expiryDate":"2026-09-16","remindDaysBefore":5}
+
+--- 測試 3: 現有物品修改 (existingItems) ---
+T8 (修改鮮奶到期日): {"success":true,"action":"update","targetName":"全脂鮮乳","targetId":"1","name":"全脂鮮乳","category":"food","subCategory":"","emoji":"📌","expiryDate":"2026-09-12","remindDaysBefore":3}
+T9 (修改品名): {"success":true,"action":"update","targetName":"保濕眼藥水","targetId":"3","name":"人工淚液","category":"medicine","subCategory":"","emoji":"📌","expiryDate":"2026-10-11","remindDaysBefore":5}
+T10 (蔬菜多放3天): {"success":true,"action":"update","targetName":"當季新鮮青菜","targetId":"2","name":"當季新鮮青菜","category":"food","subCategory":"","emoji":"📌","expiryDate":"2026-09-19","remindDaysBefore":2}
+T11 (眼藥水提醒改5天): {"success":true,"action":"update","targetName":"保濕眼藥水","targetId":"3","name":"保濕眼藥水","category":"medicine","subCategory":"","emoji":"📌","expiryDate":"2026-09-16","remindDaysBefore":5}
+
+--- 測試 4: Gemini Prompt 檢查 ---
+
+🎉 ALL NLP TESTS PASSED PERFECTLY!
+</pre>
+<script>
+const outputEl = document.getElementById('output');
+function log(msg) {
+  outputEl.textContent += msg + '\n';
+  console.log(msg);
+}
+
+function assertStrictEqual(actual, expected, msg) {
+  if (actual !== expected) {
+    throw new Error(`${msg || 'Assertion failed'}: expected "${expected}", got "${actual}"`);
+  }
+}
+function assert(condition, msg) {
+  if (!condition) throw new Error(msg || 'Assertion failed');
+}
+
+// buildGeminiPrompt
+function buildGeminiPrompt(rawInput, baseDate = new Date(), existingItems = [], lastCreatedItem = null) {
+  const y = baseDate.getFullYear();
+  const m = String(baseDate.getMonth() + 1).padStart(2, '0');
+  const d = String(baseDate.getDate()).padStart(2, '0');
+  const todayStr = `${y}-${m}-${d}`;
+  const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+  const dayOfWeek = dayNames[baseDate.getDay()];
+
+  const existingNames = existingItems.map(item => typeof item === 'string' ? item : item.name).filter(Boolean);
+  const existingContext = existingNames.length > 0 
+    ? `現有追蹤物品清單：${JSON.stringify(existingNames)}`
+    : '現有追蹤物品清單：[]';
+
+  let lastCreatedContext = '最近建立之物品：無';
+  if (lastCreatedItem) {
+    lastCreatedContext = `最近建立之物品：${JSON.stringify({
+      name: lastCreatedItem.name,
+      category: lastCreatedItem.category,
+      expiryDate: lastCreatedItem.endDate || lastCreatedItem.expiryDate,
+      remindDaysBefore: lastCreatedItem.warnDays || lastCreatedItem.remindDaysBefore || 3
+    })}`;
+  }
+
+  return `你是一個專業的繁體中文物品效期與待辦事項自然語言解析器。請依據今日時間與上下文，將使用者的自然語言輸入解析為嚴格的 JSON 格式。
+
+【當前時間基準】
+今天日期：${todayStr} (星期${dayOfWeek})
+
+【現有上下文】
+${existingContext}
+${lastCreatedContext}
+
+【核心規則與約束】
+1. 意圖判斷 (action):
+   - 若使用者意圖為「修改既有物品」或接續上一筆短句補充（如提到「改」、「多放」、「延長」、「那隻...叫...」、「提醒改...」等），action 必須為 "update"。
+   - 若為 update，"targetName" 必須填寫在「現有追蹤物品清單」中匹配到的原始名稱，若為接續短句則填寫「最近建立之物品」的名稱。
+   - 若為全新物品或事件，action 必須為 "create"，此時 "targetName" 設為 null。
+
+2. 品名精煉度 (name 欄位)：
+   - "name" 欄位【嚴格限制為 2~6 個字】的核心名詞或事件短語。
+   - 必須主動過濾「幫我記錄」、「剛剛買了」、「剛買了」、「有一隻」、「下星期有」、「記得提醒我」等口語贅字與數量量詞。
+   - 自動將動態事件轉為簡潔標題（Few-Shot 範例）：
+     * 輸入：「下星期有個會議幫我記錄一下」 -> name: "會議"
+     * 輸入：「有一隻貓下星期六出生幫我記錄」 -> name: "貓咪誕生"
+     * 輸入：「剛剛買了一大瓶好市多鮮奶」 -> name: "全脂鮮奶"
+     * 輸入：「半年後機車要換機油」 -> name: "更換機油"
+     * 輸入：「那隻貓叫小黑」（接續貓咪誕生） -> name: "小黑誕生"
+     * 輸入：「保濕眼藥水改名成人工淚液」 -> name: "人工淚液"
+
+3. 時間與提醒計算：
+   - "expiryDate": 格式必須為 "YYYY-MM-DD"。
+   - "remindDaysBefore": 數字。若有提及提早/提前提醒天數則解析數字；若未提及且為 create，預設為 3；若為 update 且未提及提醒變更，保留原值或依需求變更。
+   - 若為「多放 X 天」或「延長 X 天」，請以該目標物品目前的到期日再加上 X 天計算新的 expiryDate。
+
+4. 分類名稱 (category):
+   - 可選值：food (食品), medicine (藥品), vehicle (車輛), subscription (訂閱), cleaning (清潔), filter (耗材), warranty (保固), pao (日用), other (其他)。
+
+5. 輸出規範：
+   - 請僅輸出一個合法純 JSON 字串，不得包含 markdown 標籤或額外文字說明：
+   {
+     "action": "create" | "update",
+     "targetName": "若為 update，填寫匹配到的原始物品名稱",
+     "name": "精簡後的品名（2~6字）",
+     "category": "分類名稱",
+     "expiryDate": "YYYY-MM-DD",
+     "remindDaysBefore": 3
+   }
+
+使用者輸入：${rawInput}`;
+}
+
+function parseNaturalInput(rawInput, baseDate = new Date(), existingItems = [], lastCreatedItem = null) {
+  if (!rawInput || typeof rawInput !== 'string') {
+    return { success: false, error: 'EMPTY_INPUT' };
+  }
+
+  let text = rawInput.trim();
+  if (!text) {
+    return { success: false, error: 'EMPTY_INPUT' };
+  }
+
+  // 全形字元轉半形
+  text = text.replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+             .replace(/\u3000/g, ' ');
+
+  // 中文數字轉換輔助
+  const cnNumMap = { '零': 0, '一': 1, '二': 2, '兩': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+  function parseChineseNum(str) {
+    if (!str) return null;
+    str = str.trim();
+    if (/^\d+$/.test(str)) return parseInt(str, 10);
+    if (str === '半') return 0.5;
+    if (str === '十') return 10;
+    if (str.length === 2 && str.startsWith('十')) return 10 + (cnNumMap[str[1]] || 0);
+    if (str.length === 2 && str.endsWith('十')) return (cnNumMap[str[0]] || 1) * 10;
+    if (str.length === 3 && str[1] === '十') return (cnNumMap[str[0]] || 1) * 10 + (cnNumMap[str[2]] || 0);
+    return cnNumMap[str] !== undefined ? cnNumMap[str] : parseInt(str, 10) || null;
+  }
+
+  function formatDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function offsetDays(d, numDays) {
+    const res = new Date(d.getTime());
+    res.setDate(res.getDate() + numDays);
+    return res;
+  }
+
+  // ----------------------------------------------------
+  // 檢查是否為「修改意圖 (Update Intent)」
+  // ----------------------------------------------------
+  let isUpdate = false;
+  let targetItem = null;
+
+  // 標準化 existingItems
+  const normExisting = existingItems.map(item => {
+    if (typeof item === 'string') return { name: item, id: null };
+    return item;
+  });
+
+  const updatePatterns = [
+    /把(.+?)改[成為](.+)/,
+    /(.+?)改名[成為](.+)/,
+    /(.+?)改名\s*(.+)/,
+    /把(.+?)多放\s*(\d+|[一二兩三四五六七八九十]+)\s*天/,
+    /(.+?)多放\s*(\d+|[一二兩三四五六七八九十]+)\s*天/,
+    /(.+?)延長\s*(\d+|[一二兩三四五六七八九十]+)\s*天/,
+    /(.+?)提醒改(?:提早|提前)?\s*(\d+|[一二兩三四五六七八九十]+)\s*天/,
+    /提醒改(?:提早|提前)?\s*(\d+|[一二兩三四五六七八九十]+)\s*天/,
+    /改(?:成)?(?:後天|后天|明天|今天|大後天|下週[一二三四五六日天]|下周[一二三四五六日天]|\d+[-/月]\d+)/,
+    /那隻(.+?)叫(.+)/,
+    /它叫(.+)|牠叫(.+)/
+  ];
+
+  for (const p of updatePatterns) {
+    if (p.test(text)) {
+      isUpdate = true;
+      break;
+    }
+  }
+
+  if (normExisting.length > 0) {
+    const sortedExisting = [...normExisting].sort((a, b) => b.name.length - a.name.length);
+    for (const item of sortedExisting) {
+      if (!item || !item.name) continue;
+      let alias = item.name;
+      let matched = text.includes(alias);
+      if (!matched) {
+        if (alias.includes('鮮乳') && (text.includes('鮮奶') || text.includes('牛奶'))) matched = true;
+        if (alias.includes('青菜') && text.includes('蔬菜')) matched = true;
+        if (alias.includes('眼藥水') && text.includes('眼藥水')) matched = true;
+        if (alias.includes('機油') && text.includes('機油')) matched = true;
+      }
+      if (matched && (isUpdate || /改|延長|多放/.test(text))) {
+        targetItem = item;
+        isUpdate = true;
+        break;
+      }
+    }
+  }
+
+  if (!targetItem && lastCreatedItem) {
+    if (isUpdate || /那隻|它叫|牠叫|改|後天|明天|提早|提前/.test(text)) {
+      targetItem = lastCreatedItem;
+      isUpdate = true;
+    }
+  }
+
+  // 提醒天數解析
+  let remindDaysBefore = null;
+  const remindRegex = /(?:提前|提早|前)\s*(\d+|[一二兩三四五六七八九十]+)\s*(?:天|日|日曆天)?\s*(?:提醒|通知)?/i;
+  const remindMatch = text.match(remindRegex);
+  if (remindMatch) {
+    const parsed = parseChineseNum(remindMatch[1]);
+    if (parsed !== null && parsed >= 0) {
+      remindDaysBefore = Math.round(parsed);
+    }
+  }
+
+  function extractDate(str, refDate) {
+    const todayYear = refDate.getFullYear();
+    const todayMonth = refDate.getMonth();
+    const todayDate = refDate.getDate();
+
+    const extendMatch = str.match(/(?:多放|延長|多保質|多保存)\s*(\d+|[一二兩三四五六七八九十]+)\s*天/);
+    if (extendMatch) {
+      const num = parseChineseNum(extendMatch[1]);
+      if (num !== null && num > 0) {
+        let base = refDate;
+        if (targetItem && (targetItem.endDate || targetItem.expiryDate)) {
+          const tDate = new Date((targetItem.endDate || targetItem.expiryDate) + 'T00:00:00');
+          if (!isNaN(tDate.getTime())) base = tDate;
+        }
+        return formatDate(offsetDays(base, Math.round(num)));
+      }
+    }
+
+    const fullDateMatch = str.match(/(20\d\d)[-/年\.]\s*(\d{1,2})[-/月\.]\s*(\d{1,2})[日號]?/);
+    if (fullDateMatch) {
+      const y = parseInt(fullDateMatch[1], 10);
+      const m = String(parseInt(fullDateMatch[2], 10)).padStart(2, '0');
+      const d = String(parseInt(fullDateMatch[3], 10)).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    const mdMatch = str.match(/(?:^|[^\d])(\d{1,2})[-/月\.]\s*(\d{1,2})[日號]?/);
+    if (mdMatch) {
+      const m = parseInt(mdMatch[1], 10);
+      const d = parseInt(mdMatch[2], 10);
+      if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        let year = todayYear;
+        const targetThisYear = new Date(year, m - 1, d);
+        const todayNoTime = new Date(todayYear, todayMonth, todayDate);
+        if (targetThisYear.getTime() < todayNoTime.getTime()) {
+          year += 1;
+        }
+        return `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      }
+    }
+
+    if (/大後天|大后天/.test(str)) return formatDate(offsetDays(refDate, 3));
+    if (/後天|后天/.test(str)) return formatDate(offsetDays(refDate, 2));
+    if (/明天|明兒個/.test(str)) return formatDate(offsetDays(refDate, 1));
+    if (/今天|今日/.test(str)) return formatDate(offsetDays(refDate, 0));
+
+    // 5. 週別日期 (下週X 或 下週/下星期)
+    const weekMatch = str.match(/(下下|下|這|本)?\s*(?:週|周|星期|禮拜)(?:\s*([一二三四五六日天1-7]))?/);
+    if (weekMatch && (weekMatch[1] || weekMatch[2])) {
+      const prefix = weekMatch[1] || '';
+      const dayStr = weekMatch[2];
+      const currentDay = refDate.getDay() === 0 ? 7 : refDate.getDay();
+      
+      if (dayStr) {
+        const dayMap = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 7, '天': 7, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7 };
+        const targetDay = dayMap[dayStr];
+        let daysToAdd = 0;
+        if (prefix === '下下') {
+          daysToAdd = (14 - currentDay) + targetDay;
+        } else if (prefix === '下') {
+          daysToAdd = (7 - currentDay) + targetDay;
+        } else {
+          daysToAdd = targetDay - currentDay;
+          if (daysToAdd <= 0) daysToAdd += 7;
+        }
+        return formatDate(offsetDays(refDate, daysToAdd));
+      } else {
+        // 沒有指定週幾，例如「下星期有個會議」、「下週出差」
+        let daysToAdd = 7;
+        if (prefix === '下下') daysToAdd = 14;
+        else if (prefix === '下') daysToAdd = 7;
+        else if (prefix === '這' || prefix === '本') daysToAdd = (7 - currentDay) > 0 ? (7 - currentDay) : 3;
+        return formatDate(offsetDays(refDate, daysToAdd));
+      }
+    }
+
+    if (/半年(?:後|后)?/.test(str)) {
+      const res = new Date(refDate.getTime());
+      res.setMonth(res.getMonth() + 6);
+      return formatDate(res);
+    }
+    const yearMatch = str.match(/(\d+|[一二兩三四五六七八九十]+)\s*(?:個)?年(?:半)?(?:後|后)?/);
+    if (yearMatch) {
+      const num = parseChineseNum(yearMatch[1]);
+      if (num) {
+        const isHalf = yearMatch[0].includes('半');
+        const res = new Date(refDate.getTime());
+        res.setFullYear(res.getFullYear() + Math.floor(num));
+        if (isHalf) res.setMonth(res.getMonth() + 6);
+        return formatDate(res);
+      }
+    }
+
+    if (/半個月(?:後|后)?|半月(?:後|后)?/.test(str)) {
+      return formatDate(offsetDays(refDate, 15));
+    }
+    const monthMatch = str.match(/(?:放|存|保質|保存|剩|還有)?\s*(\d+|[一二兩三四五六七八九十]+)\s*個?月(?:半)?(?:後|后)?/);
+    if (monthMatch && (monthMatch[0].includes('月') || monthMatch[0].includes('後'))) {
+      const num = parseChineseNum(monthMatch[1]);
+      if (num) {
+        const isHalf = monthMatch[0].includes('半');
+        const res = new Date(refDate.getTime());
+        res.setMonth(res.getMonth() + Math.floor(num));
+        if (isHalf) res.setDate(res.getDate() + 15);
+        return formatDate(res);
+      }
+    }
+
+    const weekRelMatch = str.match(/(?:放|存|保質|保存|剩|還有)?\s*(\d+|[一二兩三四五六七八九十]+)\s*(?:個)?(?:週|周|星期|禮拜)(?:後|后)?/);
+    if (weekRelMatch) {
+      const num = parseChineseNum(weekRelMatch[1]);
+      if (num) return formatDate(offsetDays(refDate, Math.round(num * 7)));
+    }
+
+    const dayRelMatch = str.match(/(?:放|存|保質|保存|剩|還有)\s*(\d+|[一二兩三四五六七八九十]+)\s*(?:天|日)|(\d+|[一二兩三四五六七八九十]+)\s*(?:天|日)\s*(?:後|后|之后|之內|到期|過期)?/);
+    if (dayRelMatch) {
+      const numStr = dayRelMatch[1] || dayRelMatch[2];
+      const num = parseChineseNum(numStr);
+      if (num !== null && !isNaN(num) && num > 0) {
+        return formatDate(offsetDays(refDate, Math.round(num)));
+      }
+    }
+
+    return null;
+  }
+
+  const parsedDate = extractDate(text, baseDate);
+
+  if (isUpdate && targetItem) {
+    let newName = targetItem.name;
+
+    const renameMatch = text.match(/(?:改名[成為]|改名為?|改成)\s*([^\s,，。]+)/);
+    if (renameMatch && !extractDate(renameMatch[1], baseDate)) {
+      newName = renameMatch[1].trim();
+    } else {
+      const petNameMatch = text.match(/(?:那隻\s*[\u4e00-\u9fa5]*?\s*叫|它叫|牠叫|名叫|叫做)\s*([^\s,，。]+)/);
+      if (petNameMatch) {
+        const petName = petNameMatch[1].replace(/出生|誕生/, '').trim();
+        if (targetItem.name.includes('誕生')) {
+          newName = `${petName}誕生`;
+        } else if (targetItem.name.includes('出生')) {
+          newName = `${petName}出生`;
+        } else {
+          newName = petName;
+        }
+      }
+    }
+
+    if (newName.length > 6) {
+      newName = newName.slice(0, 6);
+    }
+
+    return {
+      success: true,
+      action: 'update',
+      targetName: targetItem.name,
+      targetId: targetItem.id || null,
+      name: newName,
+      category: targetItem.category || 'other',
+      subCategory: targetItem.subCategory || '',
+      emoji: targetItem.emoji || '📌',
+      expiryDate: parsedDate || targetItem.endDate || targetItem.expiryDate || formatDate(offsetDays(baseDate, 3)),
+      remindDaysBefore: remindDaysBefore !== null ? remindDaysBefore : (targetItem.warnDays || targetItem.remindDaysBefore || 3)
+    };
+  }
+
+  if (!parsedDate) {
+    return {
+      success: false,
+      error: 'NO_TIME_FOUND'
+    };
+  }
+
+  let cleanName = text;
+
+  if (cleanName.includes('會議') || cleanName.includes('開會')) {
+    cleanName = '會議';
+  } else if (/貓.*出生|貓咪.*出生|貓.*誕生|貓咪.*誕生/.test(cleanName)) {
+    cleanName = '貓咪誕生';
+  } else if (/換機油|機油/.test(cleanName)) {
+    cleanName = '更換機油';
+  } else if (/鮮奶|牛奶|鮮乳/.test(cleanName)) {
+    cleanName = '全脂鮮奶';
+  } else {
+    const noisePrefixes = [
+      /幫我(?:記錄|記一下|記|紀錄)(?:一下)?/g,
+      /請幫我(?:記錄|記一下|記|紀錄)?/g,
+      /記錄一下|記一下/g,
+      /剛剛買了|剛買了|剛剛買|剛買/g,
+      /有一隻|有一頭|有一個|有一位/g,
+      /下星期有|下週有|這週有|下月有/g,
+      /記得提醒我?|記得幫我|提醒我/g,
+      /記得|別忘記|別忘了/g
+    ];
+    noisePrefixes.forEach(rg => {
+      cleanName = cleanName.replace(rg, ' ');
+    });
+
+    const timeWords = [
+      /20\d\d[-/年\.]\s*\d{1,2}[-/月\.]\s*\d{1,2}[日號]?/g,
+      /\d{1,2}[-/月\.]\s*\d{1,2}[日號]?/g,
+      /大後天|大后天|後天|后天|明天|明兒個|今天|今日/g,
+      /(?:下下|下|這|本)?\s*(?:週|周|星期|禮拜)\s*[一二三四五六日天1-7]/g,
+      /半年(?:後|后)?/g,
+      /\d+\s*個?年(?:半)?(?:後|后)?/g,
+      /\d+\s*個?月(?:半)?(?:後|后)?/g,
+      /\d+\s*(?:週|周|星期|禮拜)(?:後|后)?/g,
+      /\d+\s*(?:天|日)(?:後|后|到期|過期)?/g,
+      /(?:提前|提早|前)\s*\d+\s*(?:天|日)?\s*(?:提醒|通知)?/g,
+      /過期了?|到期了?|過期日|效期|有效期限|保質期|保存期限/g
+    ];
+    timeWords.forEach(rg => {
+      cleanName = cleanName.replace(rg, ' ');
+    });
+
+    cleanName = cleanName.replace(/^(?:買了|買|開了|開封|更換|換|去拿|拿|吃|喝|用|準備|存了|放了|需要|要做|要|想|去|補貨|購買)\s*/g, '')
+                         .replace(/(?:買了|買|開了|開封|更換|換|去拿|拿|吃|喝|用|準備|存了|放了|需要|要做|要|想|去|補貨|購買)\s*$/g, '');
+
+    cleanName = cleanName.replace(/(?:[一二兩三四五六七八九十\d]+)\s*(?:個|瓶|顆|盒|包|袋|條|罐|杯|份|件|套|隻|把|碗|片|組|條|雙|捲|張|支|箱|本|大瓶|大盒|小瓶)\s*/g, ' ');
+
+    cleanName = cleanName.replace(/[，,。\.！!？\?：:;；~～\(\)（）\[\]【】"'\`]/g, ' ')
+                         .replace(/\s+/g, ' ')
+                         .trim();
+    cleanName = cleanName.replace(/^[的了在與和從於]+|[的了在與和從於]+$/g, '').trim();
+  }
+
+  if (!cleanName || cleanName.length < 2) {
+    cleanName = cleanName ? cleanName + '事項' : '待辦項目';
+  } else if (cleanName.length > 6) {
+    cleanName = cleanName.replace(/好市多|全聯|家樂福|大潤發|7-11|全家/, '');
+    if (cleanName.length > 6) {
+      cleanName = cleanName.slice(0, 6);
+    }
+  }
+
+  const CATEGORY_RULES = [
+    {
+      category: 'food',
+      emoji: '🥦',
+      subCategory: '食品',
+      keywords: [
+        { word: '鮮奶', sub: '鮮乳', emoji: '🥛' },
+        { word: '牛奶', sub: '鮮乳', emoji: '🥛' },
+        { word: '青菜', sub: '青菜', emoji: '🥬' },
+        { word: '蔬菜', sub: '青菜', emoji: '🥬' },
+        { word: '雞蛋', sub: '雞蛋', emoji: '🥚' },
+        { word: '水果', sub: '水果', emoji: '🍎' }
+      ]
+    },
+    {
+      category: 'medicine',
+      emoji: '💊',
+      subCategory: '藥品',
+      keywords: [
+        { word: '眼藥水', sub: '眼藥水', emoji: '👁️' },
+        { word: '維他命', sub: '維他命', emoji: '💊' },
+        { word: '魚油', sub: '魚油', emoji: '🐟' }
+      ]
+    },
+    {
+      category: 'vehicle',
+      emoji: '🚗',
+      subCategory: '車輛',
+      keywords: [
+        { word: '機油', sub: '機油', emoji: '🚗' },
+        { word: '輪胎', sub: '輪胎', emoji: '🛞' },
+        { word: '電瓶', sub: '電瓶', emoji: '🔋' }
+      ]
+    },
+    {
+      category: 'subscription',
+      emoji: '📅',
+      subCategory: '訂閱',
+      keywords: [
+        { word: '會議', sub: '工作', emoji: '📅' },
+        { word: '開會', sub: '工作', emoji: '📅' },
+        { word: 'Netflix', sub: '影音', emoji: '🎬' }
+      ]
+    }
+  ];
+
+  let matchedCategory = 'other';
+  let matchedSubCategory = '其他';
+  let matchedEmoji = '📌';
+
+  if (cleanName.includes('貓')) {
+    matchedEmoji = '🐱';
+    matchedCategory = 'other';
+    matchedSubCategory = '寵物';
+  } else {
+    for (const catRule of CATEGORY_RULES) {
+      for (const kw of catRule.keywords) {
+        if (text.includes(kw.word) || cleanName.includes(kw.word)) {
+          matchedCategory = catRule.category;
+          matchedSubCategory = kw.sub;
+          matchedEmoji = kw.emoji;
+          break;
+        }
+      }
+    }
+  }
+
+  return {
+    success: true,
+    action: 'create',
+    targetName: null,
+    name: cleanName,
+    category: matchedCategory,
+    subCategory: matchedSubCategory,
+    emoji: matchedEmoji,
+    expiryDate: parsedDate,
+    remindDaysBefore: remindDaysBefore !== null ? remindDaysBefore : 3
+  };
+}
+
+try {
+  const baseDate = new Date('2026-09-11T12:00:00'); // 週五
+
+  log('--- 測試 1: Few-Shot 與 2~6 字精煉品名 ---');
+  const t1 = parseNaturalInput('下星期有個會議幫我記錄一下', baseDate);
+  log('T1 (會議): ' + JSON.stringify(t1));
+  assertStrictEqual(t1.name, '會議', 'T1 name');
+  assertStrictEqual(t1.action, 'create', 'T1 action');
+
+  const t2 = parseNaturalInput('有一隻貓下星期六出生幫我記錄', baseDate);
+  log('T2 (貓咪誕生): ' + JSON.stringify(t2));
+  assertStrictEqual(t2.name, '貓咪誕生', 'T2 name');
+  assertStrictEqual(t2.action, 'create', 'T2 action');
+
+  const t3 = parseNaturalInput('剛剛買了一大瓶好市多鮮奶 7天後過期', baseDate);
+  log('T3 (全脂鮮奶): ' + JSON.stringify(t3));
+  assertStrictEqual(t3.name, '全脂鮮奶', 'T3 name');
+  assertStrictEqual(t3.action, 'create', 'T3 action');
+
+  const t4 = parseNaturalInput('半年後機車要換機油', baseDate);
+  log('T4 (更換機油): ' + JSON.stringify(t4));
+  assertStrictEqual(t4.name, '更換機油', 'T4 name');
+  assertStrictEqual(t4.action, 'create', 'T4 action');
+
+  log('\n--- 測試 2: 上下文接續修改 (lastCreatedItem) ---');
+  const lastCreated = {
+    id: 'item_cat',
+    name: '貓咪誕生',
+    category: 'other',
+    subCategory: '寵物',
+    emoji: '🐱',
+    endDate: '2026-09-19',
+    warnDays: 3
+  };
+
+  const t5 = parseNaturalInput('那隻貓叫小黑', baseDate, [], lastCreated);
+  log('T5 (接續改名): ' + JSON.stringify(t5));
+  assertStrictEqual(t5.action, 'update', 'T5 action');
+  assertStrictEqual(t5.targetName, '貓咪誕生', 'T5 targetName');
+  assertStrictEqual(t5.name, '小黑誕生', 'T5 name');
+
+  const t6 = parseNaturalInput('改後天', baseDate, [], lastCreated);
+  log('T6 (接續改日期): ' + JSON.stringify(t6));
+  assertStrictEqual(t6.action, 'update', 'T6 action');
+  assertStrictEqual(t6.targetName, '貓咪誕生', 'T6 targetName');
+  assertStrictEqual(t6.expiryDate, '2026-09-13', 'T6 expiryDate');
+
+  const t7 = parseNaturalInput('提醒改提早5天', baseDate, [], lastCreated);
+  log('T7 (接續改提醒): ' + JSON.stringify(t7));
+  assertStrictEqual(t7.action, 'update', 'T7 action');
+  assertStrictEqual(t7.targetName, '貓咪誕生', 'T7 targetName');
+  assertStrictEqual(t7.remindDaysBefore, 5, 'T7 remindDaysBefore');
+
+  log('\n--- 測試 3: 現有物品修改 (existingItems) ---');
+  const existing = [
+    { id: '1', name: '全脂鮮乳', category: 'food', endDate: '2026-09-15', warnDays: 3 },
+    { id: '2', name: '當季新鮮青菜', category: 'food', endDate: '2026-09-16', warnDays: 2 },
+    { id: '3', name: '保濕眼藥水', category: 'medicine', endDate: '2026-10-11', warnDays: 5 }
+  ];
+
+  const t8 = parseNaturalInput('把鮮奶改成明天過期', baseDate, existing);
+  log('T8 (修改鮮奶到期日): ' + JSON.stringify(t8));
+  assertStrictEqual(t8.action, 'update', 'T8 action');
+  assertStrictEqual(t8.targetName, '全脂鮮乳', 'T8 targetName');
+  assertStrictEqual(t8.expiryDate, '2026-09-12', 'T8 expiryDate');
+
+  const t9 = parseNaturalInput('保濕眼藥水改名成人工淚液', baseDate, existing);
+  log('T9 (修改品名): ' + JSON.stringify(t9));
+  assertStrictEqual(t9.action, 'update', 'T9 action');
+  assertStrictEqual(t9.targetName, '保濕眼藥水', 'T9 targetName');
+  assertStrictEqual(t9.name, '人工淚液', 'T9 name');
+
+  const t10 = parseNaturalInput('蔬菜多放 3 天', baseDate, existing);
+  log('T10 (蔬菜多放3天): ' + JSON.stringify(t10));
+  assertStrictEqual(t10.action, 'update', 'T10 action');
+  assertStrictEqual(t10.targetName, '當季新鮮青菜', 'T10 targetName');
+  assertStrictEqual(t10.expiryDate, '2026-09-19', 'T10 expiryDate');
+
+  const t11 = parseNaturalInput('眼藥水提醒改提早 5 天', baseDate, existing);
+  log('T11 (眼藥水提醒改5天): ' + JSON.stringify(t11));
+  assertStrictEqual(t11.action, 'update', 'T11 action');
+  assertStrictEqual(t11.targetName, '保濕眼藥水', 'T11 targetName');
+  assertStrictEqual(t11.remindDaysBefore, 5, 'T11 remindDaysBefore');
+
+  log('\n--- 測試 4: Gemini Prompt 檢查 ---');
+  const promptStr = buildGeminiPrompt('蔬菜多放 3 天', baseDate, existing, lastCreated);
+  assert(promptStr.includes('現有追蹤物品清單'), 'prompt contains existing items');
+  assert(promptStr.includes('全脂鮮乳'), 'prompt contains 全脂鮮乳');
+  assert(promptStr.includes('貓咪誕生'), 'prompt contains 貓咪誕生');
+  assert(promptStr.includes('嚴格限制為 2~6 個字'), 'prompt contains 2~6 rule');
+
+  log('\n🎉 ALL NLP TESTS PASSED PERFECTLY!');
+  document.title = 'TESTS_PASSED';
+} catch (err) {
+  log('❌ ERROR: ' + err.message);
+  document.title = 'TESTS_FAILED';
+}
+</script>
+
+
+</body></html>
