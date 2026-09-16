@@ -2965,6 +2965,10 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
  * 使用 Promise.all 同步啟動視覺外觀 (MobileNet) 與 文字效期 (Tesseract OCR)
  */
 async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
+  if (isMobileClipTestMode()) {
+    console.warn('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，跳過 analyzeSmartCameraDualTrack');
+    return null;
+  }
   // 1. 最優先判定原生條碼 (ISBN 或一般條碼)
   const barcodeImmediate = await scanBarcodePriority(imageSource);
   if (barcodeImmediate && barcodeImmediate.isIsbn) {
@@ -3429,6 +3433,10 @@ async function initVlmModel(onProgress) {
  * 使用者開啟相機或進入畫面時自動在背景靜默預載，首次下載喚起 #modelLoadingOverlay
  */
 async function initVisionModel(onProgress) {
+  if (isMobileClipTestMode()) {
+    console.log('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，略過 SmolVLM / MobileNet 預載');
+    return null;
+  }
   const isDebug = isCameraDebug();
   const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
   if (isDebug) {
@@ -4117,6 +4125,10 @@ function formatVlmResult(result, photoDataUrl, skipDom = false) {
  * 端側視覺語言大模型辨識核心 (支援 WebGPU 環境檢查、8秒超時控制與舊版雙軌降級)
  */
 async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
+  if (isMobileClipTestMode()) {
+    console.warn('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，跳過 analyzeSmartCameraWithVlm');
+    return null;
+  }
   const isDebug = isCameraDebug();
 
   // 1. 執行前先偵測使用者裝置環境 (WebGPU 檢查)
@@ -4347,6 +4359,290 @@ async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
 }
 
 // ==========================================
+// 7.8 獨立 MobileCLIP 測試套件 (Xenova/mobileclip_s0 WASM) - 僅供手機手動測試相容性
+// ==========================================
+let mobileClipPipeline = null;
+let mobileClipLoadingPromise = null;
+
+const MOBILECLIP_TEST_CANDIDATES = [
+  'a carton or bottle of fresh milk',
+  'a bottle of shampoo',
+  'a bottle of body wash',
+  'a tube of toothpaste',
+  'a food snack package',
+  'a medicine or supplement bottle',
+  'an air purifier filter',
+  'a water filter cartridge',
+  'a comic book',
+  'a video game',
+  'a collectible figure or toy',
+  'an unknown household item'
+];
+
+/**
+ * 判斷是否啟用 MobileCLIP 手機測試模式
+ * 僅在網址包含 ?mobilecliptest=1 時啟用
+ */
+function isMobileClipTestMode() {
+  if (typeof window === 'undefined' || !window.location) return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mobilecliptest') === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+async function initMobileClipTest(onProgress = null) {
+  if (mobileClipPipeline) {
+    return mobileClipPipeline;
+  }
+  if (mobileClipLoadingPromise) {
+    return mobileClipLoadingPromise;
+  }
+
+  mobileClipLoadingPromise = (async () => {
+    console.log('[MOBILECLIP TEST] loading start');
+    console.log('[MOBILECLIP TEST] backend: WASM');
+    const loadStartTime = performance.now();
+
+    try {
+      let tf = null;
+      if (typeof window !== 'undefined' && window.transformersLib) {
+        tf = window.transformersLib;
+      } else if (typeof getVisionEngine === 'function') {
+        tf = await getVisionEngine();
+      } else {
+        tf = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.1');
+      }
+
+      if (!tf || !tf.pipeline) {
+        throw new Error('Transformers.js pipeline 函式無法取得');
+      }
+
+      // 確保啟用瀏覽器快取 (browser cache)
+      if (tf.env) {
+        tf.env.useBrowserCache = true;
+        tf.env.allowLocalModels = false;
+      }
+
+      const pipelineFn = tf.pipeline;
+
+      const progressCallback = (p) => {
+        if (!p) return;
+        if (p.status === 'progress' && typeof p.progress === 'number') {
+          console.log(`[MOBILECLIP TEST] download progress: ${p.file || ''} ${p.progress.toFixed(1)}%`);
+          if (typeof onProgress === 'function') {
+            onProgress(p.progress, p.file);
+          }
+        } else if (p.status === 'done') {
+          console.log(`[MOBILECLIP TEST] download progress: ${p.file || ''} [done]`);
+          if (typeof onProgress === 'function') {
+            onProgress(100, p.file);
+          }
+        } else if (p.status) {
+          console.log(`[MOBILECLIP TEST] download progress: ${p.file || ''} [${p.status}]`);
+        }
+      };
+
+      let pipe = null;
+      let usedDtype = 'q8';
+      console.log('[MOBILECLIP TEST] dtype requested: q8');
+
+      try {
+        // 優先以 q8 載入，不指定 device: 'webgpu'，使用瀏覽器預設 WASM backend
+        pipe = await pipelineFn('zero-shot-image-classification', 'Xenova/mobileclip_s0', {
+          dtype: 'q8',
+          progress_callback: progressCallback
+        });
+      } catch (q8Err) {
+        console.warn('[MOBILECLIP TEST] dtype q8 載入失敗，嘗試 fallback 到 int8:', q8Err);
+        console.log('[MOBILECLIP TEST] dtype requested: int8');
+        usedDtype = 'int8';
+        try {
+          pipe = await pipelineFn('zero-shot-image-classification', 'Xenova/mobileclip_s0', {
+            dtype: 'int8',
+            progress_callback: progressCallback
+          });
+        } catch (int8Err) {
+          console.error('[MOBILECLIP TEST] ERROR: int8 載入亦失敗，停止載入（禁止自動使用 fp32）', int8Err && int8Err.stack ? int8Err.stack : int8Err);
+          throw int8Err;
+        }
+      }
+
+      mobileClipPipeline = pipe;
+      const loadDurationMs = (performance.now() - loadStartTime).toFixed(1);
+      console.log(`[MOBILECLIP TEST] model ready (載入耗時: ${loadDurationMs} ms, dtype: ${usedDtype})`);
+      return mobileClipPipeline;
+    } catch (error) {
+      console.error('[MOBILECLIP TEST] ERROR', error && error.stack ? error.stack : error);
+      mobileClipPipeline = null;
+      throw error;
+    } finally {
+      mobileClipLoadingPromise = null;
+    }
+  })();
+
+  return mobileClipLoadingPromise;
+}
+
+async function testMobileClip(imageDataUrl, candidateLabels = MOBILECLIP_TEST_CANDIDATES, onProgress = null) {
+  try {
+    if (!imageDataUrl) {
+      const err = new Error('請提供圖片參數 imageDataUrl (例如 Data URL、圖片網址或 Image 元素)');
+      console.error('[MOBILECLIP TEST] ERROR', err.stack || err);
+      throw err;
+    }
+
+    const pipe = await initMobileClipTest(onProgress);
+    if (!pipe) {
+      const err = new Error('MobileCLIP pipeline 初始化失敗');
+      console.error('[MOBILECLIP TEST] ERROR', err.stack || err);
+      throw err;
+    }
+
+    console.log('[MOBILECLIP TEST] inference start');
+    const infStartTime = performance.now();
+
+    const candidates = Array.isArray(candidateLabels) && candidateLabels.length > 0
+      ? candidateLabels
+      : MOBILECLIP_TEST_CANDIDATES;
+
+    const rawResults = await pipe(imageDataUrl, candidates);
+
+    const infDurationMs = (performance.now() - infStartTime).toFixed(1);
+    console.log(`[MOBILECLIP TEST] inference finished (推論耗時: ${infDurationMs} ms)`);
+
+    const sorted = Array.isArray(rawResults)
+      ? [...rawResults].sort((a, b) => (b.score || 0) - (a.score || 0))
+      : [];
+
+    const top5 = sorted.slice(0, 5).map(item => ({
+      label: item.label,
+      score: typeof item.score === 'number' ? Number(item.score.toFixed(4)) : item.score
+    }));
+
+    console.log('[MOBILECLIP TEST] top 5:');
+    console.table(top5);
+
+    return top5;
+  } catch (error) {
+    console.error('[MOBILECLIP TEST] ERROR', error && error.stack ? error.stack : error);
+    throw error;
+  }
+}
+
+/**
+ * MobileCLIP 手機測試模式專用執行流程
+ * 當網址包含 ?mobilecliptest=1 時由拍照完成後觸發
+ */
+async function runMobileClipCameraTest(photoDataUrl) {
+  console.log('[MOBILECLIP TEST] 執行手機測試模式分析...');
+
+  // 1. Loading 顯示：模型第一次下載時沿用 modelLoadingOverlay 顯示「MobileCLIP 模型下載中...」
+  try {
+    if (typeof showModelLoadingOverlay === 'function') {
+      showModelLoadingOverlay('MobileCLIP 模型下載中...', 0, '正在連線下載模型權重...');
+    }
+    if (typeof showAiScanLoading === 'function') {
+      showAiScanLoading(photoDataUrl);
+      const desc = document.getElementById('aiScanStatusText');
+      if (desc) desc.textContent = 'MobileCLIP 模型下載中...';
+      const tag = document.getElementById('aiScanEngineTag');
+      if (tag) tag.textContent = 'MobileCLIP WASM';
+    }
+
+    const onProgress = (percent, file) => {
+      const p = Math.max(0, Math.min(100, Math.round(percent)));
+      if (typeof updateModelLoadingProgress === 'function') {
+        updateModelLoadingProgress(p, 'MobileCLIP 模型下載中...', file ? `下載進度: ${file} (${p}%)` : '下載中...');
+      }
+      const desc = document.getElementById('aiScanStatusText');
+      if (desc) {
+        desc.textContent = `MobileCLIP 模型下載中... ${p}%`;
+      }
+    };
+
+    // 初始化模型（下載階段，若已下載過則自快取秒載）
+    await initMobileClipTest(onProgress);
+
+    // 2. 推論階段顯示「MobileCLIP 分析中...」
+    if (typeof updateModelLoadingProgress === 'function') {
+      updateModelLoadingProgress(100, 'MobileCLIP 分析中...', '正在比對 12 項候選特徵標籤...');
+    }
+    const desc = document.getElementById('aiScanStatusText');
+    if (desc) {
+      desc.textContent = 'MobileCLIP 分析中...';
+    }
+
+    // 3. 執行推論
+    const results = await testMobileClip(photoDataUrl, MOBILECLIP_TEST_CANDIDATES);
+
+    // 4. 完成後關閉 Loading 與相機視窗
+    if (typeof hideModelLoadingOverlay === 'function') {
+      hideModelLoadingOverlay(false);
+    }
+    if (typeof hideAiScanLoading === 'function') {
+      hideAiScanLoading();
+    }
+    const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+    }
+    if (typeof closeCameraScanModal === 'function') {
+      closeCameraScanModal();
+    }
+
+    // 5. 格式化顯示前 5 名結果（例如：1. a carton or bottle of fresh milk — 82.3%）
+    let msg = 'MobileCLIP 測試結果\n\n';
+    if (Array.isArray(results) && results.length > 0) {
+      results.slice(0, 5).forEach((item, idx) => {
+        const scoreNum = typeof item.score === 'number' ? item.score : parseFloat(item.score);
+        const pct = !isNaN(scoreNum)
+          ? (scoreNum <= 1 ? (scoreNum * 100).toFixed(1) : scoreNum.toFixed(1)) + '%'
+          : item.score;
+        msg += `${idx + 1}. ${item.label} — ${pct}\n`;
+      });
+    } else {
+      msg += '（未取得辨識結果）';
+    }
+
+    console.log('[MOBILECLIP TEST] 測試結果輸出:\n' + msg);
+    setTimeout(() => {
+      alert(msg);
+    }, 100);
+
+    return results;
+  } catch (error) {
+    console.error('[MOBILECLIP TEST] ERROR', error && error.stack ? error.stack : error);
+
+    // 關閉 Loading
+    if (typeof hideModelLoadingOverlay === 'function') {
+      hideModelLoadingOverlay(false);
+    }
+    if (typeof hideAiScanLoading === 'function') {
+      hideAiScanLoading();
+    }
+    const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+    }
+    if (typeof closeCameraScanModal === 'function') {
+      closeCameraScanModal();
+    }
+
+    // 畫面顯示：MobileCLIP TEST ERROR + error.message
+    const errorMsg = `MobileCLIP TEST ERROR\n${error && error.message ? error.message : error}`;
+    setTimeout(() => {
+      alert(errorMsg);
+    }, 100);
+    throw error;
+  }
+}
+
+// ==========================================
 // 8. 全域掛載與自啟動
 // ==========================================
 if (typeof window !== 'undefined') {
@@ -4415,6 +4711,11 @@ if (typeof window !== 'undefined') {
   window.isCameraDebug = isCameraDebug;
   window.getLastCreatedItem = () => lastCreatedItem;
   window.setLastCreatedItem = (item) => { lastCreatedItem = item; };
+  window.testMobileClip = testMobileClip;
+  window.initMobileClipTest = initMobileClipTest;
+  window.MOBILECLIP_TEST_CANDIDATES = MOBILECLIP_TEST_CANDIDATES;
+  window.isMobileClipTestMode = isMobileClipTestMode;
+  window.runMobileClipCameraTest = runMobileClipCameraTest;
 
   // DOM 載入後自動嘗試啟動非同步模型初始化
   // AI 模型載入全面改為「點擊相機按鈕」時非同步觸發，初始化不自動載入任何模型
@@ -4485,6 +4786,11 @@ if (typeof module !== 'undefined' && module.exports) {
     hideVlmLoadingCard,
     VLM_PROMPT,
     getLastCreatedItem: () => lastCreatedItem,
-    setLastCreatedItem: (item) => { lastCreatedItem = item; }
+    setLastCreatedItem: (item) => { lastCreatedItem = item; },
+    testMobileClip,
+    initMobileClipTest,
+    MOBILECLIP_TEST_CANDIDATES,
+    isMobileClipTestMode,
+    runMobileClipCameraTest
   };
 }

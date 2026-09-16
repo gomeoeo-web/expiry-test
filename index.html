@@ -16900,6 +16900,55 @@ function extractCleanName(rawText) {
 
     const photoDataUrl = canvas.toDataURL('image/jpeg', 0.86);
 
+    // 【MobileCLIP 手機測試模式分流】
+    // 只有當網址包含 ?mobilecliptest=1 時才進入測試模式，正常網址完全不受影響
+    const isMobileClipTest = (typeof window !== 'undefined' && (
+      (typeof window.isMobileClipTestMode === 'function' && window.isMobileClipTestMode()) ||
+      new URLSearchParams(window.location.search).get('mobilecliptest') === '1'
+    ));
+
+    if (isMobileClipTest) {
+      console.log('[MOBILECLIP TEST] 拍照完成，進入 MobileCLIP 手機測試模式');
+      if (typeof window.runMobileClipCameraTest === 'function') {
+        await window.runMobileClipCameraTest(photoDataUrl);
+      } else if (typeof window.testMobileClip === 'function') {
+        try {
+          if (typeof window.showModelLoadingOverlay === 'function') {
+            window.showModelLoadingOverlay('MobileCLIP 模型下載中...', 0, '正在連線下載模型...');
+          }
+          const results = await window.testMobileClip(photoDataUrl);
+          if (typeof window.hideModelLoadingOverlay === 'function') {
+            window.hideModelLoadingOverlay(false);
+          }
+          if (typeof closeCameraScanModal === 'function') {
+            closeCameraScanModal();
+          }
+          let msg = 'MobileCLIP 測試結果\n\n';
+          if (Array.isArray(results) && results.length > 0) {
+            results.slice(0, 5).forEach((item, idx) => {
+              const scoreNum = typeof item.score === 'number' ? item.score : parseFloat(item.score);
+              const pct = !isNaN(scoreNum)
+                ? (scoreNum <= 1 ? (scoreNum * 100).toFixed(1) : scoreNum.toFixed(1)) + '%'
+                : item.score;
+              msg += `${idx + 1}. ${item.label} — ${pct}\n`;
+            });
+          } else {
+            msg += '（未取得辨識結果）';
+          }
+          setTimeout(() => alert(msg), 100);
+        } catch (err) {
+          if (typeof window.hideModelLoadingOverlay === 'function') {
+            window.hideModelLoadingOverlay(false);
+          }
+          if (typeof closeCameraScanModal === 'function') {
+            closeCameraScanModal();
+          }
+          setTimeout(() => alert(`MobileCLIP TEST ERROR\n${err && err.message ? err.message : err}`), 100);
+        }
+      }
+      return; // 測試模式在此結束，絕不執行 analyzeSmartCameraWithVlm 或 analyzeSmartCameraDualTrack，亦不寫入表單
+    }
+
     // 關閉相機取景，立即啟動辨識遮罩與 AI 雙軌載入動畫
     closeCameraScanModal();
     const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');

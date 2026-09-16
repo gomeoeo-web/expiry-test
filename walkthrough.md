@@ -1,87 +1,104 @@
-# Mobile VLM Low Memory Mode 最佳化驗證報告 (v1.8.17)
+# MobileCLIP 手機測試模式 (?mobilecliptest=1) 實作與驗證報告
 
 ## 目標與概述
 
-本版本針對行動裝置（iPhone Safari、Android Chrome、Samsung Galaxy S25 FE 等手機環境）新增 **「Mobile VLM Low Memory Mode」**，在保留端側視覺語言大模型 `HuggingFaceTB/SmolVLM-256M-Instruct` 的前提下，進行極致的顯存與記憶體佔用最佳化，並具備完整平滑降級備援與 iOS Safari 序列推論防護機制。
+為了解決在 iPhone Safari 等行動裝置上無法連接 Mac Remote Web Inspector Console 執行 `window.testMobileClip(...)` 的限制，本版本新增 **「MobileCLIP 手機測試模式」**。
+
+此模式具備**嚴格條件啟用**與**完全隔離**特性：
+- 僅在網址明確帶有 `?mobilecliptest=1` 時生效。
+- 正常正式網址絕不受任何影響，維持既有正式相機與 SmolVLM / 雙軌辨識流程。
+- 測試結果只做彈窗顯示，絕不寫入正式表單、不修改分類、不新增物品。
 
 ---
 
-## 核心修改內容 (Changes Made)
+## 核心修改與分流架構
 
-### 1. 跨平台裝置環境辨識 (`isMobileDevice()`)
-- 新增 `isMobileDevice()` 函式，支援偵測：
-  - **iPhone** (`/iphone/`)
-  - **iPad** (`/ipad/` 以及 iPadOS 桌面模式 `MacIntel + maxTouchPoints > 1`)
-  - **Android** (`/android/`，涵蓋 Samsung Galaxy S25 FE、Pixel 等)
-  - **Mobile UA** (`/mobile|touch|webos|blackberry|iemobile|opera mini/` 及 `navigator.userAgentData.mobile`)
-- 新增 `isIosSafari()` 函式，專責精準辨識 iOS / iPadOS WebKit 嚴格記憶體限制環境。
+### 1. 測試模式判斷函式 (`isMobileClipTestMode()`)
+- 位於 [app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/app.js) 與 [www/app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/app.js)：
+```javascript
+function isMobileClipTestMode() {
+  if (typeof window === 'undefined' || !window.location) return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mobilecliptest') === '1';
+  } catch (e) {
+    return false;
+  }
+}
+```
 
-### 2. SmolVLM 模型載入最佳化與 3 順位 Fallback
-- **桌面模式**：維持原設定，不指定 `dtype`。
-- **手機模式**：
-  優先嘗試載入指定之 dtype mapping：
-  ```javascript
-  AutoModelForVision2Seq.from_pretrained(
-    'HuggingFaceTB/SmolVLM-256M-Instruct',
-    {
-      device: 'webgpu',
-      dtype: {
-        embed_tokens: 'fp32',
-        vision_encoder: 'q4',
-        decoder_model_merged: 'q4'
-      },
-      progress_callback
-    }
-  )
-  ```
-  若該環境不支援 mapping，捕捉錯誤並依序自動降級：
-  - **第 1 順位**：`dtype: 'q4'`
-  - **第 2 順位**：`dtype: 'q8'`
-  - **第 3 順位**：不指定 `dtype` (預設)
-- 每次 fallback 均輸出清晰之 `[VLM DEBUG]` 日誌，嚴禁靜默失敗。
+### 2. 相機拍照完成後分流 (`processCapturedImage`)
+- 位於 [index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/index.html) 與 [www/index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/index.html) 的 `processCapturedImage(source)`：
+```javascript
+const photoDataUrl = canvas.toDataURL('image/jpeg', 0.86);
 
-### 3. VLM 圖片尺寸降低與 OCR 原圖保護
-- **桌面端**：`maxDim = 768`
-- **手機端**：`maxDim = 512`
-- **獨立保護**：尺寸縮小僅限於 VLM 推論輸入；Tesseract OCR 繼續維持原始高解析度影像與 1200px 銳化裁切對焦，確保效期數字識別率不被犧牲。
+// 【MobileCLIP 手機測試模式分流】
+const isMobileClipTest = (typeof window !== 'undefined' && (
+  (typeof window.isMobileClipTestMode === 'function' && window.isMobileClipTestMode()) ||
+  new URLSearchParams(window.location.search).get('mobilecliptest') === '1'
+));
 
-### 4. 生成 Token 限制
-- **桌面端**：`max_new_tokens: 160`
-- **手機端**：`max_new_tokens: 64`
-- `do_sample: false` 維持固定不變。
+if (isMobileClipTest) {
+  console.log('[MOBILECLIP TEST] 拍照完成，進入 MobileCLIP 手機測試模式');
+  await window.runMobileClipCameraTest(photoDataUrl);
+  return; // 測試模式在此結束，絕不執行後續 analyzeSmartCameraWithVlm 或 analyzeSmartCameraDualTrack
+}
 
-### 5. iOS Safari 序列推論特別保護
-- 偵測到 iOS Safari / WebKit 核心時，不同時初始化 MobileNet、OCR、VLM 三套模型。
-- 先只載入與執行 SmolVLM；待 SmolVLM 推論完成後，再按需啟動 OCR，避免峰值顯存與記憶體疊加溢出崩潰。
-- VLM 模型下載期間禁止啟動其他大型模型。
+// 正常網址：關閉相機取景，立即啟動辨識遮罩與 AI 雙軌載入動畫
+closeCameraScanModal();
+...
+```
 
-### 6. Android / Samsung 平滑降級機制
-- Android Chrome 具備 `navigator.gpu` 時，最優先嘗試 SmolVLM 256M q4 WebGPU。
-- 若 GPU 顯存不足、著色器編譯失敗或推論超時，自動捕獲異常並平滑降級至 MobileNet + OCR 雙軌辨識，保證頁面絕不崩潰。
+### 3. 模型下載與推論 Loading 提示 (`runMobileClipCameraTest`)
+- 沿用 `#modelLoadingOverlay` 與 `#aiScanLoadingModal`：
+  - **模型首次下載時**：顯示 `MobileCLIP 模型下載中...`，並依 `onProgress` 更新進度百分比與檔案名稱。
+  - **推論時**：顯示 `MobileCLIP 分析中...`。
+  - **完成或錯誤時**：自動關閉 Loading 與相機視窗。
 
-### 7. 完整 Debug 診斷輸出
-- `[VLM DEBUG] device class: mobile / desktop`
-- `[VLM DEBUG] mobile low memory mode: true / false`
-- `[VLM DEBUG] requested dtype:`
-- `[VLM DEBUG] actual dtype fallback:`
-- `[VLM DEBUG] VLM image maxDim:`
-- `[VLM DEBUG] max_new_tokens:`
-- `[VLM DEBUG] mobile VLM load success`
-- `[VLM DEBUG] mobile VLM load failed`
+### 4. 測試結果與錯誤顯示 (iPhone 友善彈窗)
+- **成功結果**：以原生 `alert` 顯示前 5 名排序結果（格式完全對齊需求）：
+```text
+MobileCLIP 測試結果
 
-### 8. 版本號更新與建置同步
-- 版本號同步更新為 **v1.8.17**：
-  - [package.json](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/package.json)
-  - [index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/index.html)
-  - [app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/app.js)
-  - [www/index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/index.html)
-  - [www/app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/app.js)
+1. a carton or bottle of fresh milk — 82.3%
+2. a food snack package — 8.4%
+3. an unknown household item — 3.1%
+4. a bottle of shampoo — 2.1%
+5. a tube of toothpaste — 1.5%
+```
+- **失敗或推論異常**：彈出錯誤視窗：
+```text
+MobileCLIP TEST ERROR
+[error.message]
+```
+- **資料隔離**：純測試畫面，不將結果寫入正式物品表單，不新增物品，不修改分類。
+
+### 5. 雙重安全防護 (SmolVLM 與 DualTrack 阻斷)
+- 在 `initVisionModel`、`analyzeSmartCameraWithVlm`、`analyzeSmartCameraDualTrack` 入口處均加入 `if (isMobileClipTestMode()) return null;` 防護：
+  - 測試網址開啟相機時，**不會**在背景預載 256MB 的 SmolVLM，避免行動裝置顯存與網路浪費。
+  - 確保測試模式**只跑 MobileCLIP**。
 
 ---
 
-## 測試與驗證結果 (Verification Results)
+## 測試驗證結果 (Verification Results)
 
-自動化測試套件已全數通過：
-- `node scratch/test_v1817_mobile_vlm.js`：驗證版本號一致性、跨平台裝置判斷、圖片尺寸分流、Token 生成規格。
-- `node scratch/test_mobile_vlm.js`：8 大情境全覆蓋（包含 3 階 fallback、iOS Safari 序列保護、Android WebGPU 降級、OCR 獨立原圖）。
-- `node scratch/test_flow_v1816.js` & `node scratch/test_date_parser.js`：OCR 與 VLM 融合防幻覺決策邏輯 100% 通過。
+自動化驗證腳本 [test_mobileclip_mode.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/scratch/test_mobileclip_mode.js) 執行結果：
+1. `isMobileClipTestMode()` 網址判斷：
+   - 正常網址（無參數）-> `false`
+   - 其他參數（`?theme=dark`）-> `false`
+   - 非 1 數值（`?mobilecliptest=0`）-> `false`
+   - 測試網址（`?mobilecliptest=1`）-> `true`
+   - 多參數組合（`?theme=dark&mobilecliptest=1`）-> `true`
+2. 預載隔離測試：
+   - `initVisionModel()` 在測試模式下回傳 `null`，確認不預載 SmolVLM。
+3. 相機流程阻斷測試：
+   - `analyzeSmartCameraWithVlm()` 回傳 `null`。
+   - `analyzeSmartCameraDualTrack()` 回傳 `null`。
+4. 結果字串與錯誤字串格式化驗證：
+   - 百分比與 em-dash `—` 格式 100% 符合規範。
+   - 錯誤訊息符合 `MobileCLIP TEST ERROR\n+ error.message` 格式。
+5. 全專案相容性回歸：
+   - `verify_syntax_all.js` 語法檢查 100% 通過。
+   - `test_v1817_mobile_vlm.js` 回歸測試 100% 通過。
+   - `test_flow_v1816.js` 及 `test_date_parser.js` 100% 通過。
+   - `app.js` 與 `www/app.js`、`index.html` 與 `www/index.html` 100% 同步。
