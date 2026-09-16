@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.14
+ * Smart Quick Add & On-Device NER Parser v1.8.15
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -436,19 +436,23 @@ function updateNerStatus(status) {
 async function getVisionEngine() {
   const isDebug = isCameraDebug();
   try {
-    if (typeof window !== 'undefined' && window.pipeline) {
-      return window.pipeline;
+    if (typeof window !== 'undefined' && window.transformersLib) {
+      return window.transformersLib;
     }
-    const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.3');
+    const tf = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.1');
     if (typeof window !== 'undefined') {
-      window.pipeline = pipeline;
-      if (env) {
-        env.useBrowserCache = true;
-        env.allowLocalModels = false;
-        window.transformersEnv = env;
+      window.transformersLib = tf;
+      if (tf.AutoProcessor) window.AutoProcessor = tf.AutoProcessor;
+      if (tf.AutoModelForVision2Seq) window.AutoModelForVision2Seq = tf.AutoModelForVision2Seq;
+      if (tf.load_image) window.load_image = tf.load_image;
+      if (tf.pipeline) window.pipeline = tf.pipeline;
+      if (tf.env) {
+        tf.env.useBrowserCache = true;
+        tf.env.allowLocalModels = false;
+        window.transformersEnv = tf.env;
       }
     }
-    return pipeline;
+    return tf;
   } catch (err) {
     if (isDebug) {
       console.error('[VLM DEBUG] Transformers.js 動態 import 失敗:\n完整 Error Stack:', err && err.stack ? err.stack : err);
@@ -462,16 +466,13 @@ let transformersModule = null;
 async function loadTransformers() {
   const isDebug = isCameraDebug();
   try {
-    const pipe = await getVisionEngine();
-    if (pipe) {
-      transformersModule = {
-        pipeline: pipe,
-        env: (typeof window !== 'undefined' && window.transformersEnv) ? window.transformersEnv : { useBrowserCache: true, allowLocalModels: false }
-      };
+    const tf = await getVisionEngine();
+    if (tf) {
+      transformersModule = tf;
       if (isDebug) {
         console.log('[VLM DEBUG] Transformers.js 是否成功載入: 成功');
       }
-      return transformersModule;
+      return tf;
     }
     if (isDebug) {
       console.error('[VLM DEBUG] Transformers.js 是否成功載入: 失敗 (getVisionEngine 回傳空值)');
@@ -2872,8 +2873,10 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
 }
 
 // ==========================================
-// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU / INT4 Q4) v1.8.14
+// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.15
 // ==========================================
+let vlmProcessor = null;
+let vlmModel = null;
 let vlmPipeline = null;
 let isVlmLoading = false;
 let vlmStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'fallback'
@@ -2974,8 +2977,8 @@ function hideVlmLoadingCard(withFadeOut = true) {
 }
 
 /**
- * 非同步載入端側視覺語言大模型 (SmolVLM-Instruct INT4/Q4 with WebGPU)
- * 透過 loadTransformers() 原生動態 import，並更新 #modelLoadingOverlay 進度
+ * 非同步載入端側視覺語言大模型 (SmolVLM-256M-Instruct with WebGPU)
+ * 依照 Hugging Face 官方 SmolVLM WebGPU 規範，使用 AutoProcessor 與 AutoModelForVision2Seq
  */
 async function initVlmModel(onProgress) {
   const isDebug = isCameraDebug();
@@ -2984,25 +2987,25 @@ async function initVlmModel(onProgress) {
   if (isDebug) {
     console.log('[VLM DEBUG] 1. navigator.gpu 是否存在:', hasWebGpu);
     console.log('[VLM DEBUG] 3. initVlmModel() 是否開始執行: 是 (目前狀態: ' + vlmStatus + ')');
-    console.log('[VLM DEBUG] 4. 使用的模型名稱: onnx-community/SmolVLM-Instruct');
+    console.log('[VLM DEBUG] 4. 使用的模型名稱: HuggingFaceTB/SmolVLM-256M-Instruct');
     console.log('[VLM DEBUG] 5. 使用的 device（WebGPU 或其他）: webgpu');
-    console.log('[VLM DEBUG] 6. 使用的 dtype: q4');
   }
 
-  if (vlmPipeline) {
+  if (vlmProcessor && vlmModel) {
     if (isDebug) {
-      console.log('[VLM DEBUG] 9. vlmPipeline 是否建立成功: 已快取就緒');
+      console.log('[VLM DEBUG] 9. SmolVLM 是否建立成功: 已快取就緒');
+      console.log('[VLM DEBUG] SmolVLM model ready');
     }
-    return vlmPipeline;
+    return { processor: vlmProcessor, model: vlmModel };
   }
   if (isVlmLoading) {
     while (isVlmLoading) {
       await new Promise(r => setTimeout(r, 100));
     }
     if (isDebug) {
-      console.log('[VLM DEBUG] 9. vlmPipeline 是否建立成功:', !!vlmPipeline);
+      console.log('[VLM DEBUG] 9. SmolVLM 是否建立成功:', !!(vlmProcessor && vlmModel));
     }
-    return vlmPipeline;
+    return { processor: vlmProcessor, model: vlmModel };
   }
 
   isVlmLoading = true;
@@ -3013,25 +3016,23 @@ async function initVlmModel(onProgress) {
 
   try {
     const tf = await loadTransformers();
-    const pipelineFn = (tf && tf.pipeline)
-      ? tf.pipeline
-      : (typeof window !== 'undefined' && window.pipeline ? window.pipeline : null);
+    const AutoProcessor = (tf && tf.AutoProcessor)
+      ? tf.AutoProcessor
+      : (typeof window !== 'undefined' && window.AutoProcessor ? window.AutoProcessor : null);
+    const AutoModelForVision2Seq = (tf && tf.AutoModelForVision2Seq)
+      ? tf.AutoModelForVision2Seq
+      : (typeof window !== 'undefined' && window.AutoModelForVision2Seq ? window.AutoModelForVision2Seq : null);
 
     if (isDebug) {
-      console.log('[VLM DEBUG] 2. Transformers.js 是否成功載入:', !!pipelineFn ? '成功' : '失敗');
+      console.log('[VLM DEBUG] 2. Transformers.js 是否成功載入:', !!(AutoProcessor && AutoModelForVision2Seq) ? '成功' : '失敗');
     }
 
-    if (!pipelineFn) {
-      const err = new Error('Transformers.js pipeline is not available');
+    if (!AutoProcessor || !AutoModelForVision2Seq) {
+      const err = new Error('Transformers.js AutoProcessor / AutoModelForVision2Seq 不可用');
       if (isDebug) {
-        console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed (Transformers.js pipeline 不可用)\n完整 Error Stack:', err.stack);
+        console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed (Transformers.js AutoProcessor 或 AutoModelForVision2Seq 不可用)\n完整 Error Stack:', err && err.stack ? err.stack : err);
       }
       throw err;
-    }
-
-    if (typeof window !== 'undefined') {
-      window.pipeline = pipelineFn;
-      if (tf && tf.env) window.transformersEnv = tf.env;
     }
 
     const progressCallback = (p) => {
@@ -3082,20 +3083,40 @@ async function initVlmModel(onProgress) {
       }
     };
 
-    console.log('[VLM] 正在透過 WebGPU 初始化 SmolVLM-Instruct (INT4/Q4)...');
+    console.log('[VLM] 正在透過 WebGPU 初始化 HuggingFaceTB/SmolVLM-256M-Instruct...');
 
-    vlmPipeline = await pipelineFn('image-text-to-text', 'onnx-community/SmolVLM-Instruct', {
-      dtype: 'q4',
-      device: 'webgpu',
-      progress_callback: progressCallback
-    });
+    vlmProcessor = await AutoProcessor.from_pretrained(
+      'HuggingFaceTB/SmolVLM-256M-Instruct',
+      { progress_callback: progressCallback }
+    );
+    if (isDebug) {
+      console.log('[VLM DEBUG] AutoProcessor 建立成功');
+    }
+
+    vlmModel = await AutoModelForVision2Seq.from_pretrained(
+      'HuggingFaceTB/SmolVLM-256M-Instruct',
+      {
+        device: 'webgpu',
+        progress_callback: progressCallback
+      }
+    );
+    if (isDebug) {
+      console.log('[VLM DEBUG] AutoModelForVision2Seq 建立成功');
+    }
+
+    vlmPipeline = { processor: vlmProcessor, model: vlmModel };
+    if (typeof window !== 'undefined') {
+      window.vlmProcessor = vlmProcessor;
+      window.vlmModel = vlmModel;
+    }
 
     const vlmEndTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const loadDuration = ((vlmEndTime - vlmStartTime) / 1000).toFixed(2);
 
     if (isDebug) {
       console.log(`[VLM DEBUG] 8. 模型載入完成耗時: ${loadDuration} 秒`);
-      console.log('[VLM DEBUG] 9. vlmPipeline 是否建立成功: 是', vlmPipeline);
+      console.log('[VLM DEBUG] 9. SmolVLM 是否建立成功: 是', { processor: !!vlmProcessor, model: !!vlmModel });
+      console.log('[VLM DEBUG] SmolVLM model ready');
     }
 
     vlmStatus = 'ready';
@@ -3105,7 +3126,7 @@ async function initVlmModel(onProgress) {
     }, 700);
 
     console.log('[VLM] ✅ SmolVLM 端側多模態大模型加載完成！');
-    return vlmPipeline;
+    return { processor: vlmProcessor, model: vlmModel };
   } catch (err) {
     if (isDebug) {
       const isGpuError = err && String(err).toLowerCase().includes('webgpu');
@@ -3142,29 +3163,23 @@ async function initVisionModel(onProgress) {
   showModelLoadingOverlay('首次載入 AI 視覺模型 0%... 之後離線免下載', 0, '正在連線模型快取庫...');
 
   try {
-    // 設置 15 秒安全超時，若連線不順自動無縫降級
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('VLM 模型載入超時 (15s)，自動平滑降級')), 15000);
-    });
-    const loadPromise = initVlmModel((percent, statusMsg) => {
+    const pipeline = await initVlmModel((percent, statusMsg) => {
       updateModelLoadingProgress(percent, statusMsg, `模型快取進行中... ${percent}%`);
       if (typeof onProgress === 'function') {
         onProgress(percent, statusMsg);
       }
     });
 
-    const pipeline = await Promise.race([loadPromise, timeoutPromise]);
     setTimeout(() => {
       hideModelLoadingOverlay(true);
     }, 600);
     return pipeline;
   } catch (err) {
     if (isDebug) {
-      const isTimeout = err && (err.message?.includes('超時') || err.message?.includes('timeout'));
-      console.error(`[VLM DEBUG] 15. Fallback 原因: ${isTimeout ? 'inference timeout (預載超時 15s)' : 'VLM model load failed'}`);
+      console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed');
       console.error('[VLM DEBUG] 完整 Error Stack:', err && err.stack ? err.stack : err);
     }
-    console.warn('[VisionModel] 視覺模型預載失敗或超時，平滑降級至輕量相機辨識：', err);
+    console.warn('[VisionModel] 視覺模型預載失敗，平滑降級至輕量相機辨識：', err);
     hideModelLoadingOverlay(false);
     return await initMobileNet();
   }
@@ -3223,45 +3238,165 @@ function extractTextFromOutput(out) {
 }
 
 /**
- * 執行 VLM 視覺推論
+ * 執行 VLM 視覺推論 (Hugging Face 官方 SmolVLM WebGPU 流程)
  */
-async function runVlmInference(pipe, imgDataUrl, promptText = VLM_PROMPT) {
+async function runVlmInference(pipeOrInstance, imgDataUrl, promptText = VLM_PROMPT) {
   const isDebug = isCameraDebug();
   if (isDebug) {
     console.log('[VLM DEBUG] 11. 是否真的執行 runVlmInference(): 是', {
-      pipeAvailable: !!pipe,
+      instanceAvailable: !!(pipeOrInstance || (vlmProcessor && vlmModel)),
       promptPreview: promptText ? promptText.slice(0, 100) + '...' : ''
     });
   }
-  let out;
-  try {
-    const messages = [
-      {
-        role: 'user',
-        content: [
-          { type: 'image', url: imgDataUrl },
-          { type: 'text', text: promptText }
-        ]
-      }
-    ];
-    out = await pipe(messages, { max_new_tokens: 160, temperature: 0.1 });
-  } catch (chatErr) {
+
+  const processor = (pipeOrInstance && pipeOrInstance.processor) || vlmProcessor;
+  const model = (pipeOrInstance && pipeOrInstance.model) || vlmModel;
+  let loadImageFn = (typeof window !== 'undefined' && window.load_image) ? window.load_image : null;
+  if (!loadImageFn) {
+    const tf = await loadTransformers();
+    loadImageFn = (tf && tf.load_image) ? tf.load_image : (typeof window !== 'undefined' ? window.load_image : null);
+  }
+
+  if (!processor || !model) {
+    const modelErr = new Error('SmolVLM Processor or Model Unavailable');
     if (isDebug) {
-      console.warn('[VLM DEBUG] runVlmInference 對話格式失敗，嘗試單純圖文提示詞備援格式:', chatErr);
+      console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed (processor 或 model 實例為空)');
+      console.error('[VLM DEBUG] 完整 Error Stack:', modelErr.stack);
     }
-    try {
-      out = await pipe(imgDataUrl, promptText, { max_new_tokens: 160 });
-    } catch (e2) {
-      if (isDebug) {
-        console.warn('[VLM DEBUG] runVlmInference 第二格式失敗，嘗試物件格式:', e2);
+    throw modelErr;
+  }
+
+  // A. 將目前的 image Data URL 用 load_image() 載入
+  let image;
+  try {
+    image = await loadImageFn(imgDataUrl);
+  } catch (imgErr) {
+    if (isDebug) {
+      console.error('[VLM DEBUG] 15. Fallback 原因: load_image 失敗');
+      console.error('[VLM DEBUG] 完整 Error Stack:', imgErr && imgErr.stack ? imgErr.stack : imgErr);
+    }
+    throw imgErr;
+  }
+
+  // B. 建立 messages
+  const messages = [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          image: image
+        },
+        {
+          type: 'text',
+          text: promptText
+        }
+      ]
+    }
+  ];
+
+  // C. 使用 processor.apply_chat_template 產生文字 Prompt
+  let text;
+  try {
+    text = processor.apply_chat_template(messages, {
+      add_generation_prompt: true
+    });
+  } catch (tmplErr) {
+    if (isDebug) {
+      console.error('[VLM DEBUG] 15. Fallback 原因: apply_chat_template 失敗');
+      console.error('[VLM DEBUG] 完整 Error Stack:', tmplErr && tmplErr.stack ? tmplErr.stack : tmplErr);
+    }
+    throw tmplErr;
+  }
+
+  // D. 使用 processor 建立模型輸入
+  let inputs;
+  try {
+    inputs = await processor(text, [image]);
+    if (isDebug) {
+      console.log('[VLM DEBUG] processor input 建立成功');
+    }
+  } catch (procErr) {
+    if (isDebug) {
+      console.error('[VLM DEBUG] 15. Fallback 原因: processor 建立模型輸入失敗');
+      console.error('[VLM DEBUG] 完整 Error Stack:', procErr && procErr.stack ? procErr.stack : procErr);
+    }
+    throw procErr;
+  }
+
+  // E. 使用 model.generate() 進行推論
+  let outputs;
+  try {
+    if (isDebug) {
+      console.log('[VLM DEBUG] model.generate 開始');
+    }
+    outputs = await model.generate({
+      ...inputs,
+      do_sample: false,
+      max_new_tokens: 160
+    });
+    if (isDebug) {
+      console.log('[VLM DEBUG] model.generate 完成');
+    }
+  } catch (genErr) {
+    if (isDebug) {
+      console.error('[VLM DEBUG] 15. Fallback 原因: model.generate 推論失敗');
+      console.error('[VLM DEBUG] 完整 Error Stack:', genErr && genErr.stack ? genErr.stack : genErr);
+    }
+    throw genErr;
+  }
+
+  // F. 解碼時必須只取得「模型新生成的回答」
+  let rawText = '';
+  try {
+    const seqs = (outputs && outputs.sequences) ? outputs.sequences : outputs;
+    const inputLength = inputs?.input_ids?.dims?.at(-1) || (inputs?.input_ids?.dims && inputs.input_ids.dims[inputs.input_ids.dims.length - 1]) || 0;
+
+    let generatedTokens = seqs;
+    if (seqs && typeof seqs.slice === 'function' && inputLength > 0) {
+      try {
+        generatedTokens = seqs.slice(null, [inputLength, null]);
+      } catch (sliceErr) {
+        if (isDebug) {
+          console.warn('[VLM DEBUG] seqs.slice 警告:', sliceErr);
+        }
       }
-      out = await pipe({ image: imgDataUrl, prompt: promptText }, { max_new_tokens: 160 });
     }
+
+    const decodeFn = (processor.batch_decode ? processor.batch_decode.bind(processor) : (processor.tokenizer && processor.tokenizer.batch_decode ? processor.tokenizer.batch_decode.bind(processor.tokenizer) : null));
+
+    let decoded = '';
+    if (decodeFn) {
+      decoded = decodeFn(generatedTokens, { skip_special_tokens: true });
+    } else if (processor.decode) {
+      decoded = processor.decode(generatedTokens[0] || generatedTokens, { skip_special_tokens: true });
+    }
+
+    if (Array.isArray(decoded)) {
+      rawText = (decoded[0] || '').trim();
+    } else if (typeof decoded === 'string') {
+      rawText = decoded.trim();
+    } else {
+      rawText = String(decoded || '').trim();
+    }
+
+    // 防護：若未成功切除前綴 Prompt 且包含了 prompt 內容，過濾掉輸入文本
+    if (rawText && text && rawText.includes(text)) {
+      rawText = rawText.replace(text, '').trim();
+    }
+
+    if (isDebug) {
+      console.log('[VLM DEBUG] VLM 新生成文字:', rawText);
+      console.log('[VLM DEBUG] 12. VLM 原始輸出內容 (runVlmInference 產生):', rawText);
+    }
+  } catch (decErr) {
+    if (isDebug) {
+      console.error('[VLM DEBUG] 15. Fallback 原因: 解碼新生成文字失敗');
+      console.error('[VLM DEBUG] 完整 Error Stack:', decErr && decErr.stack ? decErr.stack : decErr);
+    }
+    throw decErr;
   }
-  const rawText = extractTextFromOutput(out);
-  if (isDebug) {
-    console.log('[VLM DEBUG] 12. VLM 原始輸出內容 (runVlmInference 產生):', rawText);
-  }
+
   return rawText;
 }
 
@@ -3797,6 +3932,8 @@ if (typeof window !== 'undefined') {
   window.showVlmLoadingCard = showVlmLoadingCard;
   window.updateVlmProgress = updateVlmProgress;
   window.hideVlmLoadingCard = hideVlmLoadingCard;
+  window.vlmProcessor = vlmProcessor;
+  window.vlmModel = vlmModel;
   window.VLM_PROMPT = VLM_PROMPT;
   window.cameraDebug = true;
   window.isCameraDebug = isCameraDebug;
@@ -3852,6 +3989,8 @@ if (typeof module !== 'undefined' && module.exports) {
     updateModelLoadingProgress,
     hideModelLoadingOverlay,
     initVlmModel,
+    vlmProcessor: () => vlmProcessor,
+    vlmModel: () => vlmModel,
     compressImageForVlm,
     runVlmInference,
     parseVLMResponse,
