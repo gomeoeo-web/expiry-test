@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.16
+ * Smart Quick Add & On-Device NER Parser v1.8.17
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -3018,7 +3018,7 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
 }
 
 // ==========================================
-// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.16
+// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.17
 // ==========================================
 let vlmProcessor = null;
 let vlmModel = null;
@@ -3194,6 +3194,7 @@ async function initVlmModel(onProgress) {
   isVlmLoading = true;
   vlmStatus = 'loading';
   const vlmStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  let mobileFailLogged = false;
 
   showModelLoadingOverlay('首次載入 AI 視覺模型 0%... 之後離線免下載', 0, '正在連線模型儲存庫...');
 
@@ -3376,6 +3377,7 @@ async function initVlmModel(onProgress) {
         }
       } else {
         console.error('[VLM DEBUG] mobile VLM load failed');
+        mobileFailLogged = true;
         throw (lastErr || new Error('Mobile VLM load failed all fallback attempts'));
       }
     }
@@ -3404,8 +3406,9 @@ async function initVlmModel(onProgress) {
     console.log('[VLM] ✅ SmolVLM 端側多模態大模型加載完成！');
     return { processor: vlmProcessor, model: vlmModel };
   } catch (err) {
-    if (isMobile) {
+    if (isMobile && !mobileFailLogged) {
       console.error('[VLM DEBUG] mobile VLM load failed');
+      mobileFailLogged = true;
     }
     if (isDebug) {
       const isGpuError = err && String(err).toLowerCase().includes('webgpu');

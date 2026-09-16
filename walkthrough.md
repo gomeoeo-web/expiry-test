@@ -1,72 +1,87 @@
-# 執行期崩潰修復與管線防護驗證報告 (v1.8.10)
+# Mobile VLM Low Memory Mode 最佳化驗證報告 (v1.8.17)
 
-## 問題根因分析 (Root Cause Analysis)
+## 目標與概述
 
-1. **腳本解析中斷 (Syntax Error Block 2)**：
-   - 在 `index.html` 腳本區塊中，`matchCategoryAndSubCategory` 函式末尾存在 26 行多餘的重覆未閉合程式碼，於緊隨其後的 `const DEFAULT_CATEGORIES = {` 處觸發了語法解析錯誤：`SyntaxError: Unexpected token 'const'`。
-   - 該解析錯誤導致瀏覽器直接放棄執行整個核心 JavaScript 區塊，因此 `DOMContentLoaded`、頂部選單按鈕（全部/將到期/已過期）、FAB 懸浮新增按鈕、相機按鈕、設定按鈕事件監聽器皆無法註冊，且 `renderApp()` 完全無法呼叫，造成畫面卡死且按鈕無響應。
-2. **已移除元素存取防護**：
-   - 先前移除 `itemWarnDaysSelect` 下拉選單後，腳本內若存取其屬性或監聽事件，容易引發 `TypeError: Cannot read properties of null`。
-   - 此外，`previewDaysText` 在 HTML 中存在但在 JS 宣告中缺漏，在特定模式下亦可能觸發 `ReferenceError`。
-3. **物品渲染管線未防護**：
-   - 物品列表卡片渲染與計數統計在遇到異常屬性（如損毀的分類名、非預期日期字串）時缺乏區域 `try...catch` 保護。
+本版本針對行動裝置（iPhone Safari、Android Chrome、Samsung Galaxy S25 FE 等手機環境）新增 **「Mobile VLM Low Memory Mode」**，在保留端側視覺語言大模型 `HuggingFaceTB/SmolVLM-256M-Instruct` 的前提下，進行極致的顯存與記憶體佔用最佳化，並具備完整平滑降級備援與 iOS Safari 序列推論防護機制。
 
 ---
 
-## 修正內容 (Changes Made)
+## 核心修改內容 (Changes Made)
 
-### 一、修復已移除元素及 DOM 節點之空值防護
-- [index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/index.html) & [www/index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/index.html)：
-  - 移除多餘重複的 26 行代碼，使 `index.html` 核心腳本區塊 100% 通過語法編譯。
-  - 對 `itemWarnDaysSelect` 實施全域空值安全保護：
-    ```javascript
-    const itemWarnDaysSelect = document.getElementById('itemWarnDaysSelect');
-    if (itemWarnDaysSelect) {
-      itemWarnDaysSelect.addEventListener('change', autoSaveCurrentItem);
+### 1. 跨平台裝置環境辨識 (`isMobileDevice()`)
+- 新增 `isMobileDevice()` 函式，支援偵測：
+  - **iPhone** (`/iphone/`)
+  - **iPad** (`/ipad/` 以及 iPadOS 桌面模式 `MacIntel + maxTouchPoints > 1`)
+  - **Android** (`/android/`，涵蓋 Samsung Galaxy S25 FE、Pixel 等)
+  - **Mobile UA** (`/mobile|touch|webos|blackberry|iemobile|opera mini/` 及 `navigator.userAgentData.mobile`)
+- 新增 `isIosSafari()` 函式，專責精準辨識 iOS / iPadOS WebKit 嚴格記憶體限制環境。
+
+### 2. SmolVLM 模型載入最佳化與 3 順位 Fallback
+- **桌面模式**：維持原設定，不指定 `dtype`。
+- **手機模式**：
+  優先嘗試載入指定之 dtype mapping：
+  ```javascript
+  AutoModelForVision2Seq.from_pretrained(
+    'HuggingFaceTB/SmolVLM-256M-Instruct',
+    {
+      device: 'webgpu',
+      dtype: {
+        embed_tokens: 'fp32',
+        vision_encoder: 'q4',
+        decoder_model_merged: 'q4'
+      },
+      progress_callback
     }
-    ```
-  - 在 `setReminderSelectValue`、`populateReminderOptions`、`openAddModal`、`openEditModal` 及 `autoSaveCurrentItem` 中全面加上 `const warnSelect = document.getElementById('itemWarnDaysSelect'); if (warnSelect) { ... }` 判斷，若無該選單則改由現有的自訂時間輸入框或既定邏輯儲存。
-  - 補齊並保護 `const previewDaysText = document.getElementById('previewDaysText');` 之宣告與使用。
-- [app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/app.js) & [www/app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/app.js)：
-  - 確保所有 DOM 讀取皆具備環境與空值安全防護。
+  )
+  ```
+  若該環境不支援 mapping，捕捉錯誤並依序自動降級：
+  - **第 1 順位**：`dtype: 'q4'`
+  - **第 2 順位**：`dtype: 'q8'`
+  - **第 3 順位**：不指定 `dtype` (預設)
+- 每次 fallback 均輸出清晰之 `[VLM DEBUG]` 日誌，嚴禁靜默失敗。
 
-### 二、強化物品渲染管線 (Robust Rendering Pipeline)
-- 在 `updateNoticeCardAndPillCounts()` 中：
-  - 加上全區及逐項 `try...catch`，當 item 缺失分類時自動補足安全預設值：
-    ```javascript
-    if (!item.category) item.category = 'other';
-    if (!item.subCategory) item.subCategory = '';
-    ```
-  - 計數邏輯在分類異常或日期損毀時，依舊能正確加總有效項目並更新 DOM（全部 / 將到期 / 已過期），不因單一項目卡死全部數據。
-- 在 `renderCards()` 與 `createCardElement(item)` 中：
-  - 在 `todayList.forEach` 與 `invList.forEach` 迴圈內包裹 `try...catch`，若單一卡片解析出錯，僅印出警告並降級輸出備用卡片，確保其餘所有物品正常呈現。
-  - `getCategoryShortLabel` 與 `getCategoryEmoji` 加上安全防護，未知或自訂分類一律安全回傳標籤或預設 `'其他'` 及 `'📦'`。
-  - 建立全域別名：`window.renderItems = renderCards; window.displayItems = renderCards; window.renderApp = renderApp;`。
+### 3. VLM 圖片尺寸降低與 OCR 原圖保護
+- **桌面端**：`maxDim = 768`
+- **手機端**：`maxDim = 512`
+- **獨立保護**：尺寸縮小僅限於 VLM 推論輸入；Tesseract OCR 繼續維持原始高解析度影像與 1200px 銳化裁切對焦，確保效期數字識別率不被犧牲。
 
-### 三、確保事件監聽器 (EventListeners) 正常綁定
-- 建立並導出安全初始化函式 `initApp()` 與按鈕綁定保護 `ensureButtonListeners()`：
-  - 頂部選單按鈕（全部 / 將到期 / 已過期）點擊即時過濾並呼叫 `renderCards()`。
-  - 懸浮新增按鈕（FAB）與 Header 新增按鈕綁定 `openAddModal()`。
-  - 設定按鈕綁定 `openSettingsModal()`。
-  - 相機按鈕綁定 `openCameraScanModal()`。
-  - 底部導航分頁切換綁定 `switchViewTab()`。
-- 支援 DOM 已就緒與 `DOMContentLoaded` 雙軌安全啟動，確保生命週期不被任何前置邏輯阻斷。
+### 4. 生成 Token 限制
+- **桌面端**：`max_new_tokens: 160`
+- **手機端**：`max_new_tokens: 64`
+- `do_sample: false` 維持固定不變。
+
+### 5. iOS Safari 序列推論特別保護
+- 偵測到 iOS Safari / WebKit 核心時，不同時初始化 MobileNet、OCR、VLM 三套模型。
+- 先只載入與執行 SmolVLM；待 SmolVLM 推論完成後，再按需啟動 OCR，避免峰值顯存與記憶體疊加溢出崩潰。
+- VLM 模型下載期間禁止啟動其他大型模型。
+
+### 6. Android / Samsung 平滑降級機制
+- Android Chrome 具備 `navigator.gpu` 時，最優先嘗試 SmolVLM 256M q4 WebGPU。
+- 若 GPU 顯存不足、著色器編譯失敗或推論超時，自動捕獲異常並平滑降級至 MobileNet + OCR 雙軌辨識，保證頁面絕不崩潰。
+
+### 7. 完整 Debug 診斷輸出
+- `[VLM DEBUG] device class: mobile / desktop`
+- `[VLM DEBUG] mobile low memory mode: true / false`
+- `[VLM DEBUG] requested dtype:`
+- `[VLM DEBUG] actual dtype fallback:`
+- `[VLM DEBUG] VLM image maxDim:`
+- `[VLM DEBUG] max_new_tokens:`
+- `[VLM DEBUG] mobile VLM load success`
+- `[VLM DEBUG] mobile VLM load failed`
+
+### 8. 版本號更新與建置同步
+- 版本號同步更新為 **v1.8.17**：
+  - [package.json](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/package.json)
+  - [index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/index.html)
+  - [app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/app.js)
+  - [www/index.html](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/index.html)
+  - [www/app.js](file:///c:/Users/gomeo/OneDrive/桌面/我的超級APP/新期效管家/--main/www/app.js)
 
 ---
 
 ## 測試與驗證結果 (Verification Results)
 
-1. **語法分析檢查 (verify_syntax_all.js)**：
-   - `index.html` 區塊 1、區塊 2、區塊 3（ES Module）全部通過，無任何語法錯誤。
-   - `www/index.html`、`app.js`、`www/app.js` 全數檢查通過。
-2. **模擬 DOM 執行期崩潰測試 (test_runtime_crash.js)**：
-   - 模擬注入包含 1 筆正常物品（鮮乳）與 1 筆未知損毀分類物品至 `localStorage`。
-   - 完整執行腳本區塊 2 與 `app.js`：
-     - `renderApp()` 正常執行，卡片 DOM 成功渲染。
-     - 膠囊統計欄正確顯示共 1 項物品，過期/將到期統計正常。
-     - 模擬觸發 FAB 點擊、設定按鈕點擊、相機按鈕點擊、選單過濾切換，皆順暢響應且 0 報錯。
-3. **v1.8.10 規格單元測試 (test_v1810_verification.js)**：
-   - 51 / 51 項測試 100% 全數 PASS（包含鮮奶優先權、殺菌不誤殺、眼鏡分類為其他、低信心值降級防呆、📦其他預設選項等）。
-4. **檔案同步**：
-   - `index.html` 與 `www/index.html` 保持 100% 一致。
-   - `app.js` 與 `www/app.js` 保持 100% 一致。
+自動化測試套件已全數通過：
+- `node scratch/test_v1817_mobile_vlm.js`：驗證版本號一致性、跨平台裝置判斷、圖片尺寸分流、Token 生成規格。
+- `node scratch/test_mobile_vlm.js`：8 大情境全覆蓋（包含 3 階 fallback、iOS Safari 序列保護、Android WebGPU 降級、OCR 獨立原圖）。
+- `node scratch/test_flow_v1816.js` & `node scratch/test_date_parser.js`：OCR 與 VLM 融合防幻覺決策邏輯 100% 通過。
