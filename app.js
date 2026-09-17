@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.23
+ * Smart Quick Add & On-Device NER Parser v1.8.24
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -230,7 +230,7 @@ const SMART_KEYWORD_MAP = [
 
   { keywords: [
     '鮮乳', '牛乳', '羊乳', '保久乳', '全脂乳', '低脂乳', '鮮奶', '牛奶', '優格', '起司',
-    '豆漿', '奶粉', 'milk', '優酪乳', '燕麥奶', '堅果奶', '黑豆漿', '米漿', '鮮奶油',
+    '豆漿', '奶粉', 'milk', '生乳', 'fresh milk', '優酪乳', '燕麥奶', '堅果奶', '黑豆漿', '米漿', '鮮奶油',
     '乳酪', '奶酪', '起司片', '起司條', '奶油', '牛油', '優格飲', '發酵乳', '養樂多',
     '布丁', '木瓜牛奶'
   ], emoji: '🥛', cat: 'food', subCat: '鮮乳' },
@@ -3148,9 +3148,21 @@ function updateAiModelSettingsUI(progress = null, state = null) {
   const btn = document.getElementById('btnDownloadAiModel');
   const btnText = document.getElementById('btnDownloadAiModelText');
   const statusText = document.getElementById('settingsAiModelStatusText');
-  const isDownloaded = state === 'downloaded' || isMobileClip2Downloaded();
 
-  if (state === 'downloading' || (isMobileClip2Loading && progress !== null)) {
+  if (state === 'downloaded') {
+    if (btn) {
+      btn.className = 'btn-download-ai-model downloaded';
+    }
+    if (btnText) {
+      btnText.textContent = '✅ 已下載 (離線可用)';
+    }
+    if (statusText) {
+      statusText.textContent = '✅ 已快取至本機 IndexedDB (~43MB 離線隨開即用)';
+    }
+  } else if (
+    state === 'downloading' ||
+    (isMobileClip2Loading && progress !== null)
+  ) {
     const p = Math.max(0, Math.min(100, Math.round(progress || 0)));
     if (btn) {
       btn.className = 'btn-download-ai-model downloading';
@@ -3161,7 +3173,7 @@ function updateAiModelSettingsUI(progress = null, state = null) {
     if (statusText) {
       statusText.textContent = `正在下載 MobileCLIP2-S0 視覺模型 ${p}%...`;
     }
-  } else if (isDownloaded) {
+  } else if (isMobileClip2Downloaded()) {
     if (btn) {
       btn.className = 'btn-download-ai-model downloaded';
     }
@@ -3499,6 +3511,10 @@ async function initMobileClip2(onProgress = null, options = {}) {
     } finally {
       isMobileClip2Loading = false;
       mobileClip2LoadPromise = null;
+
+      if (isMobileClip2Downloaded()) {
+        updateAiModelSettingsUI(100, 'downloaded');
+      }
     }
   })();
 
@@ -3642,9 +3658,9 @@ async function runMobileClip2Vision(imageSource) {
 }
 
 /**
- * 7.7.3 階層式商品辨識 (Hierarchical Recognition)
- * 第一階段：比較 18 個大分類，取得 Top 2
- * 第二階段：僅在 Top 2 大分類下比對商品細分類
+ * 7.7.3 全域商品特徵比對 (Global Candidate Matching & Category Prior)
+ * 所有 97 個候選商品皆參與比對，不採用硬性 Top 2 Category Gating
+ * 最終分數 = visualSimilarity * 0.90 + categoryPrior * 0.10
  */
 async function classifyWithMobileClip2(imageSource) {
   try {
@@ -3657,11 +3673,11 @@ async function classifyWithMobileClip2(imageSource) {
     const { categories, candidates } = getMobileClip2Data();
 
     if (!categories || categories.length === 0 || !candidates || candidates.length === 0) {
-      console.warn('[MOBILECLIP2] 離線標籤資料庫未就緒，降級使用 MobileNet');
+      console.warn('[MOBILECLIP2] FALLBACK TO MOBILENET\nreason = 離線標籤資料庫未就緒');
       return await classifyImageVisual(imageSource);
     }
 
-    // Stage 1: 大分類比對
+    // Stage 1: 大分類比對 (作為先驗 Prior，不作硬性過濾 Gate)
     const categoryScores = categories.map(cat => ({
       cat: cat.cat,
       label: cat.label,
@@ -3669,15 +3685,14 @@ async function classifyWithMobileClip2(imageSource) {
       score: cosineSimilarity(fusedImageEmbedding, cat.embedding)
     })).sort((a, b) => b.score - a.score);
 
-    const top2Cats = new Set([
-      categoryScores[0]?.cat || 'food',
-      categoryScores[1]?.cat || 'pao'
-    ]);
+    const catScoreMap = new Map(categoryScores.map(c => [c.cat, c.score]));
 
-    // Stage 2: 細分類比對 (限制於 Top 2 大分類與 'other' 保底)
-    const eligibleCandidates = candidates.filter(c => top2Cats.has(c.cat) || c.cat === 'other');
-    const candidateScores = eligibleCandidates.map(c => {
-      const sim = cosineSimilarity(fusedImageEmbedding, c.embedding);
+    // 全域 97 個細分類商品候選全面參與比對
+    const allCandidateScores = candidates.map(c => {
+      const visualSimilarity = cosineSimilarity(fusedImageEmbedding, c.embedding);
+      const categoryPrior = catScoreMap.get(c.cat) ?? 0;
+      // 商品本身的 image <-> text similarity 佔 90%，category prior 佔 10%
+      const finalScore = visualSimilarity * 0.90 + categoryPrior * 0.10;
       return {
         id: c.id,
         cat: c.cat,
@@ -3686,37 +3701,44 @@ async function classifyWithMobileClip2(imageSource) {
         emoji: c.emoji,
         defaultDays: c.defaultDays || 30,
         isContainer: !!c.isContainer,
-        score: sim,
-        probability: sim,
+        visualSimilarity,
+        categoryPrior,
+        finalScore,
+        score: finalScore,
+        probability: finalScore,
         candidate: c,
         className: c.defaultName,
         label: c.labels ? c.labels[0] : c.defaultName
       };
-    }).sort((a, b) => b.score - a.score);
+    }).sort((a, b) => b.finalScore - a.finalScore);
 
-    const top5 = candidateScores.slice(0, 5);
+    const top10 = allCandidateScores.slice(0, 10);
 
     if (isCameraDebug()) {
-      console.log('[MOBILECLIP2] Stage 1 Top 2 Categories:', [categoryScores[0], categoryScores[1]]);
-      console.log('[MOBILECLIP2] visual top5:');
-      console.table(top5.map(t => ({
-        name: t.defaultName,
-        category: t.cat,
-        subCategory: t.subCat,
-        score: (t.score * 100).toFixed(1) + '%'
-      })));
+      console.log('[MOBILECLIP2] CATEGORY SCORES');
+      categoryScores.forEach((c, idx) => {
+        console.log(`  ${(idx + 1).toString().padStart(2, ' ')}. ${c.cat.padEnd(14, ' ')} : ${c.score.toFixed(4)} (${c.label})`);
+      });
+
+      console.log('[MOBILECLIP2] GLOBAL CANDIDATE TOP10');
+      top10.forEach((cand, idx) => {
+        console.log(
+          `  ${(idx + 1).toString().padStart(2, ' ')}. id=${cand.id.padEnd(20, ' ')} cat=${cand.cat.padEnd(12, ' ')} subCat=${(cand.subCat || '').padEnd(8, ' ')} ` +
+          `visualSimilarity=${cand.visualSimilarity.toFixed(4)} categoryPrior=${cand.categoryPrior.toFixed(4)} finalScore=${cand.finalScore.toFixed(4)}`
+        );
+      });
     }
 
-    return top5;
+    return top10;
   } catch (err) {
-    console.warn('[MOBILECLIP2] 辨識過程異常，降級使用本地 MobileNet:', err);
+    console.warn('[MOBILECLIP2] FALLBACK TO MOBILENET\nreason = 辨識過程異常: ' + (err?.message || err));
     return await classifyImageVisual(imageSource);
   }
 }
 
 /**
  * 7.7.4 商品辨識融合演算法 (Fusion Engine)
- * 整合 MobileCLIP2 視覺候選 + OCR 高解析度文字 + SMART_KEYWORD_MAP
+ * 整合 MobileCLIP2 視覺候選 + OCR 高解析度文字 + SMART_KEYWORD_MAP + Dairy Safety Check
  * 嚴格遵循 OCR-only 效期規則：未讀出日期時保持 null
  */
 function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems = []) {
@@ -3724,7 +3746,6 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
   const ocrBarcode = (ocrData && ocrData.barcode) ? String(ocrData.barcode).trim() : '';
 
   if (isCameraDebug()) {
-    console.log('[OCR] start after MobileCLIP2');
     console.log('[OCR] raw text:\n' + (ocrText || '(無文字)'));
   }
 
@@ -3732,7 +3753,7 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
   if (ocrData && ocrData.barcodeData && ocrData.barcodeData.isIsbn) {
     const isbnVal = ocrData.barcodeData.barcode;
     const finalDate = (ocrData && ocrData.date && /^\d{4}-\d{2}-\d{2}$/.test(ocrData.date)) ? ocrData.date : null;
-    return {
+    const result = {
       success: true,
       name: `圖書/漫畫 (ISBN: ${isbnVal})`,
       category: 'animation',
@@ -3749,13 +3770,32 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
       ocrText: ocrText,
       notes: `ISBN: ${isbnVal}`
     };
+    if (isCameraDebug()) {
+      console.log('[FUSION] final result:', {
+        name: result.name,
+        category: result.category,
+        subCategory: result.subCategory,
+        emoji: result.emoji,
+        expiryDate: result.expiryDate,
+        fusionMode: result.fusionMode,
+        confidence: result.confidence
+      });
+    }
+    return result;
   }
 
   // 2. OCR 關鍵字比對 (SMART_KEYWORD_MAP)
   let ocrKeywordMatch = null;
   let ocrMatchedWord = '';
+  const ocrLower = ocrText.toLowerCase();
+
+  const DAIRY_KEYWORDS = ['牛奶', '鮮乳', '鮮奶', '生乳', '牛乳', 'milk', 'fresh milk'];
+  const hasDairyOcrKeyword = DAIRY_KEYWORDS.some(kw => ocrLower.includes(kw.toLowerCase()));
+
+  const CLEANING_KEYWORDS = ['洗衣精', '洗衣球', '洗衣膠囊', '洗衣粉', '柔軟精', '漂白水', '洗碗精', '洗潔精', '潔廁劑', '清潔劑', '除黴', '除霉', '去漬', '洗手乳', '洗手液', '地板清潔', '馬桶刷', '芳香劑', '馬桶清潔', '水垢清', '小蘇打', '過碳酸鈉'];
+  const hasCleaningOcrKeyword = CLEANING_KEYWORDS.some(kw => ocrLower.includes(kw.toLowerCase()));
+
   if (ocrText) {
-    const ocrLower = ocrText.toLowerCase();
     let maxKwLen = 0;
     for (const mapItem of SMART_KEYWORD_MAP) {
       for (const kw of mapItem.keywords) {
@@ -3771,36 +3811,79 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
     }
   }
 
-  if (isCameraDebug()) {
-    console.log('[FUSION] OCR keyword matches: ' + (ocrMatchedWord || 'none'));
+  if (isCameraDebug() && ocrMatchedWord) {
+    console.log('[FUSION] OCR keyword matches: ' + ocrMatchedWord);
   }
 
-  // 3. 調整與重排視覺候選分數 (若 OCR 命中關鍵字，對應候選獲得強力加權)
+  // 3. 調整與重排視覺候選分數 (OCR 融合)
+  // 如果 OCR 讀到乳品關鍵字，food_milk 獲得 +0.50 強力提升
   let bestCandidate = (visualPredictions && visualPredictions[0]) || null;
-  if (ocrKeywordMatch && visualPredictions && visualPredictions.length > 0) {
-    const reWeighted = visualPredictions.map(p => {
+  let reWeighted = visualPredictions || [];
+
+  if (visualPredictions && visualPredictions.length > 0) {
+    reWeighted = visualPredictions.map(p => {
       let boost = 0;
-      if (p.cat === ocrKeywordMatch.cat) boost += 0.25;
-      if (p.subCat === ocrKeywordMatch.subCat) boost += 0.40;
+      if (ocrKeywordMatch) {
+        if (p.cat === ocrKeywordMatch.cat) boost += 0.25;
+        if (p.subCat === ocrKeywordMatch.subCat) boost += 0.40;
+      }
+      if (p.id === 'food_milk' && hasDairyOcrKeyword) {
+        boost += 0.50;
+      }
+      const baseScore = p.finalScore !== undefined ? p.finalScore : (p.score || 0);
       return {
         ...p,
-        fusedScore: (p.score || 0) + boost
+        fusedScore: baseScore + boost
       };
     }).sort((a, b) => b.fusedScore - a.fusedScore);
 
     bestCandidate = reWeighted[0] || bestCandidate;
   }
 
-  // 4. 品名決策：
+  // 4. Dairy Safety Check (乳品安全防護)
+  const milkCandInVisual = (visualPredictions || []).find(c => c.id === 'food_milk');
+  const top1Cand = (visualPredictions && visualPredictions[0]) || null;
+  const top1Score = top1Cand ? (top1Cand.finalScore !== undefined ? top1Cand.finalScore : top1Cand.score || 0) : 0;
+  const milkScore = milkCandInVisual ? (milkCandInVisual.finalScore !== undefined ? milkCandInVisual.finalScore : milkCandInVisual.score || 0) : 0;
+  const isMilkScoreClose = milkCandInVisual && ((top1Score - milkScore) < 0.05);
+  const isContainerAmbiguity = top1Cand && ['cleaning', 'pao', 'food'].includes(top1Cand.cat);
+
+  const isDairyExplicitByOcr = hasDairyOcrKeyword || (ocrKeywordMatch && ocrKeywordMatch.cat === 'food' && ocrKeywordMatch.subCat === '鮮乳');
+
+  let isDairyBySafetyCheck = false;
+  if (isDairyExplicitByOcr) {
+    isDairyBySafetyCheck = true;
+    if (milkCandInVisual) bestCandidate = milkCandInVisual;
+  } else if (isMilkScoreClose && isContainerAmbiguity) {
+    // 視覺接近且候選落在 cleaning / pao / food
+    // 若 OCR 明確命中清潔用品關鍵字，依清潔用品為準；
+    // 否則「不要直接判成清潔用品」，優先保留 food_milk 候選
+    const ocrConfirmsCleaning = hasCleaningOcrKeyword || (ocrKeywordMatch && ocrKeywordMatch.cat === 'cleaning');
+    if (!ocrConfirmsCleaning) {
+      if (top1Cand.cat === 'cleaning') {
+        isDairyBySafetyCheck = true;
+        if (milkCandInVisual) bestCandidate = milkCandInVisual;
+      }
+    }
+  }
+
+  // 5. 品名決策：
   // 優先級 1: OCR 清楚讀出的品牌 + 商品名稱
-  // 優先級 2: OCR 關鍵字或品類詞
-  // 優先級 3: MobileCLIP2 細分類標準品名
-  // 優先級 4: 「未辨識物品」
+  // 優先級 2: Dairy Safety Check 保底品名「鮮乳」
+  // 優先級 3: OCR 關鍵字或品類詞
+  // 優先級 4: MobileCLIP2 細分類標準品名
+  // 優先級 5: 「未辨識物品」
   let finalName = '';
   if (ocrText) {
     finalName = extractFallbackItemName(ocrText, visualPredictions);
   }
-  if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
+  if (isDairyBySafetyCheck) {
+    if (!finalName || finalName === '新收錄物品' || finalName === '生活物品' || hasDairyOcrKeyword) {
+      if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
+        finalName = '鮮乳';
+      }
+    }
+  } else if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
     if (bestCandidate && bestCandidate.defaultName) {
       finalName = bestCandidate.defaultName;
     } else {
@@ -3809,12 +3892,16 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
   }
   finalName = simplifyItemName(finalName);
 
-  // 5. 分類與圖標決策
+  // 6. 分類與圖標決策
   let finalCategory = 'other';
   let finalSubCategory = '';
   let finalEmoji = '📦';
 
-  if (ocrKeywordMatch) {
+  if (isDairyBySafetyCheck) {
+    finalCategory = 'food';
+    finalSubCategory = '鮮乳';
+    finalEmoji = '🥛';
+  } else if (ocrKeywordMatch) {
     finalCategory = ocrKeywordMatch.cat;
     finalSubCategory = ocrKeywordMatch.subCat;
     finalEmoji = ocrKeywordMatch.emoji;
@@ -3826,7 +3913,7 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
 
   const categoryConfig = DEFAULT_CATEGORIES[finalCategory] || DEFAULT_CATEGORIES['other'];
 
-  // 6. 有效期限決策 (OCR-ONLY RULE: 絕不猜測，找不到即為 null)
+  // 7. 有效期限決策 (OCR-ONLY RULE: 絕不猜測，找不到即為 null)
   let finalExpiry = null;
   if (ocrData && ocrData.date && /^\d{4}-\d{2}-\d{2}$/.test(ocrData.date)) {
     finalExpiry = ocrData.date;
@@ -3837,17 +3924,14 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
     }
   }
 
-  if (isCameraDebug()) {
-    console.log('[FUSION] final candidate:', {
-      name: finalName,
-      category: finalCategory,
-      subCategory: finalSubCategory,
-      emoji: finalEmoji,
-      expiryDate: finalExpiry
-    });
+  let fusionMode = 'mobileclip2_visual';
+  if (isDairyBySafetyCheck) {
+    fusionMode = isDairyExplicitByOcr ? 'dairy_ocr_priority' : 'dairy_safety_override';
+  } else if (ocrKeywordMatch) {
+    fusionMode = 'ocr_keyword_priority';
   }
 
-  return {
+  const finalResult = {
     success: true,
     name: finalName,
     category: finalCategory,
@@ -3858,13 +3942,27 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
     hasEndDate: !!finalExpiry,
     remindDaysBefore: categoryConfig.defaultRemindDays || 3,
     remindTime: '09:00',
-    confidence: bestCandidate ? bestCandidate.score : 0.85,
+    confidence: bestCandidate ? (bestCandidate.finalScore !== undefined ? bestCandidate.finalScore : bestCandidate.score) : 0.85,
     visualMatch: bestCandidate ? bestCandidate.defaultName : 'MobileCLIP2-S0',
-    fusionMode: ocrKeywordMatch ? 'ocr_keyword_priority' : 'mobileclip2_visual',
+    fusionMode: fusionMode,
     visualPredictions: visualPredictions || [],
     ocrText: ocrText,
     notes: ocrBarcode ? `條碼: ${ocrBarcode}` : undefined
   };
+
+  if (isCameraDebug()) {
+    console.log('[FUSION] final result:', {
+      name: finalResult.name,
+      category: finalResult.category,
+      subCategory: finalResult.subCategory,
+      emoji: finalResult.emoji,
+      expiryDate: finalResult.expiryDate,
+      fusionMode: finalResult.fusionMode,
+      confidence: finalResult.confidence
+    });
+  }
+
+  return finalResult;
 }
 
 /**
