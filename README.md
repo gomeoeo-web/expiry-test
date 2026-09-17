@@ -1,10 +1,21 @@
-# 期效管家 1.9.4
+# 期效管家 1.9.5
 
 相機使用 Gemini 3.5 Flash 雲端辨識；使用者無需 API key、測試密碼或下載視覺模型。第一次辨識會說明照片上傳並徵求同意。物品資料與照片縮圖仍儲存在原瀏覽器，既有資料鍵值未更動。
 
 ## 本機使用
 
 雙擊「啟動期效管家.bat」以 http://localhost:8080/ 開啟。直接用 file:// 開啟無法完整載入模組或使用雲端辨識。
+
+## 1.9.5 變更
+- **使用者關閉視窗立即中斷辨識（前端 AbortController 全域化）**：
+  - 在 `cloud-camera.js` 全域維護 `activeRecognitionController`，進入辨識時建立並於結束時清理。
+  - 對外提供 `window.cancelCurrentRecognition()`，當使用者點擊相機關閉按鈕（`#btnCloseCameraModal`）、確認視窗關閉/取消（`#btnCloseNlpConfirm`、`#btnCancelNlpConfirm`）或點擊遮罩背景時，立即中止請求。
+  - 靜默處理 `AbortError`，不彈出報錯或逾時彈窗，並重設拍照按鈕與隱藏載入遮罩。
+- **後端 Cloudflare Worker 配合中斷與釋放鎖**：
+  - 透過 `request.signal.addEventListener('abort', ...)` 監聽用戶端中斷，並即時清除 Durable Object 中的 IP 鎖定。
+  - 無論成功、失敗、超時或中斷，均保證在 `finally` 區塊中徹底釋放鎖定狀態。
+  - 縮短鎖定容錯 TTL：鎖定標記加上時間戳記，預設最長僅鎖定 10 秒；若超時自動失效，允許下一張圖片直接通過。
+- **版本號升級**：版本號全面升級為 1.9.5。
 
 ## 1.9.4 變更
 - **單一 IP 每日配額調整為 200 次**：放寬單一網路 IP 呼叫上限至 200 次，確保足夠每日正常管理辨識所需。

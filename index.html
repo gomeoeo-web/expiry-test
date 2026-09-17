@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.4">
+  <link rel="stylesheet" href="style.css?v=1.9.5">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7854,7 +7854,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.4</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.5</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9367,7 +9367,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.4';
+  const APP_VERSION = '1.9.5';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -16659,6 +16659,9 @@ function extractCleanName(rawText) {
   }
 
   function closeNlpConfirmModal() {
+    if (typeof window.cancelCurrentRecognition === 'function') {
+      window.cancelCurrentRecognition();
+    }
     const modal = document.getElementById('nlpConfirmModal');
     if (modal) {
       closeModalWithAnimation(modal, () => {
@@ -16963,13 +16966,22 @@ function extractCleanName(rawText) {
       });
     }
 
-    if (closeBtn) closeBtn.addEventListener('click', closeNlpConfirmModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeNlpConfirmModal);
+    if (closeBtn) closeBtn.addEventListener('click', () => {
+      if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+      closeNlpConfirmModal();
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => {
+      if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+      closeNlpConfirmModal();
+    });
     if (applyBtn) applyBtn.addEventListener('click', handleNlpConfirmApply);
 
     if (modal) {
       modal.addEventListener('click', function(e) {
-        if (e.target === modal) closeNlpConfirmModal();
+        if (e.target === modal) {
+          if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+          closeNlpConfirmModal();
+        }
       });
     }
 
@@ -17321,7 +17333,29 @@ function extractCleanName(rawText) {
       btnCameraScan.addEventListener('click', openCameraScanModal);
     }
     if (btnClose) {
-      btnClose.addEventListener('click', closeCameraScanModal);
+      btnClose.addEventListener('click', () => {
+        if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+        closeCameraScanModal();
+      });
+    }
+
+    const cameraModal = document.getElementById('cameraScanModal');
+    if (cameraModal) {
+      cameraModal.addEventListener('click', (e) => {
+        if (e.target === cameraModal) {
+          if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+          closeCameraScanModal();
+        }
+      });
+    }
+
+    const loadingModal = document.getElementById('aiScanLoadingModal');
+    if (loadingModal) {
+      loadingModal.addEventListener('click', (e) => {
+        if (e.target === loadingModal) {
+          if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+        }
+      });
     }
     if (btnFlip) {
       btnFlip.addEventListener('click', flipCamera);
@@ -17388,6 +17422,9 @@ function extractCleanName(rawText) {
   }
 
   function closeCameraScanModal() {
+    if (typeof window.cancelCurrentRecognition === 'function') {
+      window.cancelCurrentRecognition();
+    }
     stopCameraStream();
     const modal = document.getElementById('cameraScanModal');
     if (modal) modal.style.display = 'none';
@@ -17644,7 +17681,7 @@ function extractCleanName(rawText) {
     }
     isCameraProcessing = true;
     if (window.setCloudCameraBusy) window.setCloudCameraBusy(true);
-    let photoDataUrl = null, parsed = null, notice = '';
+    let photoDataUrl = null, parsed = null, notice = '', isAborted = false;
     try {
       const canvas = document.getElementById('cameraCanvas');
       const ctx = canvas?.getContext('2d');
@@ -17671,13 +17708,19 @@ function extractCleanName(rawText) {
       if (typeof window.recognizeCloudCamera !== 'function') throw new Error(location.protocol === 'file:' ? '目前是直接開啟 HTML 檔案，無法載入辨識功能。請關閉此頁，雙擊「啟動期效管家.bat」，從 http://localhost:8080/ 使用 APP。' : '辨識程式未載入。請重新整理；若仍失敗，請確認網站包含 cloud-camera.js。');
       parsed = await window.recognizeCloudCamera(canvas, photoDataUrl);
     } catch (error) {
-      notice = error.message || '辨識未完成，請手動填寫。';
+      if (error?.name === 'AbortError' || error?.message === '辨識已取消') {
+        isAborted = true;
+        console.log('辨識已主動中斷或取消，靜默處理。');
+      } else {
+        notice = error.message || '辨識未完成，請手動填寫。';
+      }
     } finally {
       closeCameraScanModal();
       hideAiScanLoading();
       isCameraProcessing = false;
       if (window.setCloudCameraBusy) window.setCloudCameraBusy(false);
     }
+    if (isAborted) return;
     if (!parsed) parsed = {success:false, name:'', category:'other', subCategory:'', emoji:'📦', expiryDate:null, hasEndDate:false, remindDaysBefore:3, remindTime:'09:00', image:photoDataUrl, recognitionNotice:notice};
     openNlpConfirmModal(parsed);
   }
@@ -17691,6 +17734,18 @@ function extractCleanName(rawText) {
   window.getItems = () => items;
   window.getLastCreatedItem = () => lastCreatedItem;
   window.setLastCreatedItem = (item) => { lastCreatedItem = item; };
+
+  // 強化全域中斷函式，同步重設 isCameraProcessing 並隱藏遮罩
+  const origCancelRecognition = window.cancelCurrentRecognition;
+  window.cancelCurrentRecognition = function() {
+    isCameraProcessing = false;
+    hideAiScanLoading();
+    if (typeof origCancelRecognition === 'function') {
+      origCancelRecognition();
+    } else if (typeof window.setCloudCameraBusy === 'function') {
+      window.setCloudCameraBusy(false);
+    }
+  };
 
   // ==========================================
   // 9. 初始化啟動
@@ -17953,7 +18008,7 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <script type="module" src="app.js?v=1.9.4"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.4"></script>
+  <script type="module" src="app.js?v=1.9.5"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.5"></script>
 </body>
 </html>
