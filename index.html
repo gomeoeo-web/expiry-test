@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.8.24">
+  <link rel="stylesheet" href="style.css?v=1.8.26">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7183,6 +7183,9 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
               <span id="btnDownloadAiModelText">下載模型</span>
             </button>
           </div>
+          <div class="settings-download-progress-track" id="settingsDownloadProgressTrack" style="display:none;">
+            <div class="settings-download-progress-bar" id="settingsDownloadProgressBar" style="width:0%;"></div>
+          </div>
         </div>
 
         <!-- Group 2: Archive & Recently Deleted Trash -->
@@ -7238,7 +7241,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.24</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.26</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -7290,7 +7293,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         </div>
         <!-- Flash animation overlay on shutter -->
         <div id="cameraFlashOverlay" class="camera-flash-overlay"></div>
-        <!-- AI 模型載入 / 快取進度浮層 (v1.8.24 MobileCLIP2-S0 首次載入優化) -->
+        <!-- AI 模型載入 / 快取進度浮層 (v1.8.26 MobileCLIP2-S0 首次載入優化) -->
         <div id="modelLoadingOverlay" class="model-loading-overlay" style="display: none;">
           <div class="model-loading-card">
             <div class="model-loading-header">
@@ -8829,7 +8832,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.8.24';
+  const APP_VERSION = '1.8.26';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -17323,8 +17326,8 @@ function extractCleanName(rawText) {
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <!-- Tesseract.js 本地/離線 OCR 文字辨識引擎 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <!-- MobileCLIP2 預計算特徵資料庫與主控制器 (v1.8.24) -->
-  <script type="module" src="mobileclip2-labels.js?v=1.8.24"></script>
-  <script type="module" src="app.js?v=1.8.24"></script>
+  <!-- MobileCLIP2 預計算特徵資料庫與主控制器 (v1.8.26) -->
+  <script type="module" src="mobileclip2-labels.js?v=1.8.26"></script>
+  <script type="module" src="app.js?v=1.8.26"></script>
 </body>
 </html>

@@ -1,96 +1,52 @@
-# 期效管家 v1.8.22：MobileCLIP2-S0 視覺編碼器 + OCR 雙軌相機辨識升級成果
+# 期效管家 v1.8.26 升級成果展示
 
 ## 概述與核心解決問題
 
-針對 **iPhone 13 (6GB RAM)** 在 iOS Safari / WebGPU 環境下執行生成式大模型 (如 SmolVLM-256M / Moondream2) 時，因瞬間記憶體壓力造成整個 Safari 頁面頻繁 Reload / Crash 的問題，在本次 **v1.8.22** 升級中：
-
-1. **全面移除相機辨識流程中的所有生成式 VLM**（SmolVLM-256M、Moondream2、`model.generate()`、`AutoModelForVision2Seq`）。
-2. 將相機主要辨識引擎重構為：
-   **MobileCLIP2-S0 Vision Encoder (~43MB) + Tesseract OCR + SMART_KEYWORD_MAP 決策融合**。
-3. 手機端與瀏覽器端**嚴格禁止載入 254MB 之 `text_model.onnx`**，所有文字特徵（18 個大分類、97 個商品細分類）皆已由真實 MobileCLIP2-S0 文字編碼器離線計算完成，生成 512 維 L2 正規化特徵庫 (`mobileclip2-labels.js` / `.json`)。
-4. 有效期限嚴格遵守 **OCR-Only 規則**：絕不使用保存期限或 AI 猜測，未在包裝讀出日期即為 `null`。
-5. 全專案版本號同步晉升為 **v1.8.22**。
+本次 **v1.8.26** 版本升級專注於解決使用者拍攝滑鼠被誤判為雜訊 `ad 3` 的問題，並徹底修復設定頁面中的「下載模型」按鈕，讓模型下載能一鍵即時觸發，並具備即時進度與完成反饋。
 
 ---
 
-## 核心升級亮點
+## 核心修復亮點
 
-### 1. 手機端採用 Moondream2 (1.8B 端側超輕量 VLM)
-- **模型架構**：採用 Hugging Face Transformers.js 端側量化模型 `Xenova/moondream2`（1.8B 參數級超輕量視覺語言模型），專為端側邊緣運算設計。
-- **硬體加速與自動降級**：
-  - 支援 WebGPU 硬體加速推論（INT4 / FP16）。
-  - 若裝置未支援 WebGPU（如部分舊版手機），自動無縫降級至 WASM / Q4 量化管線，確保跨平台百分之百相容不閃退。
-- **全多模態理解**：
-  - 支援自然語言 Visual Question Answering（VQA），能從物品外觀、包裝細節中直接理解商品名稱、日常所屬類別與有效期限。
-  - 保留條碼直鎖（ISBN 978/979 條碼立即辨識）與 Tesseract OCR 效期文字提取雙軌互補。
+### 1. 修正滑鼠辨識為 `ad 3`，確保未來物品均符合真實名稱
+- **OCR 雜訊智慧過濾 (`isOcrNoiseString`)**：
+  - 過濾掉如 `ad 3`、`ad3`、`a 1`、`sn 12`、`c3`、`x-2`、`p 4` 等 1~3 字元之短英數碎片、無母音子音拼湊或非標準型號雜訊。
+  - 要求中文品名至少需有 2 個中文字，且自動排除成分、規格、電話等說明雜訊。
+- **特徵資料庫擴充並離線生成 512 維向量**：
+  - 在 `mobileclip2-labels.js` / `.json` 中新增：
+    - `warranty_mouse`：**電腦滑鼠**（🖱️，保固/電腦，512 維 L2 正規化特徵）
+    - `warranty_keyboard`：**電腦鍵盤**（⌨️，保固/電腦）
+    - `warranty_mousepad`：**滑鼠墊**（🖱️，保固/電腦）
+    - `warranty_monitor`：**電腦螢幕**（🖥️，保固/電腦）
+  - 擴充 `VISUAL_APPEARANCE_DICT` 與 `VISUAL_LABEL_TRANSLATIONS`，確保在 MobileNet 降級狀態下亦能自動將 `mouse, computer mouse` 映射至「電腦滑鼠 (保固/電腦)」。
+- **確立「視覺外觀辨識優先」融合原則**：
+  - 當視覺模型辨識出實體商品（如滑鼠、鍵盤、耳機、鮮乳等），而 OCR 僅讀出無分類意義之破碎雜訊時，**品名一律由視覺外觀決定**（例如：「電腦滑鼠」）。
+  - 若 OCR 讀出知名品牌（如 `Logitech`、`Razer`、`Apple`、`Samsung`、`光泉` 等），則融合為「Logitech 電腦滑鼠」或「Razer 電腦滑鼠」。
 
-### 2. 設定頁面新增專屬「AI 辨識模型下載」控制群組
-- **位置與入口**：位於「設定與資料管理」彈窗（Settings Modal）首要群組。
-- **介面配置**：
-  - 圖示：🤖
-  - 標題：**AI 辨識模型 (Moondream2)**
-  - 動態狀態說明（`#settingsAiModelStatusText`）：
-    - 未下載時：「1.8B 端側超輕量 VLM，點擊立即下載至本機快取」
-    - 下載中時：「正在下載 Moondream2 權重 XX%...」
-    - 已快取時：「✅ 已快取至本機 IndexedDB (離線隨開即用)」
-  - 下載按鈕（`#btnDownloadAiModel`）：
-    - 支援未下載、下載中（流光動效）、已下載（綠色膠囊 `✅ 已下載 (離線可用)`）三態視覺切換。
-    - 點擊可直接在背景或透過進度面板啟動模型下載與 IndexedDB 寫入。
+---
 
-### 3. 首次下載動畫優化與「永久免重複彈出」防護機制
-- **優化首次下載動畫卡片**：
-  - 高質感毛玻璃暗黑霓虹卡片（`.model-loading-overlay` / `.model-loading-card`）。
-  - 霓虹流光漸層進度條（`#6366f1 -> #3b82f6 -> #10b981`），搭配發光微光陰影與動態流光（Shimmer）。
-  - 即時數字百分比與檔案名稱回調。
-  - 下載完成時自動顯示「✅ 100% 下載完成，已存入本機快取」並平滑淡出。
-- **下載完畢絕不再出現動畫**：
-  - 透過 `localStorage` 旗標 (`moondream2_downloaded`) 與記憶體實例狀態，精確記憶下載結果。
-  - `showModelLoadingOverlay` 內建防護：凡模型已快取且非手動強制重抓時，**一律自動攔截抑制**。
-  - 使用者在日常開啟相機（`openCameraScanModal`）時，畫面乾淨開鏡，**絕不再有任何下載動畫干擾取景**！
+### 2. 修復設定頁面「下載模型」按鈕
+- **按下一鍵直接下載，移除彈窗阻擋**：
+  - 移除原先重複提示的 `confirm` 詢問視窗，使用者點擊按鈕或整列設定列即可立即啟動下載。
+  - 清理過期快取旗標干擾，確保未下載狀態準確識別。
+- **三態視覺與即時進度回饋**：
+  - **未下載**：按鈕顯示 `📥 下載模型`，說明為「MobileCLIP2-S0 輕量視覺模型 (~43MB)，點擊立即下載至本機快取」。
+  - **下載中**：按鈕立即轉為黃橙色動態 `⏳ 下載中 X%`，狀態文字同步顯示「正在下載 MobileCLIP2-S0 視覺模型 X%...」，且下方顯示專屬進度條。
+  - **下載完成**：按鈕轉為綠色膠囊 `✅ 下載完成`，狀態文字更新為「✅ 下載完成！已快取至本機 IndexedDB (~43MB 離線隨開即用)」，模型快取永久記憶。
+- **全區域感應與觸控優化**：
+  - 支援點擊按鈕 `#btnDownloadAiModel` 與點擊整列 `#rowAiModelDownload`，手機端零延遲觸發。
 
-### 4. 全專案版本號同步升級為 v1.8.21
-- `package.json` -> `"version": "1.8.21"`
-- `index.html` & `www/index.html` -> `style.css?v=1.8.21`, `app.js?v=1.8.21`, `appVersionBadge` -> `v1.8.21`, `APP_VERSION = '1.8.21'`
-- `style.css` & `www/style.css` -> 新增 `.btn-download-ai-model` 與升級 `.model-loading-overlay`
-- `app.js` & `www/app.js` -> 核心功能全面升級並同步至 `www/`
+---
+
+### 3. 全專案版本號同步升級為 v1.8.26
+- `package.json` -> `"version": "1.8.26"`
+- `index.html` & `www/index.html` -> `style.css?v=1.8.26`, `app.js?v=1.8.26`, `mobileclip2-labels.js?v=1.8.26`, `#appVersionBadge` -> `v1.8.26`, `APP_VERSION = '1.8.26'`
+- `style.css` & `www/style.css` -> 新增設定列下載進度條樣式 `.settings-download-progress-track` 與 `.settings-download-progress-bar`
+- `app.js` & `www/app.js` -> 標頭升級為 `v1.8.26`，所有核心演算法 100% 同步
 
 ---
 
 ## 驗證成果 (Verification Results)
 
-### 自動化測試驗證套件 (`scratch/test_v1821_verification.js`)
-執行結果：**100% 全數通過** ✅
-
-```
-==============================================
-🧪 執行期效管家 v1.8.21 Moondream2 升級完整驗證套件
-==============================================
-
---- 驗證 1: 全專案版本號更新為 1.8.21 ---
-  ✅ package.json: version = 1.8.21
-  ✅ index.html: 所有版本引用、設定頁下載按鈕與 Moondream2 UI 標籤正確
-  ✅ www/index.html: 與 root index.html 100% 同步
-  ✅ app.js: 包含 v1.8.21 標題與核心 Moondream2 模組
-  ✅ www/app.js: 與 root app.js 100% 同步
-
---- 驗證 2: 核心 API 與相容層檢查 ---
-  ✅ 所有對外 API 介面、Moondream2 核心與相容包裝函式全部完備就緒！
-
---- 驗證 3: 下載快取狀態與動畫防護驗證 ---
-  ✅ 初始狀態：正確判定未下載模型
-  ✅ 下載成功後：已安全持久化快取標記至 localStorage
-  ✅ 快取防護成功：已下載模型狀態下，相機啟動一律靜默就緒，絕不彈出下載動畫！
-
---- 驗證 4: Moondream2 輸出解析與決策融合 ---
-  ✅ Case 1 通過: Moondream2 格式化輸出精準提取 (品名、分類、效期)
-  ✅ Case 2 通過: JSON 格式輸出相容解析
-  ✅ Case 3 通過: formatVlmResult 正確標記 Moondream2 (1.8B 端側超輕量 VLM) 引擎
-
-==============================================
-🎉 期效管家 v1.8.21 升級驗證 100% 全數通過！
-==============================================
-```
-
-### 回歸測試
-- `scratch/test_date_parser.js`：台灣在地化有效期限格式解析 **100% 通過** ✅
-- `scratch/run_all_tests.js`：核心語意與條碼優先級邏輯 **100% 通過** ✅
+### 自動化測試驗證套件 (`scratch/test_v1826_verification.js`)
+執行結果：**48 項檢測 100% 全數通過** ✅

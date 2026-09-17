@@ -6554,6 +6554,23 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   box-shadow: none;
 }
 
+.settings-download-progress-track {
+  height: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.settings-download-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0a84ff, #30d158);
+  border-radius: 2px;
+  transition: width 0.22s ease;
+}
+
 /* ==========================================================================
    Model Loading Overlay (v1.8.21 Moondream2 1.8B VLM 首次下載動畫優化)
    ========================================================================== */
