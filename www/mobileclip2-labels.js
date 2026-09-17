@@ -2,7 +2,7 @@
  * MobileCLIP2-S0 預先計算商品特徵向量資料庫 (Offline Text Embeddings)
  * 模型: plhery/mobileclip2-onnx (S0)
  * 向量維度: 512 (L2 Normalized)
- * 版本: v1.8.26
+ * 版本: v1.8.27
  * 
  * 手機端與瀏覽器禁止載入 254MB text_model.onnx，僅需載入此特徵庫與 S0 vision_model.onnx。
  */
