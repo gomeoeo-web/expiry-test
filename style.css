@@ -569,6 +569,9 @@ body {
 }
 
 .camera-viewport-wrap {
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
   flex: 1;
   position: relative;
   overflow: hidden;

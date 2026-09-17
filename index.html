@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.0">
+  <link rel="stylesheet" href="style.css?v=1.9.1">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7232,7 +7232,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.0</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.1</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -8768,7 +8768,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.0';
+  const APP_VERSION = '1.9.1';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -9288,6 +9288,145 @@ var CapacitorBridgeBundle = (() => {
         { name: '精品皮鞋鞋靴', subCat: '精品鞋靴', emoji: '👠', duration: 180, hasEndDate: true, warnDays: 14, location: '玄關通風鞋櫃', notes: '換季鞋靴放置除濕包與鞋撐防變形' }
       ]
     },
+    drinks: {
+      label: '飲品',
+      emoji: '🧃',
+      items: [
+        { name: '精品咖啡豆', subCat: '咖啡豆', emoji: '☕', duration: 30, hasEndDate: true, warnDays: 5, location: '吧台密封罐', notes: '拆封後最佳香氣賞味期 1 個月' },
+        { name: '濾掛咖啡包', subCat: '濾掛咖啡', emoji: '☕', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公桌抽屜', notes: '充氮防氧化，建議半年內沖泡完畢' },
+        { name: '高山茶葉茶包', subCat: '茶葉茶包', emoji: '🍵', duration: 180, hasEndDate: true, warnDays: 14, location: '茶水櫃', notes: '密封防潮，保持高雅香氣' },
+        { name: '現調手搖飲品', subCat: '手搖飲品', emoji: '🧋', duration: 1, hasEndDate: true, warnDays: 1, location: '冷藏/隨身', notes: '建議當日內飲用完畢' },
+        { name: '鮮榨蔬果汁', subCat: '果汁蔬果汁', emoji: '🍹', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏', notes: '低溫冷藏，3 天內飲畢' },
+        { name: '包裝礦泉水', subCat: '包裝水', emoji: '💧', duration: 365, hasEndDate: true, warnDays: 30, location: '常備物資區', notes: '常溫避光保存' },
+        { name: '微礦氣泡水', subCat: '氣泡水', emoji: '🫧', duration: 180, hasEndDate: true, warnDays: 14, location: '冷藏儲物櫃', notes: '開封後請旋緊瓶蓋避免氣泡散逸' },
+        { name: '碳酸清涼飲料', subCat: '碳酸飲料', emoji: '🥤', duration: 180, hasEndDate: true, warnDays: 14, location: '冰箱層板', notes: '留意瓶身賞味期限' },
+        { name: '精釀啤酒烈酒', subCat: '啤酒烈酒', emoji: '🍺', duration: 180, hasEndDate: true, warnDays: 14, location: '酒櫃/冷藏', notes: '避光保存，留意最佳風味期' },
+        { name: '紅白葡萄酒', subCat: '紅白酒', emoji: '🍷', duration: 365, hasEndDate: true, warnDays: 30, location: '恆溫紅酒櫃', notes: '開瓶後請冷藏並於一週內享用' },
+        { name: '沖泡飲品燕麥奶', subCat: '沖泡飲品', emoji: '🥛', duration: 90, hasEndDate: true, warnDays: 7, location: '早餐櫃', notes: '開封後密封防潮' },
+        { name: '運動乳清飲品', subCat: '乳清飲品', emoji: '🥤', duration: 60, hasEndDate: true, warnDays: 7, location: '健身包旁', notes: '即飲蛋白補充品' }
+      ]
+    },
+    snack: {
+      label: '零食',
+      emoji: '🍪',
+      items: [
+        { name: '酥脆餅乾米果', subCat: '餅乾米果', emoji: '🍘', duration: 60, hasEndDate: true, warnDays: 7, location: '零食抽屜', notes: '開封後儘速享用防受潮' },
+        { name: '洋芋片脆片', subCat: '洋芋片脆片', emoji: '🥔', duration: 45, hasEndDate: true, warnDays: 7, location: '零食籃', notes: '保持密封乾燥' },
+        { name: '黑巧克力可可', subCat: '巧克力可可', emoji: '🍫', duration: 180, hasEndDate: true, warnDays: 14, location: '陰涼零食櫃', notes: '高溫易融化，室溫20度以下或冷藏' },
+        { name: '烘焙堅果果乾', subCat: '堅果果乾', emoji: '🥜', duration: 60, hasEndDate: true, warnDays: 7, location: '茶几密封罐', notes: '堅果富含油脂，拆封後儘早食用防止氧化' },
+        { name: '軟糖硬糖', subCat: '糖果軟糖', emoji: '🍬', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公抽屜', notes: '防潮密封避免黏手' },
+        { name: '蜜汁肉乾肉條', subCat: '肉乾肉條', emoji: '🥩', duration: 30, hasEndDate: true, warnDays: 5, location: '零食櫃', notes: '開封後請冷藏保鮮' },
+        { name: '即食杯麵泡麵', subCat: '即食泡麵', emoji: '🍜', duration: 180, hasEndDate: true, warnDays: 14, location: '廚房儲物櫃', notes: '常備乾糧，定期檢視效期' },
+        { name: '香脆海苔點心', subCat: '海苔點心', emoji: '🍙', duration: 60, hasEndDate: true, warnDays: 7, location: '零食籃', notes: '極易受潮，建議儘快食用完畢' },
+        { name: '果汁果凍布丁', subCat: '果凍布丁', emoji: '🍮', duration: 60, hasEndDate: true, warnDays: 7, location: '冷藏蔬果層', notes: '冷藏後風味更佳' },
+        { name: '傳統糕點月餅', subCat: '傳統糕餅', emoji: '🥮', duration: 14, hasEndDate: true, warnDays: 3, location: '餐桌點心盤', notes: '無防腐劑糕餅保鮮期短' }
+      ]
+    },
+    fresh: {
+      label: '生鮮',
+      emoji: '🥩',
+      items: [
+        { name: '冷藏牛肉羊肉', subCat: '牛肉羊肉', emoji: '🥩', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '冷藏 3 天內料理或及時分裝冷凍' },
+        { name: '生鮮豬肉片', subCat: '生鮮豬肉', emoji: '🥓', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '儘速熟食烹飪' },
+        { name: '生鮮雞肉禽肉', subCat: '雞肉禽肉', emoji: '🍗', duration: 2, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '生鮮雞肉保鮮期短，請儘早食用' },
+        { name: '海鮮鮮魚切片', subCat: '海鮮魚類', emoji: '🐟', duration: 2, hasEndDate: true, warnDays: 1, location: '冰箱魚肉專用層', notes: '極鮮魚肉，建議當天或隔天享用' },
+        { name: '活凍蝦蟹貝類', subCat: '蝦蟹貝類', emoji: '🦐', duration: 60, hasEndDate: true, warnDays: 7, location: '冷凍庫', notes: '低溫冷凍，料理前流水解凍' },
+        { name: '火鍋肉片組', subCat: '火鍋肉片', emoji: '🥩', duration: 30, hasEndDate: true, warnDays: 5, location: '冷凍庫', notes: '冷凍保存，封口避免凍傷' },
+        { name: '手工冷凍水餃', subCat: '水餃湯圓', emoji: '🥟', duration: 90, hasEndDate: true, warnDays: 7, location: '冷凍抽屜', notes: '保持密封，避免乾裂' },
+        { name: '生鮮有機時蔬', subCat: '生鮮時蔬', emoji: '🥬', duration: 5, hasEndDate: true, warnDays: 2, location: '蔬果保鮮室', notes: '葉菜類及早烹調' }
+      ]
+    },
+    supplement: {
+      label: '保健',
+      emoji: '🧬',
+      items: [
+        { name: '綜合維他命錠', subCat: '綜合維他命', emoji: '💊', duration: 180, hasEndDate: true, warnDays: 14, location: '餐桌藥盒', notes: '開封後 6 個月內食用完畢' },
+        { name: '高單位活性B群', subCat: 'B群活力', emoji: '⚡', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公桌', notes: '每日晨間活力補充' },
+        { name: '長效維生素C', subCat: '維生素C', emoji: '🍊', duration: 180, hasEndDate: true, warnDays: 14, location: '客廳茶几', notes: '保持乾燥密封' },
+        { name: '高純度深海魚油', subCat: '深海魚油', emoji: '🐟', duration: 180, hasEndDate: true, warnDays: 14, location: '陰涼避光處', notes: 'EPA/DHA 保持密封避免氧化' },
+        { name: '游離型葉黃素', subCat: '葉黃素', emoji: '👁️', duration: 180, hasEndDate: true, warnDays: 14, location: '電腦桌旁', notes: '晶亮保護每日一顆' },
+        { name: '活性複合益生菌', subCat: '活性益生菌', emoji: '🦠', duration: 90, hasEndDate: true, warnDays: 7, location: '冰箱冷藏/陰涼處', notes: '菌種維持活力，定期食用完畢' },
+        { name: '膠原蛋白美妍粉', subCat: '膠原蛋白', emoji: '✨', duration: 90, hasEndDate: true, warnDays: 7, location: '梳妝台', notes: '拆封後保持密封乾燥' },
+        { name: '天然海藻鈣片D3', subCat: '鈣片D3', emoji: '🦴', duration: 180, hasEndDate: true, warnDays: 14, location: '藥品收納盒', notes: '睡前補充鈣質' },
+        { name: '常溫滴雞精禮盒', subCat: '滴雞精', emoji: '🥣', duration: 180, hasEndDate: true, warnDays: 14, location: '常備補品櫃', notes: '隔水加熱即飲' },
+        { name: '高純度乳清蛋白', subCat: '高蛋白粉', emoji: '🥤', duration: 90, hasEndDate: true, warnDays: 7, location: '廚房中島', notes: '大包裝拆封後密封乾燥防受潮' }
+      ]
+    },
+    beauty: {
+      label: '美妝',
+      emoji: '💄',
+      items: [
+        { name: '保濕修護精華液', subCat: '精華液', emoji: '💧', duration: 180, hasEndDate: true, warnDays: 14, location: '化妝台', notes: '滴管避免直接觸碰皮膚，6個月內用畢' },
+        { name: '滋潤保濕乳霜', subCat: '乳液面霜', emoji: '🧴', duration: 180, hasEndDate: true, warnDays: 14, location: '臥室梳妝台', notes: '面霜開封後旋緊瓶蓋' },
+        { name: '深層補水面膜', subCat: '保濕面膜', emoji: '🧖‍♀️', duration: 180, hasEndDate: true, warnDays: 14, location: '面膜收納盒', notes: '每週定期保養敷臉' },
+        { name: '溫和卸妝潔顏露', subCat: '卸妝潔顏', emoji: '🧼', duration: 180, hasEndDate: true, warnDays: 14, location: '洗臉台', notes: '每日清潔殘妝' },
+        { name: '舒緩化妝水噴霧', subCat: '化妝水噴霧', emoji: '💦', duration: 180, hasEndDate: true, warnDays: 14, location: '梳妝台', notes: '妝前補水滋潤' },
+        { name: '緊緻眼部修護霜', subCat: '緊緻眼霜', emoji: '👁️', duration: 180, hasEndDate: true, warnDays: 14, location: '化妝台抽屜', notes: '眼霜開封後請儘速用畢' },
+        { name: '臉部防曬隔離乳', subCat: '防曬隔離', emoji: '☀️', duration: 365, hasEndDate: true, warnDays: 30, location: '隨身包/化妝台', notes: '防曬成分開封後防護力逐月衰減，建議一年內換新' },
+        { name: '潤唇膏口紅唇彩', subCat: '唇膏口紅', emoji: '💄', duration: 365, hasEndDate: true, warnDays: 30, location: '隨身化妝包', notes: '唇膏開封建議一年內用畢' },
+        { name: '持久粉底彩妝品', subCat: '粉底彩妝', emoji: '🎨', duration: 365, hasEndDate: true, warnDays: 30, location: '彩妝抽屜', notes: '粉底液開封後定期檢視質地與氣味' },
+        { name: '經典淡香水香氛', subCat: '香水香氛', emoji: '🌸', duration: 730, hasEndDate: true, warnDays: 60, location: '香水展示盤', notes: '香水避免陽光高溫直射，建議 2~3 年內使用' }
+      ]
+    },
+    digital: {
+      label: '數位',
+      emoji: '📱',
+      items: [
+        { name: '氮化鎵多口快充頭', subCat: '充電器快充', emoji: '🔌', duration: 730, hasEndDate: true, warnDays: 30, location: '工作桌', notes: '原廠 2 年保固與充放電狀態檢視' },
+        { name: '編織快充傳輸線', subCat: '傳輸充電線', emoji: '⚡', duration: 365, hasEndDate: true, warnDays: 30, location: '床頭櫃/隨身包', notes: '線頭金屬觸點與線材磨損檢查' },
+        { name: '磁吸無線行動電源', subCat: '行動電源', emoji: '🔋', duration: 540, hasEndDate: true, warnDays: 30, location: '隨身背包', notes: '鋰電池壽命監測，約 1.5 年後檢測電池健康度' },
+        { name: '真無線降噪耳機', subCat: '耳機周邊', emoji: '🎧', duration: 365, hasEndDate: true, warnDays: 30, location: '電腦桌', notes: '1 年原廠保固與耳塞矽膠定期換新' },
+        { name: '鋼化保護貼與防摔殼', subCat: '保護貼保護殼', emoji: '🛡️', duration: 180, hasEndDate: true, warnDays: 14, location: '手機隨身', notes: '玻璃貼裂痕或防摔殼發黃時定期換新' },
+        { name: '高速記憶卡隨身碟', subCat: '記憶卡隨身碟', emoji: '💾', duration: 1095, hasEndDate: true, warnDays: 60, location: '數位配件盒', notes: '重要資料定時備份至雲端或冷儲存' },
+        { name: '人體工學鍵盤滑鼠', subCat: '鍵盤滑鼠', emoji: '⌨️', duration: 730, hasEndDate: true, warnDays: 30, location: '書房電腦桌', notes: '原廠 2 年硬體保固' },
+        { name: '智慧穿戴手環手錶', subCat: '智慧穿戴', emoji: '⌚', duration: 365, hasEndDate: true, warnDays: 30, location: '手腕佩戴', notes: '1 年原廠保固與感測器清潔' },
+        { name: '多功能擴充轉接HUB', subCat: '擴充轉接HUB', emoji: '🎛️', duration: 730, hasEndDate: true, warnDays: 30, location: '辦公室筆電旁', notes: '原廠保固與接口穩定性' }
+      ]
+    },
+    stationery: {
+      label: '文具',
+      emoji: '📚',
+      items: [
+        { name: '年度手帳筆記本', subCat: '手帳筆記', emoji: '📓', duration: 365, hasEndDate: false, location: '辦公桌', notes: '記錄陪伴與工作生活筆記使用天數' },
+        { name: '閱讀書籍與工具書', subCat: '書籍雜誌', emoji: '📖', duration: 180, hasEndDate: false, location: '書房書架', notes: '記錄藏書閱讀與陪伴天數' },
+        { name: '鋼筆精品簽字筆', subCat: '簽字鋼筆', emoji: '✒️', duration: 365, hasEndDate: false, location: '筆盒/隨身', notes: '定期清洗筆尖與保養氣密' },
+        { name: '原子筆替芯鋼筆墨水', subCat: '墨水替芯', emoji: '🖋️', duration: 180, hasEndDate: true, warnDays: 14, location: '文具抽屜', notes: '避免墨水乾涸堵塞，常備替芯' },
+        { name: '無痕膠帶與接著工具', subCat: '膠帶黏著', emoji: '🩹', duration: 180, hasEndDate: true, warnDays: 14, location: '工具盒', notes: '膠帶防曬防高溫融膠' },
+        { name: '資料夾檔案收納盒', subCat: '檔案夾收納', emoji: '📂', duration: 365, hasEndDate: false, location: '書房文件櫃', notes: '重要紙本合約分類歸檔' },
+        { name: '專業美術繪畫用品', subCat: '繪畫美術', emoji: '🎨', duration: 180, hasEndDate: true, warnDays: 14, location: '畫具箱', notes: '顏料保持密封防止乾裂' },
+        { name: '裁紙機美工刀剪刀', subCat: '裁切工具', emoji: '✂️', duration: 365, hasEndDate: false, location: '筆筒', notes: '刀片生鏽或鈍化及時折斷更換' },
+        { name: '日常辦公事務文具', subCat: '辦公文具', emoji: '📎', duration: 365, hasEndDate: false, location: '辦公桌抽屜', notes: '釘書針、迴紋針常備' }
+      ]
+    },
+    sports: {
+      label: '運動',
+      emoji: '🏃',
+      items: [
+        { name: '避震慢跑跑鞋', subCat: '跑鞋運動鞋', emoji: '👟', duration: 365, hasEndDate: false, location: '鞋櫃', notes: 'PU/EVA中底避震壽命約 500~800 公里，記錄使用天數' },
+        { name: '專業防滑瑜珈墊', subCat: '瑜珈墊', emoji: '🧘', duration: 365, hasEndDate: false, location: '客廳運動角', notes: '定期使用酒精濕巾清潔除菌' },
+        { name: '運動護膝護腕護具', subCat: '運動護具', emoji: '🛡️', duration: 180, hasEndDate: true, warnDays: 14, location: '運動裝備包', notes: '彈性纖維疲勞鬆弛即應換新' },
+        { name: '重訓阻力彈力帶', subCat: '彈力帶拉力繩', emoji: '🎗️', duration: 180, hasEndDate: true, warnDays: 14, location: '臥室健身角', notes: '定期檢查乳膠表面是否有微小裂紋防斷裂' },
+        { name: '包膠啞鈴壺鈴重量', subCat: '啞鈴重訓', emoji: '🏋️', duration: 730, hasEndDate: false, location: '地墊區', notes: '居家自主力量訓練耐用器材' },
+        { name: '運動保溫機能水壺', subCat: '機能水壺', emoji: '🧊', duration: 365, hasEndDate: true, warnDays: 14, location: '隨身背包', notes: '瓶蓋矽膠防漏墊圈每年定期換新' },
+        { name: '能量果膠電解質補給', subCat: '運動補給', emoji: '⚡', duration: 180, hasEndDate: true, warnDays: 14, location: '運動補給小袋', notes: '馬拉松與單車賽前確認賞味效期' },
+        { name: '多功能運動健身包', subCat: '運動包袋', emoji: '🎒', duration: 365, hasEndDate: false, location: '玄關掛勾', notes: '防潑水耐用訓練包' },
+        { name: '羽毛球網球拍穿線', subCat: '球拍線路', emoji: '🏸', duration: 60, hasEndDate: true, warnDays: 7, location: '球拍袋', notes: '磅數自然衰減，建議每 2 個月重新穿線' }
+      ]
+    },
+    tools: {
+      label: '五金',
+      emoji: '🔧',
+      items: [
+        { name: '精密螺絲起子工具組', subCat: '螺絲工具組', emoji: '🪛', duration: 730, hasEndDate: false, location: '工具箱', notes: '修繕3C與家具常備精密批頭' },
+        { name: 'LED高流明手電筒', subCat: '手電筒照明', emoji: '🔦', duration: 365, hasEndDate: true, warnDays: 30, location: '緊急避難包', notes: '每半年定期檢查電量與充飽備用' },
+        { name: '電工防水絕緣膠帶', subCat: '防水絕緣膠帶', emoji: '🩹', duration: 365, hasEndDate: true, warnDays: 30, location: '水電工具盒', notes: '電線包裹與修復防漏' },
+        { name: '萬能接著快乾膠', subCat: '接著快乾膠', emoji: '🧪', duration: 90, hasEndDate: true, warnDays: 7, location: '抽屜工具袋', notes: '開封接觸空氣易硬化，用畢栓緊冷藏延長壽命' },
+        { name: '家庭修繕五金螺絲', subCat: '修繕五金', emoji: '🔩', duration: 730, hasEndDate: false, location: '五金收納格', notes: '膨脹螺栓、自攻螺絲常備' },
+        { name: '不鏽鋼量尺測量工具', subCat: '量尺測量', emoji: '📏', duration: 730, hasEndDate: false, location: '工具箱上層', notes: '木工裝修與網購空間測量' },
+        { name: 'WD-40多功能防鏽油', subCat: '潤滑防鏽油', emoji: '🧴', duration: 730, hasEndDate: true, warnDays: 30, location: '工作陽台', notes: '門鉸鏈異音消弭與機械防鏽保養' },
+        { name: '家庭水電耗材五金', subCat: '五金耗材', emoji: '🔧', duration: 365, hasEndDate: false, location: '維修工具箱', notes: '水路止水閥墊圈與接頭耗材' }
+      ]
+    },
     other: {
       label: '其他',
       emoji: '📌',
@@ -9418,25 +9557,33 @@ var CapacitorBridgeBundle = (() => {
 
   // 細項配置字典 (SUB_CATEGORY_CONFIG)
   const SUB_CATEGORY_CONFIG = {
-    vehicle: ['機油', '齒輪油', '輪胎', '電瓶', '雨刷', '煞車', '驗車', '車險'],
-    subscription: ['影音', '音樂', '雲端', '軟體', '健身', '電信', '租約', '訂閱服務'],
-    medicine: ['眼藥水', '維他命', '魚油', '藥膏', '成藥', '醫療', '保養液'],
-    cleaning: ['菜瓜布', '洗衣精', '洗碗精', '抹布', '潔廁劑', '酒精', '除蟎'],
-    warranty: ['家具', '電腦', '手機', '耳機', '家電', '手錶', '遊戲機'],
-    filter: ['濾網', '濾芯', '牙刷', '除濕盒', '掃地耗材', '咖啡保養'],
-    food: ['青菜', '水果', '鮮乳', '咖啡', '雞蛋', '茶包', '調味料', '零食', '生鮮肉品', '麵包烘焙'],
-    pao: ['洗沐', '防曬', '保養', '護手霜', '牙膏', '刮鬍刀', '香水', '彩妝'],
-    pet: ['乾糧', '罐頭', '驅蟲藥', '疫苗健檢', '貓砂尿墊', '零食凍乾', '寵物保健'],
-    baby: ['配方奶', '尿布', '濕紙巾', '副食品', '奶嘴用品', '幼兒疫苗'],
-    office: ['耗材墨水', '碳粉匣', '電池', '筆記文具', '證件合約', '專業證照'],
-    outdoor: ['高蛋白', '露營裝備', '登山裝備', '水壺配件', '補給品', '球拍線路'],
-    home: ['植栽綠化', '花草肥料', '燈具照明', '寢具家飾', '居家安全', '修繕保養'],
-    fashion: ['換季送洗', '皮革保養', '珠寶飾品', '衣物防護', '精品鞋靴'],
-    animation: ['漫畫/單行本', '輕小說', 'BD/影音', '畫冊/設定集', '周邊特典'],
-    game: ['Switch 卡帶', 'PS/Xbox 光碟', '主機/手把周邊', '點數卡/序號', '特典周邊'],
-    otaku: ['徽章/吧唧', '壓克力立牌/磚', '色紙/相卡', '模型/黏土人/景品', '棉花娃/玩偶', '一番賞'],
-    ticket: ['電影票', '演唱會/音樂會', '動漫展覽門票', '活動兌換券'],
-    other: ['一般雜項', '配件小物', '未分類', '球鞋', '包袋', '會議', '備忘']
+    food: ['青菜', '水果', '鮮乳', '雞蛋', '豆製品', '起司乳酪', '生鮮肉品', '水產海鮮', '麵包烘焙', '調味料', '食用油', '米麵穀物', '南北乾貨', '熟食料理'],
+    drinks: ['咖啡豆', '濾掛咖啡', '茶葉茶包', '手搖飲品', '果汁蔬果汁', '包裝水', '氣泡水', '碳酸飲料', '啤酒烈酒', '紅白酒', '沖泡飲品', '乳清飲品'],
+    snack: ['餅乾米果', '洋芋片脆片', '巧克力可可', '堅果果乾', '糖果軟糖', '肉乾肉條', '即食泡麵', '海苔點心', '果凍布丁', '傳統糕餅'],
+    fresh: ['牛肉羊肉', '生鮮豬肉', '雞肉禽肉', '海鮮魚類', '蝦蟹貝類', '火鍋肉片', '冷凍調理包', '微波熟食', '水餃湯圓', '生鮮時蔬'],
+    medicine: ['眼藥水', '人工淚液', '外用藥膏', '感冒退燒', '消炎止痛', '腸胃整腸', '處方藥', '醫療敷料', '隱眼保養液', '防蚊止癢', '常備成藥'],
+    supplement: ['綜合維他命', 'B群活力', '維生素C', '深海魚油', '葉黃素', '活性益生菌', '膠原蛋白', '鈣片D3', '滴雞精', '高蛋白粉', '機能保健'],
+    beauty: ['精華液', '乳液面霜', '保濕面膜', '卸妝潔顏', '化妝水噴霧', '緊緻眼霜', '防曬隔離', '唇膏口紅', '粉底彩妝', '美甲護理', '香水香氛'],
+    pao: ['洗髮沐浴', '潤髮護髮', '牙膏口腔', '洗手香皂', '身體乳液', '護手滋潤', '刮鬍刀具', '女性護理', '毛巾面巾', '日常消耗'],
+    cleaning: ['菜瓜布海綿', '洗碗精洗劑', '洗衣精洗衣球', '抹布抹巾', '潔廁去垢', '水垢油垢清', '消毒酒精', '除塵防塵', '除濕防潮', '除蟎噴霧', '地板清潔', '疏通清潔'],
+    filter: ['清淨機濾網', '淨水器濾芯', '音波牙刷頭', '集水除濕盒', '掃地機主刷邊刷', '吸塵器耗材', '咖啡機除鈣', '冷氣濾網', '通風濾材'],
+    warranty: ['智慧手機', '筆記型電腦', '平板電腦', '藍牙耳機', '家用電器', '電視螢幕', '人體工學家具', '智慧手錶', '遊戲主機', '攝影器材', '保固維修'],
+    digital: ['充電器快充', '傳輸充電線', '行動電源', '耳機周邊', '保護貼保護殼', '記憶卡隨身碟', '鍵盤滑鼠', '智慧穿戴', '擴充轉接HUB'],
+    stationery: ['手帳筆記', '書籍雜誌', '簽字鋼筆', '墨水替芯', '膠帶黏著', '檔案夾收納', '繪畫美術', '裁切工具', '辦公文具'],
+    sports: ['運動護具', '瑜珈墊', '彈力帶拉力繩', '啞鈴重訓', '機能水壺', '跑鞋運動鞋', '運動補給', '運動包袋', '球拍線路'],
+    tools: ['螺絲工具組', '手電筒照明', '防水絕緣膠帶', '接著快乾膠', '修繕五金', '量尺測量', '潤滑防鏽油', '五金耗材'],
+    pet: ['乾糧飼料', '主食罐頭', '副食肉泥', '原肉凍乾', '體內外驅蟲', '核心疫苗', '貓砂尿墊', '寵物潔牙', '洗毛護理', '寵物保健品'],
+    baby: ['配方奶粉', '成長奶粉', '透氣尿布', '純水濕紙巾', '副食品常溫粥', '奶瓶奶嘴', '米餅副食', '幼兒常規疫苗', '兒童餐具'],
+    vehicle: ['機油', '機油芯', '齒輪油', '輪胎對調', '電瓶', '雨刷', '煞車油皮', '火星塞', '空氣濾清器', '定檢驗車', '車險強制險'],
+    subscription: ['影音串流', '音樂串流', '雲端空間', '專業軟體', '健身會籍', '寬頻電信', '房屋租約', '訂閱服務', '年約保險'],
+    outdoor: ['露營天幕', '登山裝備', '戶外炊具', '機能水壺', '防潮地墊', '登山手杖', '能量果膠', '防寒睡袋'],
+    home: ['室內植栽', '花草肥料', 'LED照明', '防蟎寢具', '住警消防', '香氛擴香', '水電修繕', '收納整理'],
+    fashion: ['換季送洗', '真皮皮革保養', '珠寶首飾', '衣物防護防蛀', '精品鞋靴', '名牌包袋', '飾品小物', '太陽眼鏡'],
+    animation: ['漫畫單行本', '輕小說', 'BD藍光影音', '畫冊設定集', '周邊特典', '海報掛軸', '同人周邊'],
+    game: ['Switch卡帶', 'PSXbox光碟', '主機手把', '點數卡序號', '特典周邊', '典藏套裝', 'Amiibo'],
+    otaku: ['徽章吧唧', '壓克力立牌磚', '色紙相卡', '手辦模型景品', '棉花娃玩偶', '一番賞獎品', '痛包配件'],
+    ticket: ['電影票', '演唱會門票', '動漫展覽票', '活動兌換券', '餐券住宿券', '高鐵車票', '商品禮券'],
+    other: ['一般雜項', '配件小物', '未分類', '球鞋', '包袋', '工作會議', '各類備忘']
   };
   window.SUB_CATEGORY_CONFIG = SUB_CATEGORY_CONFIG;
   window.DEFAULT_CATEGORIES = DEFAULT_CATEGORIES;
@@ -16573,16 +16720,57 @@ function extractCleanName(rawText) {
     }
   }
 
+  async function triggerCameraFocus(track, normX = 0.5, normY = 0.5) {
+    if (!track || typeof track.getCapabilities !== 'function') return;
+    try {
+      const caps = track.getCapabilities() || {};
+      const focusModes = Array.isArray(caps.focusMode) ? caps.focusMode : [];
+      const hasSingleShot = focusModes.includes('single-shot');
+      const hasContinuous = focusModes.includes('continuous');
+      const hasPOI = !!caps.pointsOfInterest;
+
+      const advanced = {};
+      if (hasPOI) {
+        advanced.pointsOfInterest = [{ x: normX, y: normY }];
+      }
+
+      // 若支援 single-shot，切換為 single-shot 觸發硬體鏡頭實體對焦步進
+      if (hasSingleShot) {
+        advanced.focusMode = 'single-shot';
+        await track.applyConstraints({ advanced: [advanced] });
+        // 對焦掃描完成後，2.5 秒平滑恢復 continuous 連續自動對焦
+        if (hasContinuous) {
+          clearTimeout(track._focusRestoreTimer);
+          track._focusRestoreTimer = setTimeout(() => {
+            track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+          }, 2500);
+        }
+      } else if (hasContinuous) {
+        advanced.focusMode = 'continuous';
+        await track.applyConstraints({ advanced: [advanced] });
+      }
+    } catch (err) {
+      console.warn('[Camera] Tap-to-focus constraints error:', err);
+    }
+  }
+
+  let lastFocusTapTime = 0;
   function handleCameraTapToFocus(e) {
     if (e.target.closest('.camera-zoom-controls') || e.target.closest('button')) return;
+
+    const now = Date.now();
+    if (now - lastFocusTapTime < 250) return;
+    lastFocusTapTime = now;
 
     const wrap = document.getElementById('cameraViewportWrap');
     const reticle = document.getElementById('cameraFocusReticle');
     if (!wrap || !reticle) return;
 
     const rect = wrap.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : 0));
+    const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : 0));
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     reticle.style.left = `${x}px`;
     reticle.style.top = `${y}px`;
@@ -16591,14 +16779,16 @@ function extractCleanName(rawText) {
     void reticle.offsetWidth;
     reticle.classList.add('pulsing');
 
+    if (navigator.vibrate) {
+      try { navigator.vibrate(25); } catch (_) {}
+    }
+
     if (cameraStream) {
       const track = cameraStream.getVideoTracks()[0];
-      if (track && typeof track.getCapabilities === 'function') {
-        const caps = track.getCapabilities();
-        if (caps.focusMode && (caps.focusMode.includes('continuous') || caps.focusMode.includes('single-shot'))) {
-          const mode = caps.focusMode.includes('continuous') ? 'continuous' : 'single-shot';
-          track.applyConstraints({ advanced: [{ focusMode: mode }] }).catch(() => {});
-        }
+      if (track) {
+        const normX = Math.max(0, Math.min(1, x / (rect.width || 1)));
+        const normY = Math.max(0, Math.min(1, y / (rect.height || 1)));
+        triggerCameraFocus(track, normX, normY);
       }
     }
 
@@ -17142,7 +17332,7 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <script type="module" src="app.js?v=1.9.0"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.0"></script>
+  <script type="module" src="app.js?v=1.9.1"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.1"></script>
 </body>
 </html>

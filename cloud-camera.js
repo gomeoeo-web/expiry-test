@@ -1,4 +1,4 @@
-// 1.9.0 — public endpoint only; no API key or developer password in the app.
+// 1.9.1 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
 const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
 
@@ -35,13 +35,15 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     if (!response.ok || !payload.success) throw new Error(payload.message || '辨識暫時無法完成，請手動填寫。');
     const result = payload.result;
     if (!result || typeof result.recognized !== 'boolean' || typeof result.name !== 'string') throw new Error('辨識結果不完整，請手動確認。');
-    const category = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category) ? result.category : 'other';
+    const matched = window.matchCategoryAndSubCategory?.(result.name || '');
+    const category = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category) ? result.category : (matched?.category || 'other');
     const expiryDate = dateOrNull(result.expiryDate, result.expiryEvidence);
     const name = result.recognized ? result.name.trim().slice(0, 100) : '';
-    const matched = window.matchCategoryAndSubCategory?.(name);
-    return { success: true, source: 'cloud', name, category, subCategory: matched?.category === category ? matched.subCategory || '' : '',
-      emoji: window.DEFAULT_CATEGORIES?.[category]?.emoji || '📦', expiryDate, hasEndDate: !!expiryDate, remindDaysBefore: 3, remindTime: '09:00', image: photoDataUrl,
-      recognitionNotice: [result.recognized ? '' : '無法確認商品，請填入名稱。', expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : '未讀到明確有效日期，可近拍日期後重新辨識，或手動填寫。', typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
+    const subCategory = (matched && matched.category === category) ? (matched.subCategory || '') : '';
+    const autoInferred = window.inferItemLifespanOrUsageDate?.(name, category, subCategory);
+    return { success: true, source: 'cloud', name, category, subCategory, autoInferred,
+      emoji: window.DEFAULT_CATEGORIES?.[category]?.emoji || matched?.emoji || '📦', expiryDate, hasEndDate: !!expiryDate, remindDaysBefore: 3, remindTime: '09:00', image: photoDataUrl,
+      recognitionNotice: [result.recognized ? '' : '無法確認商品，請填入名稱。', expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : (autoInferred?.hasEndDate ? `未讀到包裝到期日，已為您準備建議使用期限（約 ${autoInferred.durationDays} 天）。` : '此物品未讀到效期，可記錄使用日期或手動填寫。'), typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
       notes: typeof result.expiryEvidence === 'string' && expiryDate ? '日期原文：' + result.expiryEvidence.slice(0, 300) : '' };
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('辨識等待逾時，請手動填寫或稍後重試。');

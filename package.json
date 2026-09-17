@@ -1,13 +1,18 @@
 {
   "name": "my-app-tracker",
-  "version": "1.8.27",
+  "version": "1.9.1",
   "description": "期效管家 - 極簡物品生命週期與保固管家",
   "private": true,
   "main": "index.html",
   "scripts": {
-    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('www',{recursive:true}); fs.copyFileSync('index.html','www/index.html'); fs.copyFileSync('app.js','www/app.js'); if (fs.existsSync('style.css')) fs.copyFileSync('style.css','www/style.css'); if (fs.existsSync('mobileclip2-labels.js')) fs.copyFileSync('mobileclip2-labels.js','www/mobileclip2-labels.js'); if (fs.existsSync('mobileclip2-labels.json')) fs.copyFileSync('mobileclip2-labels.json','www/mobileclip2-labels.json');\"",
+    "build": "node scripts/build.mjs",
     "cap:sync": "npm run build && npx cap sync",
-    "cap:open": "npx cap open android"
+    "cap:open": "npx cap open android",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "cloud:login": "wrangler login",
+    "cloud:deploy": "wrangler deploy --config backend/wrangler.jsonc",
+    "cloud:check": "wrangler deploy --dry-run --config backend/wrangler.jsonc"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +24,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.1",
-    "@huggingface/transformers": "^3.7.1"
+    "playwright": "^1.63.0",
+    "wrangler": "^4.133.0"
   }
 }
