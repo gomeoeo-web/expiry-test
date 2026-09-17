@@ -1,11 +1,11 @@
 {
   "name": "my-app-tracker",
-  "version": "1.8.17",
+  "version": "1.8.22",
   "description": "期效管家 - 極簡物品生命週期與保固管家",
   "private": true,
   "main": "index.html",
   "scripts": {
-    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('www',{recursive:true}); fs.copyFileSync('index.html','www/index.html'); fs.copyFileSync('app.js','www/app.js'); if (fs.existsSync('style.css')) fs.copyFileSync('style.css','www/style.css');\"",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('www',{recursive:true}); fs.copyFileSync('index.html','www/index.html'); fs.copyFileSync('app.js','www/app.js'); if (fs.existsSync('style.css')) fs.copyFileSync('style.css','www/style.css'); if (fs.existsSync('mobileclip2-labels.js')) fs.copyFileSync('mobileclip2-labels.js','www/mobileclip2-labels.js'); if (fs.existsSync('mobileclip2-labels.json')) fs.copyFileSync('mobileclip2-labels.json','www/mobileclip2-labels.json');\"",
     "cap:sync": "npm run build && npx cap sync",
     "cap:open": "npx cap open android"
   },
@@ -18,6 +18,7 @@
     "@capacitor/local-notifications": "^8.3.1"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.1"
+    "@capacitor/cli": "^8.5.1",
+    "@huggingface/transformers": "^3.7.1"
   }
 }

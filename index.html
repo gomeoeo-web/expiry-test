@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.8.18">
+  <link rel="stylesheet" href="style.css?v=1.8.22">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7170,6 +7170,21 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         </div>
 
+        <!-- Group: AI 視覺辨識模型 (MobileCLIP2-S0 端側輕量 Vision Encoder) -->
+        <div class="settings-group" id="groupAiModelSettings">
+          <div class="settings-row" id="rowAiModelDownload">
+            <div class="settings-icon">🤖</div>
+            <div class="settings-info">
+              <span class="settings-title">AI 辨識模型 (MobileCLIP2-S0)</span>
+              <span class="settings-desc" id="settingsAiModelStatusText">端側輕量 Vision Encoder (~43MB)，點擊立即下載至本機快取</span>
+            </div>
+            <button type="button" id="btnDownloadAiModel" class="btn-download-ai-model" title="下載 AI 辨識模型">
+              <span class="btn-download-icon">📥</span>
+              <span id="btnDownloadAiModelText">下載模型</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Group 2: Archive & Recently Deleted Trash -->
         <div class="settings-group">
           <button type="button" class="settings-row-btn" id="btnOpenArchive">
@@ -7223,7 +7238,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.18</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.22</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -7275,18 +7290,18 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         </div>
         <!-- Flash animation overlay on shutter -->
         <div id="cameraFlashOverlay" class="camera-flash-overlay"></div>
-        <!-- AI 模型載入 / 快取進度浮層 (v1.8.14 首次載入自動喚起) -->
+        <!-- AI 模型載入 / 快取進度浮層 (v1.8.22 MobileCLIP2-S0 首次載入優化) -->
         <div id="modelLoadingOverlay" class="model-loading-overlay" style="display: none;">
           <div class="model-loading-card">
             <div class="model-loading-header">
               <div class="model-loading-badge">
-                <span class="model-icon">⚡</span>
-                <span class="model-name">AI 視覺模型載入中 (v1.8.14)</span>
+                <span class="model-icon">🤖</span>
+                <span class="model-name" id="modelLoadingTitle">MobileCLIP2-S0 (端側輕量 Vision Encoder)</span>
               </div>
-              <span class="model-cache-tag">本地快取</span>
+              <span class="model-cache-tag" id="modelCacheTag">端側離線</span>
             </div>
             <div class="model-status-row">
-              <p id="modelStatusText" class="model-status-text">首次載入 AI 視覺模型 0%... 之後離線免下載</p>
+              <p id="modelStatusText" class="model-status-text">首次下載 MobileCLIP2 0%... 之後離線免下載</p>
               <span id="modelProgressPercent" class="model-progress-percent">0%</span>
             </div>
             <div class="model-progress-track">
@@ -7295,7 +7310,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
               </div>
             </div>
             <div class="model-detail-row">
-              <span id="modelProgressDetail" class="model-progress-detail">正在自 IndexedDB 快取加載...</span>
+              <span id="modelProgressDetail" class="model-progress-detail">正在下載模型權重至本機快取...</span>
               <span class="model-subhint">首次下載後永久離線可用</span>
             </div>
           </div>
@@ -7357,9 +7372,9 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         <div class="ai-scan-title-group">
           <div class="ai-scan-title-row">
             <span class="ai-scan-title">AI 智慧分析辨識中</span>
-            <span class="ai-scan-tag" id="aiScanEngineTag">端側 VLM / 雙軌</span>
+            <span class="ai-scan-tag" id="aiScanEngineTag">MobileCLIP2 / 雙軌</span>
           </div>
-          <p id="aiScanStatusText" class="ai-scan-desc">正在啟動端側視覺大模型推論...</p>
+          <p id="aiScanStatusText" class="ai-scan-desc">正在啟動端側視覺特徵模型...</p>
         </div>
       </div>
 
@@ -7368,8 +7383,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         <div class="vlm-loading-header">
           <div class="vlm-header-title">
             <span class="vlm-badge-icon">⚡</span>
-            <span class="vlm-title-text">端側 VLM 視覺大模型</span>
-            <span class="vlm-badge-webgpu">WebGPU INT4</span>
+            <span class="vlm-title-text">端側 MobileCLIP2 視覺模型</span>
+            <span class="vlm-badge-webgpu">WebGPU / FP32</span>
           </div>
           <span class="vlm-offline-tag">永久離線</span>
         </div>
@@ -7396,7 +7411,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
       <div class="ai-scan-steps">
         <div class="ai-scan-step-item active" id="scanStepVlm">
           <span class="step-dot"></span>
-          <span class="step-text">SmolVLM 端側多模態大模型視覺理解</span>
+          <span class="step-text">MobileCLIP2 端側輕量視覺特徵比對</span>
         </div>
         <div class="ai-scan-step-item active" id="scanStepVisual">
           <span class="step-dot"></span>
@@ -8814,7 +8829,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.8.18';
+  const APP_VERSION = '1.8.22';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -12869,6 +12884,9 @@ var CapacitorBridgeBundle = (() => {
       });
     }
     updateTrashBadge();
+    if (typeof window !== 'undefined' && typeof window.updateAiModelSettingsUI === 'function') {
+      window.updateAiModelSettingsUI();
+    }
     settingsModal.style.display = 'flex';
     lockBodyScroll();
   }
@@ -16661,11 +16679,8 @@ function extractCleanName(rawText) {
     }
     if (btnAlbum && fileInput) {
       btnAlbum.addEventListener('click', () => {
-        const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
-        if (!mobileStable && typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
+        if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
           window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
-        } else if (mobileStable) {
-          console.log('[MOBILE AI] Stable mode: skip album-time model preload');
         }
         fileInput.click();
       });
@@ -16724,11 +16739,8 @@ function extractCleanName(rawText) {
     setCameraZoom(1);
     // 自動預先觸發下載（無感快取）：
     // 使用者一「點擊開啟相機」或進入辨識畫面時，立即於背景靜默或以進度條觸發 initVisionModel()，不要等到拍照按下的瞬間才卡住下載。
-    const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
-    if (!mobileStable && typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
+    if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
       window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
-    } else if (mobileStable) {
-      console.log('[MOBILE AI] Stable mode: skip camera-time model preload');
     }
     await startCameraStream(currentCameraFacing);
   }
@@ -16832,12 +16844,9 @@ function extractCleanName(rawText) {
 
     if (img && photoDataUrl) img.src = photoDataUrl;
     if (desc) {
-      const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
-      desc.textContent = mobileStable
-        ? '正在啟動手機穩定辨識：MobileNet + OCR...'
-        : ((typeof navigator !== 'undefined' && navigator.gpu)
-          ? '正在啟動端側 SmolVLM 視覺多模態大模型...'
-          : '正在啟動輕量相機雙軌辨識管線...');
+      desc.textContent = (typeof navigator !== 'undefined' && navigator.gpu)
+        ? '正在啟動端側 MobileCLIP2-S0 視覺特徵比對模型...'
+        : '正在啟動 MobileCLIP2 雙軌相機辨識管線...';
     }
     if (stepVlm) { stepVlm.className = 'ai-scan-step-item active'; }
     if (stepVisual) { stepVisual.className = 'ai-scan-step-item active'; }
@@ -16969,17 +16978,15 @@ function extractCleanName(rawText) {
 
     let parsed = null;
     try {
-      // 手機使用穩定模式：直接 MobileNet + OCR，完全不進入 SmolVLM。桌面才優先 VLM。
-      const mobileStable = typeof window !== 'undefined' && typeof window.isMobileDevice === 'function' && window.isMobileDevice();
-      if (mobileStable && typeof window.analyzeSmartCameraDualTrack === 'function') {
-        console.log('[MOBILE AI] Capture path: direct MobileNet + OCR');
-        parsed = await window.analyzeSmartCameraDualTrack(canvas, photoDataUrl);
-      } else if (typeof window.analyzeSmartCameraWithVlm === 'function') {
-        parsed = await window.analyzeSmartCameraWithVlm(canvas, photoDataUrl);
+      // 最優先呼叫 MobileCLIP2-S0 Vision Encoder + OCR 雙軌辨識引擎 (免生成式 VLM，穩定防 Crash)
+      if (typeof window.analyzeSmartCameraWithMobileClip2 === 'function') {
+        parsed = await window.analyzeSmartCameraWithMobileClip2(canvas, photoDataUrl);
+      } else if (typeof window.analyzeSmartCameraWithMobileClip === 'function') {
+        parsed = await window.analyzeSmartCameraWithMobileClip(canvas, photoDataUrl);
       } else if (typeof window.analyzeSmartCameraDualTrack === 'function') {
         parsed = await window.analyzeSmartCameraDualTrack(canvas, photoDataUrl);
       }
-      updateAiScanStep('scanStepVlm', 'done', '端側多模態視覺理解完成');
+      updateAiScanStep('scanStepVlm', 'done', 'MobileCLIP2 視覺特徵比對完成');
       updateAiScanStep('scanStepVisual', 'done', '物品特徵分類與提取完成');
       updateAiScanStep('scanStepOcr', 'done', '文字效期提取解析完成');
     } catch (err) {
@@ -17308,12 +17315,13 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <!-- TensorFlow.js 與 MobileNet 視覺外觀分類模型 (v1.8.14 雙軌引擎) -->
+  <!-- TensorFlow.js 與 MobileNet 視覺外觀分類模型 (雙軌後備引擎) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <!-- Tesseract.js 本地/離線 OCR 文字辨識引擎 -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <!-- 本地自然語言實體抽取與速記控制器 -->
-  <script type="module" src="app.js?v=1.8.18"></script>
+  <!-- MobileCLIP2 預計算特徵資料庫與主控制器 (v1.8.22) -->
+  <script type="module" src="mobileclip2-labels.js?v=1.8.22"></script>
+  <script type="module" src="app.js?v=1.8.22"></script>
 </body>
 </html>

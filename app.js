@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.18
+ * Smart Quick Add & On-Device NER Parser v1.8.22
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -15,10 +15,28 @@
  *    - 保留 lastCreatedItem 機制，若使用者輸入「那隻貓叫小黑」，辨識出新名詞後直接覆蓋上一筆名稱。
  * 6. 錯誤降級處理：
  *    - 若模型尚未下載完成、處於離線環境或推論異常，自動降級使用純本地正則解析器 (parseNaturalInput)。
+ * 7. MobileCLIP2-S0 輕量視覺特徵比對 + Tesseract OCR + SMART_KEYWORD_MAP 決策融合 (v1.8.22 全新升級)
  */
 
+// Universal MobileCLIP2-S0 特徵庫載入 (相容 Node.js CommonJS require 與瀏覽器環境)
+let MOBILECLIP2_CATEGORIES = [];
+let MOBILECLIP2_CANDIDATES = [];
+
+if (typeof window !== 'undefined' && window.MOBILECLIP2_CATEGORIES && window.MOBILECLIP2_CANDIDATES) {
+  MOBILECLIP2_CATEGORIES = window.MOBILECLIP2_CATEGORIES;
+  MOBILECLIP2_CANDIDATES = window.MOBILECLIP2_CANDIDATES;
+} else if (typeof require !== 'undefined') {
+  try {
+    const labelsData = require('./mobileclip2-labels.json');
+    MOBILECLIP2_CATEGORIES = labelsData.categories || [];
+    MOBILECLIP2_CANDIDATES = labelsData.candidates || [];
+  } catch (e) {
+    // 忽略在無 JSON 環境下的錯誤
+  }
+}
+
 // ==========================================
-// 1. 全域狀態與模型管線 & VLM Debug 診斷開關
+// 1. 全域狀態與模型管線 & 相機 Debug 診斷開關
 // ==========================================
 let cameraDebug = true;
 if (typeof window !== 'undefined') {
@@ -431,7 +449,7 @@ function updateNerStatus(status) {
 }
 
 // ==========================================
-// 2.9 AI 模型防護載入引擎 (getVisionEngine - 僅於使用者點擊相機時觸發)
+// 2.9 AI 模型防護載入引擎 (getVisionEngine - 僅於使用者點擊相機或下載模型時觸發)
 // ==========================================
 async function getVisionEngine() {
   const isDebug = isCameraDebug();
@@ -443,7 +461,8 @@ async function getVisionEngine() {
     if (typeof window !== 'undefined') {
       window.transformersLib = tf;
       if (tf.AutoProcessor) window.AutoProcessor = tf.AutoProcessor;
-      if (tf.AutoModelForVision2Seq) window.AutoModelForVision2Seq = tf.AutoModelForVision2Seq;
+      if (tf.CLIPVisionModelWithProjection) window.CLIPVisionModelWithProjection = tf.CLIPVisionModelWithProjection;
+      if (tf.RawImage) window.RawImage = tf.RawImage;
       if (tf.load_image) window.load_image = tf.load_image;
       if (tf.pipeline) window.pipeline = tf.pipeline;
       if (tf.env) {
@@ -455,7 +474,7 @@ async function getVisionEngine() {
     return tf;
   } catch (err) {
     if (isDebug) {
-      console.error('[VLM DEBUG] Transformers.js 動態 import 失敗:\n完整 Error Stack:', err && err.stack ? err.stack : err);
+      console.error('[MOBILECLIP2] Transformers.js 動態 import 失敗:\n完整 Error Stack:', err && err.stack ? err.stack : err);
     }
     console.warn('AI 模型載入失敗，降級使用本機 OCR / MobileNet:', err);
     return null;
@@ -470,17 +489,17 @@ async function loadTransformers() {
     if (tf) {
       transformersModule = tf;
       if (isDebug) {
-        console.log('[VLM DEBUG] Transformers.js 是否成功載入: 成功');
+        console.log('[MOBILECLIP2] Transformers.js 是否成功載入: 成功');
       }
       return tf;
     }
     if (isDebug) {
-      console.error('[VLM DEBUG] Transformers.js 是否成功載入: 失敗 (getVisionEngine 回傳空值)');
+      console.error('[MOBILECLIP2] Transformers.js 是否成功載入: 失敗 (getVisionEngine 回傳空值)');
     }
     return null;
   } catch (err) {
     if (isDebug) {
-      console.error('[VLM DEBUG] Transformers.js 是否成功載入: 失敗 (載入發生例外)\n完整 Error Stack:', err && err.stack ? err.stack : err);
+      console.error('[MOBILECLIP2] Transformers.js 是否成功載入: 失敗 (載入發生例外)\n完整 Error Stack:', err && err.stack ? err.stack : err);
     }
     console.warn('[loadTransformers] 載入失敗，降級備援:', err);
     return null;
@@ -2337,8 +2356,8 @@ function extractDateFromText(text) {
  * 整合 Canvas 三道前處理 (縮放限制 1200px + 中央 75% 裁切對焦 + 灰階二值化)
  */
 async function runTextAndDateOcr(imgSource) {
-  if (typeof isVlmLoading !== 'undefined' && isVlmLoading && typeof isIosSafari === 'function' && isIosSafari()) {
-    console.log('[iOS Safari 保護] VLM 模型正在下載中，暫緩 OCR 載入');
+  if (typeof isMobileClip2Loading !== 'undefined' && isMobileClip2Loading && typeof isIosSafari === 'function' && isIosSafari()) {
+    console.log('[iOS Safari 保護] MobileCLIP2 模型正在下載中，暫緩 OCR 載入');
     return { text: '', date: null, dateCandidates: [], barcode: null, barcodeData: null };
   }
   let text = '';
@@ -2651,25 +2670,52 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
     };
   }
 
-  // 1. 檢視視覺辨識前 5 大結果命中外觀特徵庫的情況
+  // 1. 檢視視覺辨識前 5 大結果命中外觀特徵庫的情況 (優先支援 MobileCLIP 高精度候選，兼容 MobileNet)
   let topVisualMatch = null;
   let topVisualConfidence = 0;
   let topVisualClassName = '';
 
-  if (Array.isArray(visualPredictions)) {
+  if (Array.isArray(visualPredictions) && visualPredictions.length > 0) {
     let bestKwLength = 0;
     for (const pred of visualPredictions) {
-      const clsName = (pred.className || '').toLowerCase();
-      const prob = typeof pred.probability === 'number' ? pred.probability : 0;
-      for (const dictItem of VISUAL_APPEARANCE_DICT) {
-        for (const kw of dictItem.keywords) {
-          const kwLower = kw.toLowerCase();
-          if (clsName.includes(kwLower)) {
-            if (prob > topVisualConfidence || (Math.abs(prob - topVisualConfidence) < 0.05 && kwLower.length > bestKwLength)) {
-              topVisualConfidence = prob;
-              bestKwLength = kwLower.length;
-              topVisualMatch = dictItem;
-              topVisualClassName = pred.className;
+      const prob = typeof pred.score === 'number' ? pred.score : (typeof pred.probability === 'number' ? pred.probability : 0);
+      const label = (pred.label || pred.className || '').trim();
+
+      // A. 優先比對 MobileCLIP 候選物件
+      const clipCandidate = pred.candidate || (typeof getMobileClipCandidate === 'function' ? getMobileClipCandidate(label) : (typeof MOBILECLIP_CANDIDATE_MAP !== 'undefined' ? MOBILECLIP_CANDIDATE_MAP[label] : null));
+      if (clipCandidate) {
+        if (prob > topVisualConfidence) {
+          topVisualConfidence = prob;
+          topVisualClassName = label;
+          const catLabel = (typeof DEFAULT_CATEGORIES !== 'undefined' && DEFAULT_CATEGORIES[clipCandidate.category])
+            ? DEFAULT_CATEGORIES[clipCandidate.category].label
+            : clipCandidate.category;
+          topVisualMatch = {
+            name: clipCandidate.defaultName,
+            category: clipCandidate.category,
+            categoryLabel: catLabel,
+            subCategory: clipCandidate.subCategory,
+            defaultDays: clipCandidate.defaultDays || 30,
+            emoji: clipCandidate.emoji || '📦',
+            isContainer: !!clipCandidate.isContainer,
+            source: 'mobileclip'
+          };
+        }
+      }
+
+      // B. MobileNet ImageNet 辭典比對 (若無 MobileCLIP 命中)
+      if (!topVisualMatch || topVisualMatch.source !== 'mobileclip') {
+        const clsLower = label.toLowerCase();
+        for (const dictItem of VISUAL_APPEARANCE_DICT) {
+          for (const kw of dictItem.keywords) {
+            const kwLower = kw.toLowerCase();
+            if (clsLower.includes(kwLower)) {
+              if (prob > topVisualConfidence || (Math.abs(prob - topVisualConfidence) < 0.05 && kwLower.length > bestKwLength)) {
+                topVisualConfidence = prob;
+                bestKwLength = kwLower.length;
+                topVisualMatch = dictItem;
+                topVisualClassName = label;
+              }
             }
           }
         }
@@ -2715,7 +2761,16 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
     'apple': '蘋果',
     'banana': '香蕉',
     'egg': '雞蛋',
-    'eggs': '雞蛋'
+    'eggs': '雞蛋',
+    'shampoo': '洗髮精/潤髮乳',
+    'body wash': '沐浴乳',
+    'toothpaste': '牙膏/口腔護理',
+    'sunscreen': '防曬乳',
+    'lotion': '保養乳液',
+    'cleanser': '洗面乳',
+    'vitamin': '維他命/保健品',
+    'filter': '濾網/濾芯',
+    'battery': '電池'
   };
 
   // 【最優先分支 1】：乳製品/鮮乳 Priority 1 優先攔截
@@ -2810,7 +2865,7 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
   // 【決策分支 2】：若外觀辨識出容器種類（如 lotion / bottle / can / pill bottle / carton），且 OCR 同步掃到品牌或產品字樣
   if (topVisualMatch && topVisualMatch.isContainer && ocrMatchedWord) {
     fusionMode = 'container_ocr_fusion';
-    finalName = OCR_NAME_TRANSLATIONS[ocrMatchedWord.toLowerCase()] || ocrMatchedWord;
+    finalName = OCR_NAME_TRANSLATIONS[ocrMatchedWord.toLowerCase()] || (topVisualMatch && topVisualMatch.source === 'mobileclip' ? topVisualMatch.name : ocrMatchedWord);
 
     if (ocrKeywordMatch && ocrKeywordMatch.cat) {
       finalCategory = ocrKeywordMatch.cat;
@@ -2843,9 +2898,9 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
       finalEmoji = topVisualMatch.emoji;
     }
   }
-  // 【決策分支 1】：若外觀特徵命中率高（置信度 > 0.35），且圖片中無明顯中文品名
-  else if (topVisualMatch && topVisualConfidence >= 0.25 && !ocrMatchedWord) {
-    fusionMode = 'visual_priority';
+  // 【決策分支 1】：若外觀特徵命中（置信度 >= 0.15），且圖片中無明顯中文品名
+  else if (topVisualMatch && topVisualConfidence >= 0.15 && !ocrMatchedWord) {
+    fusionMode = topVisualMatch.source === 'mobileclip' ? 'mobileclip_priority' : 'visual_priority';
     finalName = topVisualMatch.name;
     finalCategory = topVisualMatch.category;
     finalSubCategory = topVisualMatch.subCategory;
@@ -2855,7 +2910,7 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
   // 【決策分支 3】：若 OCR 掃到明確品名，但外觀非容器或信心度較低
   else if (ocrMatchedWord) {
     fusionMode = 'ocr_priority';
-    finalName = OCR_NAME_TRANSLATIONS[ocrMatchedWord.toLowerCase()] || ocrMatchedWord;
+    finalName = OCR_NAME_TRANSLATIONS[ocrMatchedWord.toLowerCase()] || (topVisualMatch && topVisualMatch.source === 'mobileclip' ? topVisualMatch.name : ocrMatchedWord);
     finalCategory = ocrKeywordMatch ? ocrKeywordMatch.cat : 'other';
     finalSubCategory = ocrKeywordMatch ? ocrKeywordMatch.subCat : '';
     finalEmoji = ocrKeywordMatch ? ocrKeywordMatch.emoji : '📦';
@@ -2897,14 +2952,23 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
       defaultDays = 30;
     }
   }
-  // 【決策分支 6】：無特徵之階梯式保底（第一階 OCR 2~10字、第二階 MobileNet 視覺標籤翻譯、第三階 生活物品）
+  // 【決策分支 6】：無特徵之階梯式保底（優先採用 MobileCLIP 特徵名，若無則依序 OCR/預設品名）
   else {
-    fusionMode = 'default_fallback';
-    finalName = extractFallbackItemName(ocrText, visualPredictions);
-    finalCategory = 'other';
-    finalSubCategory = '未分類';
-    defaultDays = 30;
-    finalEmoji = '📦';
+    if (topVisualMatch && topVisualConfidence >= 0.10 && topVisualMatch.name !== '生活物品') {
+      fusionMode = 'mobileclip_fallback';
+      finalName = topVisualMatch.name;
+      finalCategory = topVisualMatch.category;
+      finalSubCategory = topVisualMatch.subCategory;
+      defaultDays = topVisualMatch.defaultDays;
+      finalEmoji = topVisualMatch.emoji;
+    } else {
+      fusionMode = 'default_fallback';
+      finalName = extractFallbackItemName(ocrText, visualPredictions);
+      finalCategory = 'other';
+      finalSubCategory = '未分類';
+      defaultDays = 30;
+      finalEmoji = '📦';
+    }
   }
 
   // 關鍵防呆保護：嚴禁將乳品/食品誤歸類為清潔用品 (防止 milk / 牛奶辨識成清潔液，嚴格排除單獨殺菌/消毒/除菌)
@@ -2919,10 +2983,9 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
     defaultDays = 7;
   }
 
-  // 期限判定：若無印刷日期，自動採用預設保存天數
-  if (!finalDate) {
-    finalDate = formatDate(offsetDays(today, defaultDays));
-  }
+  // 期限判定 (OCR-ONLY 嚴格規範)：僅接受 OCR 實際讀取到的印刷日期，若無則保持 null，禁止 AI 或預設天數猜測
+  const hasValidExpiry = !!(finalDate && /^\d{4}-\d{2}-\d{2}$/.test(finalDate));
+  const expiryDateResult = hasValidExpiry ? finalDate : null;
 
   finalCategory = normalizeCategoryKey(finalCategory);
 
@@ -2947,8 +3010,8 @@ function fuseVisualAndOcrDecision(visualPredictions, ocrData, existingItems = []
     category: finalCategory,
     subCategory: finalSubCategory,
     emoji: finalEmoji,
-    expiryDate: finalDate,
-    hasEndDate: true,
+    expiryDate: expiryDateResult,
+    hasEndDate: hasValidExpiry,
     remindDaysBefore: 3,
     remindTime: '09:00',
     confidence: topVisualConfidence,
@@ -2992,20 +3055,11 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
     };
   }
 
-  // 2. 視覺外觀分類 + 文字效期 OCR
-  // Mobile Stable Mode uses sequential execution to reduce peak memory usage on iOS/Android browsers.
-  let visualPredictions = [];
-  let ocrData = null;
-  if (isMobileDevice()) {
-    console.log('[MOBILE AI] Sequential recognition: MobileNet -> OCR');
-    visualPredictions = await classifyImageVisual(imageSource);
-    ocrData = await runTextAndDateOcr(imageSource);
-  } else {
-    [visualPredictions, ocrData] = await Promise.all([
-      classifyImageVisual(imageSource),
-      runTextAndDateOcr(imageSource)
-    ]);
-  }
+  // 2. 雙軌並行分析：視覺外觀分類 + 前處理文字效期 OCR
+  const [visualPredictions, ocrData] = await Promise.all([
+    classifyImageVisual(imageSource),
+    runTextAndDateOcr(imageSource)
+  ]);
 
   if (barcodeImmediate && (!ocrData || !ocrData.barcodeData)) {
     if (ocrData) {
@@ -3031,20 +3085,139 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
 }
 
 // ==========================================
-// 7.7 端側視覺語言大模型 (VLM - SmolVLM WebGPU) v1.8.18
+// 7.7 MobileCLIP2-S0 輕量視覺特徵比對與智慧決策融合引擎 (v1.8.22)
 // ==========================================
-let vlmProcessor = null;
-let vlmModel = null;
-let vlmPipeline = null;
-let isVlmLoading = false;
-let vlmStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'fallback'
-const vlmFileProgress = {};
+
+let mobileClip2VisionModel = null;
+let mobileClip2Processor = null;
+let isMobileClip2Loading = false;
+let mobileClip2LoadPromise = null;
+const mobileClip2DownloadProgress = {};
 
 /**
- * 智慧鏡頭 VLM 與通用模型載入進度面板控制函式 (#modelLoadingOverlay & #vlmModelLoadingCard)
+ * 取得 MobileCLIP2 特徵標籤與候選資料庫
  */
-function showModelLoadingOverlay(statusText, percent = 0, detail = '正在自快取加載...') {
+function getMobileClip2Data() {
+  const categories = (typeof MOBILECLIP2_CATEGORIES !== 'undefined' && MOBILECLIP2_CATEGORIES && MOBILECLIP2_CATEGORIES.length > 0)
+    ? MOBILECLIP2_CATEGORIES
+    : ((typeof window !== 'undefined' && window.MOBILECLIP2_CATEGORIES) || []);
+  const candidates = (typeof MOBILECLIP2_CANDIDATES !== 'undefined' && MOBILECLIP2_CANDIDATES && MOBILECLIP2_CANDIDATES.length > 0)
+    ? MOBILECLIP2_CANDIDATES
+    : ((typeof window !== 'undefined' && window.MOBILECLIP2_CANDIDATES) || []);
+  return { categories, candidates };
+}
+
+/**
+ * 檢查 MobileCLIP2-S0 模型是否已經下載並快取至本機 (IndexedDB / CacheStorage)
+ */
+function isMobileClip2Downloaded() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('mobileclip2_downloaded') === 'true' ||
+           localStorage.getItem('ai_model_downloaded') === 'true' ||
+           !!mobileClip2VisionModel;
+  } catch (e) {
+    return !!mobileClip2VisionModel;
+  }
+}
+
+/**
+ * 標記 MobileCLIP2-S0 模型已成功下載完畢
+ */
+function markMobileClip2Downloaded() {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('mobileclip2_downloaded', 'true');
+      localStorage.setItem('ai_model_downloaded', 'true');
+    } catch (e) {}
+  }
+  updateAiModelSettingsUI(100, 'downloaded');
+}
+
+/**
+ * 標記相容性別名
+ */
+function isMoondreamModelDownloaded() { return isMobileClip2Downloaded(); }
+function markMoondreamModelDownloaded() { markMobileClip2Downloaded(); }
+
+/**
+ * 同步更新「設定頁面」中的 AI 辨識下載按鈕與狀態文字
+ */
+function updateAiModelSettingsUI(progress = null, state = null) {
   if (typeof document === 'undefined') return;
+  const btn = document.getElementById('btnDownloadAiModel');
+  const btnText = document.getElementById('btnDownloadAiModelText');
+  const statusText = document.getElementById('settingsAiModelStatusText');
+  const isDownloaded = state === 'downloaded' || isMobileClip2Downloaded();
+
+  if (state === 'downloading' || (isMobileClip2Loading && progress !== null)) {
+    const p = Math.max(0, Math.min(100, Math.round(progress || 0)));
+    if (btn) {
+      btn.className = 'btn-download-ai-model downloading';
+    }
+    if (btnText) {
+      btnText.textContent = `下載中 ${p}%`;
+    }
+    if (statusText) {
+      statusText.textContent = `正在下載 MobileCLIP2-S0 視覺模型 ${p}%...`;
+    }
+  } else if (isDownloaded) {
+    if (btn) {
+      btn.className = 'btn-download-ai-model downloaded';
+    }
+    if (btnText) {
+      btnText.textContent = '✅ 已下載 (離線可用)';
+    }
+    if (statusText) {
+      statusText.textContent = '✅ 已快取至本機 IndexedDB (~43MB 離線隨開即用)';
+    }
+  } else {
+    if (btn) {
+      btn.className = 'btn-download-ai-model';
+    }
+    if (btnText) {
+      btnText.textContent = '下載模型';
+    }
+    if (statusText) {
+      statusText.textContent = 'MobileCLIP2-S0 輕量視覺模型 (~43MB)，點擊立即下載至本機快取';
+    }
+  }
+}
+
+/**
+ * 綁定設定頁面中 AI 辨識模型下載按鈕之事件監聽
+ */
+function setupAiModelSettingsHandler() {
+  if (typeof document === 'undefined') return;
+  const btn = document.getElementById('btnDownloadAiModel');
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = 'true';
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isDownloaded = isMobileClip2Downloaded();
+      if (isDownloaded) {
+        const reDownload = confirm('MobileCLIP2-S0 視覺模型已在本地 IndexedDB 快取就緒（離線秒速辨識）。\n\n是否需要重新檢查並重新下載？');
+        if (!reDownload) return;
+      }
+      try {
+        await initMobileClip2(null, { forceShowOverlay: true });
+      } catch (err) {
+        alert('下載模型失敗：' + (err?.message || err));
+      }
+    });
+  }
+  updateAiModelSettingsUI();
+}
+
+/**
+ * 智慧鏡頭與模型載入進度面板控制函式 (#modelLoadingOverlay & #vlmModelLoadingCard)
+ */
+function showModelLoadingOverlay(statusText, percent = 0, detail = '正在自快取加載...', force = false) {
+  if (typeof document === 'undefined') return;
+  if (!force && isMobileClip2Downloaded()) {
+    return;
+  }
   const overlay = document.getElementById('modelLoadingOverlay');
   if (overlay) {
     overlay.style.display = 'flex';
@@ -3068,32 +3241,36 @@ function updateModelLoadingProgress(percent, statusText, detail) {
     const textEl = overlay.querySelector('#modelStatusText') || overlay.querySelector('.model-status-text');
     const percentEl = overlay.querySelector('#modelProgressPercent') || overlay.querySelector('.model-progress-percent');
     const detailEl = overlay.querySelector('#modelProgressDetail') || overlay.querySelector('.model-progress-detail');
-
     if (bar) bar.style.width = `${p}%`;
-    if (percentEl) percentEl.textContent = `${p}%`;
     if (textEl && statusText) textEl.textContent = statusText;
+    if (percentEl) percentEl.textContent = `${p}%`;
     if (detailEl && detail) detailEl.textContent = detail;
   }
-
-  updateVlmProgress(percent, statusText, detail);
+  updateVlmProgress(p, statusText, detail);
 }
 
 function hideModelLoadingOverlay(withFadeOut = true) {
   if (typeof document === 'undefined') return;
   const overlay = document.getElementById('modelLoadingOverlay');
-  if (overlay) {
-    if (withFadeOut) {
-      overlay.classList.add('fade-out');
-      setTimeout(() => {
+  const card = document.getElementById('vlmModelLoadingCard');
+
+  if (withFadeOut) {
+    if (overlay) overlay.classList.add('fade-out');
+    if (card) card.classList.add('fade-out');
+    setTimeout(() => {
+      if (overlay) {
         overlay.style.display = 'none';
         overlay.classList.remove('fade-out');
-      }, 650);
-    } else {
-      overlay.style.display = 'none';
-      overlay.classList.remove('fade-out');
-    }
+      }
+      if (card) {
+        card.style.display = 'none';
+        card.classList.remove('fade-out');
+      }
+    }, 450);
+  } else {
+    if (overlay) overlay.style.display = 'none';
+    if (card) card.style.display = 'none';
   }
-  hideVlmLoadingCard(withFadeOut);
 }
 
 function showVlmLoadingCard(statusText, percent = 0, detail = '正在自 IndexedDB 快取加載...') {
@@ -3102,41 +3279,24 @@ function showVlmLoadingCard(statusText, percent = 0, detail = '正在自 Indexed
 
 function updateVlmProgress(percent, statusText, detail) {
   if (typeof document === 'undefined') return;
-  const card = document.getElementById('vlmModelLoadingCard');
-  if (!card) return;
-
-  const bar = document.getElementById('vlmProgressBar');
-  const textEl = document.getElementById('vlmStatusText');
-  const percentEl = document.getElementById('vlmProgressPercent');
-  const detailEl = document.getElementById('vlmProgressDetail');
-
   const p = Math.max(0, Math.min(100, Math.round(percent)));
-  if (bar) bar.style.width = `${p}%`;
-  if (percentEl) percentEl.textContent = `${p}%`;
-  if (textEl && statusText) textEl.textContent = statusText;
-  if (detailEl && detail) detailEl.textContent = detail;
-}
-
-function hideVlmLoadingCard(withFadeOut = true) {
-  if (typeof document === 'undefined') return;
   const card = document.getElementById('vlmModelLoadingCard');
-  if (!card) return;
-
-  if (withFadeOut) {
-    card.classList.add('fade-out');
-    setTimeout(() => {
-      card.style.display = 'none';
-      card.classList.remove('fade-out');
-    }, 650);
-  } else {
-    card.style.display = 'none';
-    card.classList.remove('fade-out');
+  if (card) {
+    const bar = card.querySelector('#vlmProgressBar') || card.querySelector('.vlm-progress-bar');
+    const textEl = card.querySelector('#vlmStatusText') || card.querySelector('.vlm-status-text');
+    const percentEl = card.querySelector('#vlmProgressPercent') || card.querySelector('.vlm-progress-percent');
+    const detailEl = card.querySelector('#vlmProgressDetail') || card.querySelector('.vlm-progress-detail');
+    if (bar) bar.style.width = `${p}%`;
+    if (textEl && statusText) textEl.textContent = statusText;
+    if (percentEl) percentEl.textContent = `${p}%`;
+    if (detailEl && detail) detailEl.textContent = detail;
   }
 }
 
-/**
- * 判斷當前裝置是否為行動裝置 (iPhone, iPad, Android, Mobile UA)
- */
+function hideVlmLoadingCard(withFadeOut = true) {
+  hideModelLoadingOverlay(withFadeOut);
+}
+
 function isMobileDevice() {
   if (typeof navigator === 'undefined') return false;
   const ua = (navigator.userAgent || navigator.vendor || (typeof window !== 'undefined' && window.opera) || '').toLowerCase();
@@ -3147,9 +3307,6 @@ function isMobileDevice() {
   return isIPhone || isIPad || isAndroid || isMobileUa;
 }
 
-/**
- * 判斷當前裝置是否為 iOS Safari / WebKit 核心 (用於防範 Safari 嚴格記憶體限制)
- */
 function isIosSafari() {
   if (typeof navigator === 'undefined') return false;
   const ua = (navigator.userAgent || '').toLowerCase();
@@ -3157,351 +3314,682 @@ function isIosSafari() {
   return isIOS;
 }
 
-/**
- * 取得當前裝置環境對應之 VLM 影像最大邊長限制 (手機 512px，桌面 768px)
- */
 function getVlmMaxDim() {
-  return isMobileDevice() ? 512 : 768;
+  return 256;
+}
+
+// 輔助函式：等待下一個渲染幀或事件循環 (釋放 WebGPU / GC)
+function nextFrame() {
+  return new Promise(resolve => {
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(resolve);
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+// 向量 L2 正規化 (Float32Array)
+function l2Normalize(vec) {
+  let sumSq = 0;
+  for (let i = 0; i < vec.length; i++) {
+    sumSq += vec[i] * vec[i];
+  }
+  const norm = Math.sqrt(sumSq) || 1e-12;
+  const res = new Float32Array(vec.length);
+  for (let i = 0; i < vec.length; i++) {
+    res[i] = vec[i] / norm;
+  }
+  return res;
+}
+
+// 向量餘弦相似度 (兩向量皆已 L2 normalize，點積即為餘弦相似度)
+function cosineSimilarity(v1, v2) {
+  let dot = 0;
+  const len = Math.min(v1.length, v2.length);
+  for (let i = 0; i < len; i++) {
+    dot += v1[i] * v2[i];
+  }
+  return dot;
 }
 
 /**
- * 非同步載入端側視覺語言大模型 (SmolVLM-256M-Instruct with WebGPU)
- * 依照 Hugging Face 官方 SmolVLM WebGPU 規範，使用 AutoProcessor 與 AutoModelForVision2Seq
- * 支援 Mobile VLM Low Memory Mode (量化載入、順序降級備援、顯存保護)
+ * 7.7.1 初始化 MobileCLIP2-S0 視覺辨識模型 (Vision Encoder Only)
+ * 模型: plhery/mobileclip2-onnx (S0 onnx/s0/vision_model, ~43.45 MB)
+ * 禁止在手機端載入 254MB text_model.onnx
  */
-async function initVlmModel(onProgress) {
-  // Mobile Stable Mode: never load SmolVLM on phones/tablets.
-  // iOS Safari can terminate the whole page during VLM load/inference, so mobile uses MobileNet + OCR only.
-  if (isMobileDevice()) {
-    console.log('[MOBILE AI] SmolVLM disabled on mobile; initVlmModel skipped');
-    return null;
+async function initMobileClip2(onProgress = null, options = {}) {
+  if (mobileClip2VisionModel && mobileClip2Processor && !options.forceReload) {
+    return { model: mobileClip2VisionModel, processor: mobileClip2Processor };
   }
-  const isDebug = isCameraDebug();
-  const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
-  const isMobile = isMobileDevice();
-  const deviceClass = isMobile ? 'mobile' : 'desktop';
-  const mobileLowMem = isMobile;
-
-  // 7. Debug 裝置與記憶體模式資訊
-  console.log(`[VLM DEBUG] device class: ${deviceClass}`);
-  console.log(`[VLM DEBUG] mobile low memory mode: ${mobileLowMem}`);
-
-  if (isDebug) {
-    console.log('[VLM DEBUG] 1. navigator.gpu 是否存在:', hasWebGpu);
-    console.log('[VLM DEBUG] 3. initVlmModel() 是否開始執行: 是 (目前狀態: ' + vlmStatus + ')');
-    console.log('[VLM DEBUG] 4. 使用的模型名稱: HuggingFaceTB/SmolVLM-256M-Instruct');
-    console.log('[VLM DEBUG] 5. 使用的 device（WebGPU 或其他）: webgpu');
+  if (isMobileClip2Loading && mobileClip2LoadPromise && !options.forceReload) {
+    return await mobileClip2LoadPromise;
   }
 
-  if (vlmProcessor && vlmModel) {
-    if (isDebug) {
-      console.log('[VLM DEBUG] 9. SmolVLM 是否建立成功: 已快取就緒');
-      console.log('[VLM DEBUG] SmolVLM model ready');
-    }
-    return { processor: vlmProcessor, model: vlmModel };
+  isMobileClip2Loading = true;
+  const loadStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const alreadyDownloaded = isMobileClip2Downloaded();
+  const shouldShowOverlay = options.forceShowOverlay === true || (!alreadyDownloaded && options.silent !== true);
+
+  if (shouldShowOverlay) {
+    showModelLoadingOverlay('首次下載 MobileCLIP2-S0 視覺模型 0%... 之後離線免下載', 0, '正在連線下載視覺特徵權重 (~43MB)...', true);
   }
-  if (isVlmLoading) {
-    while (isVlmLoading) {
-      await new Promise(r => setTimeout(r, 100));
-    }
-    if (isDebug) {
-      console.log('[VLM DEBUG] 9. SmolVLM 是否建立成功:', !!(vlmProcessor && vlmModel));
-    }
-    return { processor: vlmProcessor, model: vlmModel };
-  }
+  updateAiModelSettingsUI(0, 'downloading');
 
-  isVlmLoading = true;
-  vlmStatus = 'loading';
-  const vlmStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-  let mobileFailLogged = false;
-
-  showModelLoadingOverlay('首次載入 AI 視覺模型 0%... 之後離線免下載', 0, '正在連線模型儲存庫...');
-
-  try {
-    const tf = await loadTransformers();
-    const AutoProcessor = (tf && tf.AutoProcessor)
-      ? tf.AutoProcessor
-      : (typeof window !== 'undefined' && window.AutoProcessor ? window.AutoProcessor : null);
-    const AutoModelForVision2Seq = (tf && tf.AutoModelForVision2Seq)
-      ? tf.AutoModelForVision2Seq
-      : (typeof window !== 'undefined' && window.AutoModelForVision2Seq ? window.AutoModelForVision2Seq : null);
-
-    if (isDebug) {
-      console.log('[VLM DEBUG] 2. Transformers.js 是否成功載入:', !!(AutoProcessor && AutoModelForVision2Seq) ? '成功' : '失敗');
-    }
-
-    if (!AutoProcessor || !AutoModelForVision2Seq) {
-      const err = new Error('Transformers.js AutoProcessor / AutoModelForVision2Seq 不可用');
-      if (isDebug) {
-        console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed (Transformers.js AutoProcessor 或 AutoModelForVision2Seq 不可用)\n完整 Error Stack:', err && err.stack ? err.stack : err);
-      }
-      throw err;
-    }
-
-    const progressCallback = (p) => {
-      if (!p) return;
-      if (p.status === 'progress' && p.file) {
-        vlmFileProgress[p.file] = {
-          loaded: p.loaded || 0,
-          total: p.total || 0,
-          progress: p.progress !== undefined ? p.progress : (p.total ? (p.loaded / p.total) * 100 : 0)
-        };
-      } else if (p.status === 'done' && p.file) {
-        vlmFileProgress[p.file] = { loaded: 100, total: 100, progress: 100 };
+  mobileClip2LoadPromise = (async () => {
+    try {
+      const tf = await getVisionEngine();
+      if (!tf || !tf.CLIPVisionModelWithProjection || !tf.AutoProcessor) {
+        throw new Error('Transformers.js CLIPVisionModelWithProjection / AutoProcessor 不可用');
       }
 
-      let totalLoaded = 0;
-      let totalSize = 0;
-      let hasTotals = false;
-      for (const f in vlmFileProgress) {
-        if (vlmFileProgress[f].total > 0) {
-          hasTotals = true;
-          totalLoaded += vlmFileProgress[f].loaded;
-          totalSize += vlmFileProgress[f].total;
+      const progressCallback = (p) => {
+        if (!p) return;
+        if (p.status === 'progress' && p.file) {
+          mobileClip2DownloadProgress[p.file] = {
+            loaded: p.loaded || 0,
+            total: p.total || 0,
+            progress: p.progress !== undefined ? p.progress : (p.total ? (p.loaded / p.total) * 100 : 0)
+          };
+        } else if (p.status === 'done' && p.file) {
+          mobileClip2DownloadProgress[p.file] = { loaded: 100, total: 100, progress: 100 };
         }
-      }
 
-      let percent = 0;
-      if (hasTotals && totalSize > 0) {
-        percent = Math.min(100, Math.round((totalLoaded / totalSize) * 100));
-      } else if (p.progress !== undefined) {
-        percent = Math.min(100, Math.round(p.progress));
-      }
+        let totalLoaded = 0;
+        let totalSize = 0;
+        let hasTotals = false;
+        for (const f in mobileClip2DownloadProgress) {
+          if (mobileClip2DownloadProgress[f].total > 0) {
+            hasTotals = true;
+            totalLoaded += mobileClip2DownloadProgress[f].loaded;
+            totalSize += mobileClip2DownloadProgress[f].total;
+          }
+        }
 
-      if (isDebug) {
-        console.log('[VLM DEBUG] 7. 模型下載 / cache 載入進度:', {
-          file: p.file || '快取載入中',
-          status: p.status,
-          loaded: p.loaded || 0,
-          total: p.total || 0,
-          percent: percent + '%'
+        let percent = 0;
+        if (hasTotals && totalSize > 0) {
+          percent = Math.min(100, Math.round((totalLoaded / totalSize) * 100));
+        } else if (p.progress !== undefined) {
+          percent = Math.min(100, Math.round(p.progress));
+        }
+
+        const fileName = p.file ? p.file.split('/').pop() : '離線快取儲存中';
+        const statusMsg = `首次下載 MobileCLIP2-S0 視覺模型 ${percent}%... 之後離線免下載`;
+        if (shouldShowOverlay) {
+          updateModelLoadingProgress(percent, statusMsg, `下載進度: ${fileName}`);
+        }
+        updateAiModelSettingsUI(percent, 'downloading');
+        if (typeof onProgress === 'function') {
+          onProgress(percent, statusMsg);
+        }
+      };
+
+      const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
+      let usedDevice = hasWebGpu ? 'webgpu' : 'wasm';
+      let visionModel = null;
+
+      try {
+        if (usedDevice === 'webgpu') {
+          visionModel = await tf.CLIPVisionModelWithProjection.from_pretrained('plhery/mobileclip2-onnx', {
+            device: 'webgpu',
+            dtype: 'fp32',
+            subfolder: 'onnx/s0',
+            model_file_name: 'vision_model',
+            progress_callback: progressCallback
+          });
+        } else {
+          throw new Error('WebGPU not supported on this client');
+        }
+      } catch (gpuErr) {
+        console.warn('[MOBILECLIP2] WebGPU 載入失敗或不支援，切換至 WASM 備援管線:', gpuErr?.message || gpuErr);
+        usedDevice = 'wasm';
+        visionModel = await tf.CLIPVisionModelWithProjection.from_pretrained('plhery/mobileclip2-onnx', {
+          device: 'wasm',
+          dtype: 'fp32',
+          subfolder: 'onnx/s0',
+          model_file_name: 'vision_model',
+          progress_callback: progressCallback
         });
       }
 
-      const statusMsg = `首次載入 AI 視覺模型 ${percent}%... 之後離線免下載`;
-      const fileName = p.file ? p.file.split('/').pop() : '離線快取儲存中';
-      updateModelLoadingProgress(percent, statusMsg, `下載進度: ${fileName}`);
-      if (typeof onProgress === 'function') {
-        onProgress(percent, statusMsg);
-      }
-    };
+      const processor = await tf.AutoProcessor.from_pretrained('plhery/mobileclip2-onnx', {
+        config_file_name: 'onnx/s0/preprocessor_config.json'
+      });
 
-    console.log('[VLM] 正在透過 WebGPU 初始化 HuggingFaceTB/SmolVLM-256M-Instruct...');
+      mobileClip2VisionModel = visionModel;
+      mobileClip2Processor = processor;
 
-    vlmProcessor = await AutoProcessor.from_pretrained(
-      'HuggingFaceTB/SmolVLM-256M-Instruct',
-      { progress_callback: progressCallback }
-    );
-    if (isDebug) {
-      console.log('[VLM DEBUG] AutoProcessor 建立成功');
-    }
-
-    if (!isMobile) {
-      // 桌面仍維持目前設定 (不指定 dtype)
-      console.log('[VLM DEBUG] requested dtype: none');
-      console.log('[VLM DEBUG] actual dtype fallback: none');
-      vlmModel = await AutoModelForVision2Seq.from_pretrained(
-        'HuggingFaceTB/SmolVLM-256M-Instruct',
-        {
-          device: 'webgpu',
-          progress_callback: progressCallback
-        }
-      );
-      if (isDebug) {
-        console.log('[VLM DEBUG] AutoModelForVision2Seq 建立成功 (Desktop Mode)');
-      }
-    } else {
-      // 手機模式 (Mobile VLM Low Memory Mode)
-      const requestedDtype = {
-        embed_tokens: 'fp32',
-        vision_encoder: 'q4',
-        decoder_model_merged: 'q4'
-      };
-      console.log('[VLM DEBUG] requested dtype:', JSON.stringify(requestedDtype));
-
-      let modelLoaded = false;
-      let lastErr = null;
-
-      // 嘗試初始 Requested Dtype Mapping
-      try {
-        vlmModel = await AutoModelForVision2Seq.from_pretrained(
-          'HuggingFaceTB/SmolVLM-256M-Instruct',
-          {
-            device: 'webgpu',
-            dtype: requestedDtype,
-            progress_callback: progressCallback
-          }
-        );
-        console.log('[VLM DEBUG] actual dtype fallback: none');
-        modelLoaded = true;
-      } catch (errMapping) {
-        lastErr = errMapping;
-        console.warn('[VLM DEBUG] 初始 requested dtype mapping 載入失敗，觸發第 1 順位 fallback (q4)：', errMapping?.message || errMapping);
-        console.log('[VLM DEBUG] actual dtype fallback: q4');
-
-        // 第一順位: dtype: 'q4'
-        try {
-          vlmModel = await AutoModelForVision2Seq.from_pretrained(
-            'HuggingFaceTB/SmolVLM-256M-Instruct',
-            {
-              device: 'webgpu',
-              dtype: 'q4',
-              progress_callback: progressCallback
-            }
-          );
-          modelLoaded = true;
-        } catch (errQ4) {
-          lastErr = errQ4;
-          console.warn('[VLM DEBUG] 第 1 順位 dtype: q4 載入失敗，觸發第 2 順位 fallback (q8)：', errQ4?.message || errQ4);
-          console.log('[VLM DEBUG] actual dtype fallback: q8');
-
-          // 第二順位: dtype: 'q8'
-          try {
-            vlmModel = await AutoModelForVision2Seq.from_pretrained(
-              'HuggingFaceTB/SmolVLM-256M-Instruct',
-              {
-                device: 'webgpu',
-                dtype: 'q8',
-                progress_callback: progressCallback
-              }
-            );
-            modelLoaded = true;
-          } catch (errQ8) {
-            lastErr = errQ8;
-            console.warn('[VLM DEBUG] 第 2 順位 dtype: q8 載入失敗，觸發第 3 順位 fallback (不指定 dtype)：', errQ8?.message || errQ8);
-            console.log('[VLM DEBUG] actual dtype fallback: default (none)');
-
-            // 第三順位: 不指定 dtype
-            try {
-              vlmModel = await AutoModelForVision2Seq.from_pretrained(
-                'HuggingFaceTB/SmolVLM-256M-Instruct',
-                {
-                  device: 'webgpu',
-                  progress_callback: progressCallback
-                }
-              );
-              modelLoaded = true;
-            } catch (errDefault) {
-              lastErr = errDefault;
-              console.error('[VLM DEBUG] 第 3 順位 fallback 亦載入失敗：', errDefault?.message || errDefault);
-            }
-          }
-        }
+      if (typeof window !== 'undefined') {
+        window.mobileClip2VisionModel = mobileClip2VisionModel;
+        window.mobileClip2Processor = mobileClip2Processor;
       }
 
-      if (modelLoaded && vlmModel) {
-        console.log('[VLM DEBUG] mobile VLM load success');
-        if (isDebug) {
-          console.log('[VLM DEBUG] AutoModelForVision2Seq 建立成功 (Mobile Mode)');
-        }
+      const loadEndTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      const loadDuration = ((loadEndTime - loadStartTime) / 1000).toFixed(2);
+      console.log(`[MOBILECLIP2] ✅ MobileCLIP2-S0 視覺模型加載完成！(耗時: ${loadDuration} 秒, device: ${usedDevice})`);
+
+      if (isCameraDebug()) {
+        console.log('[MOBILECLIP2] engine init');
+        console.log('[MOBILECLIP2] model = MobileCLIP2-S0');
+        console.log('[MOBILECLIP2] model file = onnx/s0/vision_model');
+        console.log(`[MOBILECLIP2] device = ${usedDevice}`);
+        console.log('[MOBILECLIP2] input = 256x256');
+      }
+
+      markMobileClip2Downloaded();
+
+      if (shouldShowOverlay) {
+        updateModelLoadingProgress(100, 'MobileCLIP2-S0 視覺模型下載完成！', '✅ 模型快取已就緒，之後離線免下載！');
+        setTimeout(() => hideModelLoadingOverlay(true), 500);
       } else {
-        console.error('[VLM DEBUG] mobile VLM load failed');
-        mobileFailLogged = true;
-        throw (lastErr || new Error('Mobile VLM load failed all fallback attempts'));
+        hideModelLoadingOverlay(false);
+      }
+
+      return { model: mobileClip2VisionModel, processor: mobileClip2Processor };
+    } catch (err) {
+      console.error('[MOBILECLIP2] 模型載入失敗：', err);
+      hideModelLoadingOverlay(false);
+      updateAiModelSettingsUI(0, 'error');
+      mobileClip2VisionModel = null;
+      mobileClip2Processor = null;
+      throw err;
+    } finally {
+      isMobileClip2Loading = false;
+      mobileClip2LoadPromise = null;
+    }
+  })();
+
+  return await mobileClip2LoadPromise;
+}
+
+/**
+ * 7.7.2 串行多 Crop 視覺特徵推論 (Strictly Serial Multi-Crop)
+ * 最多依序分析 3 張：
+ * 1. 整張照片 (0.40)
+ * 2. 中央商品 Crop (0.40)
+ * 3. 中央偏上包裝標籤 Crop (0.20)
+ * 每次只允許單一推論，完畢立即 dispose tensor 並釋放記憶體
+ */
+async function runMobileClip2Vision(imageSource) {
+  const { model, processor } = await initMobileClip2();
+  const tf = await getVisionEngine();
+  const RawImageClass = tf.RawImage || window.RawImage;
+
+  if (!model || !processor) {
+    throw new Error('[MOBILECLIP2] Vision Encoder 或 Processor 未正確初始化');
+  }
+
+  // 取得來源尺寸
+  const sw = imageSource.videoWidth || imageSource.naturalWidth || imageSource.width || 800;
+  const sh = imageSource.videoHeight || imageSource.naturalHeight || imageSource.height || 600;
+
+  // 建立專用 256x256 臨時推論畫布
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = 256;
+  cropCanvas.height = 256;
+  const ctx = cropCanvas.getContext('2d', { willReadFrequently: true });
+
+  const crops = [];
+  // 1. 全圖
+  crops.push({
+    name: 'whole image',
+    weight: 0.40,
+    sx: 0, sy: 0, sWidth: sw, sHeight: sh
+  });
+
+  // 2. 中央商品 Crop (70% 區域)
+  if (sw >= 100 && sh >= 100) {
+    const cWidth = Math.round(sw * 0.7);
+    const cHeight = Math.round(sh * 0.7);
+    crops.push({
+      name: 'center crop',
+      weight: 0.40,
+      sx: Math.round((sw - cWidth) / 2),
+      sy: Math.round((sh - cHeight) / 2),
+      sWidth: cWidth,
+      sHeight: cHeight
+    });
+
+    // 3. 中央偏上包裝標籤 Crop (60% 寬, 50% 高，位於頂端 10%~60% 處)
+    const lWidth = Math.round(sw * 0.6);
+    const lHeight = Math.round(sh * 0.5);
+    crops.push({
+      name: 'label crop',
+      weight: 0.20,
+      sx: Math.round((sw - lWidth) / 2),
+      sy: Math.round(sh * 0.1),
+      sWidth: lWidth,
+      sHeight: lHeight
+    });
+  }
+
+  const embeddings = [];
+
+  // 嚴格串行執行：每張 Crop 完成後釋放暫存物件，等待下一幀動畫
+  for (let i = 0; i < crops.length; i++) {
+    const crop = crops[i];
+    if (isCameraDebug()) {
+      console.log(`[MOBILECLIP2] ${crop.name} inference start`);
+    }
+
+    ctx.clearRect(0, 0, 256, 256);
+    ctx.drawImage(imageSource, crop.sx, crop.sy, crop.sWidth, crop.sHeight, 0, 0, 256, 256);
+
+    let rawImg = null;
+    let inputs = null;
+    let outputs = null;
+
+    try {
+      const imgData = ctx.getImageData(0, 0, 256, 256);
+      rawImg = RawImageClass ? new RawImageClass(imgData.data, 256, 256, 4) : cropCanvas;
+
+      inputs = await processor(rawImg);
+      outputs = await model(inputs);
+
+      const rawEmbed = outputs.image_embeds?.data;
+      if (!rawEmbed || rawEmbed.length !== 512) {
+        throw new Error(`[MOBILECLIP2] 特徵維度異常: ${rawEmbed ? rawEmbed.length : 'null'}`);
+      }
+
+      // L2 正規化單張 crop 特徵
+      const normEmbed = l2Normalize(rawEmbed);
+      embeddings.push({
+        embed: normEmbed,
+        weight: crop.weight
+      });
+    } finally {
+      // 關鍵記憶體釋放：只在 API 真正支援 dispose 時呼叫
+      inputs?.pixel_values?.dispose?.();
+      outputs?.image_embeds?.dispose?.();
+      rawImg = null;
+      inputs = null;
+      outputs = null;
+    }
+
+    if (isCameraDebug()) {
+      console.log(`[MOBILECLIP2] ${crop.name} inference end`);
+    }
+
+    // 等待下一幀動畫讓瀏覽器垃圾回收與 WebGPU 釋放緩衝
+    await nextFrame();
+  }
+
+  // 加權平均融合
+  const finalEmbed = new Float32Array(512);
+  let totalWeight = 0;
+  for (const item of embeddings) {
+    totalWeight += item.weight;
+    for (let d = 0; d < 512; d++) {
+      finalEmbed[d] += item.embed[d] * item.weight;
+    }
+  }
+  for (let d = 0; d < 512; d++) {
+    finalEmbed[d] /= totalWeight;
+  }
+
+  // 釋放推論畫布
+  cropCanvas.width = 1;
+  cropCanvas.height = 1;
+
+  if (isCameraDebug()) {
+    console.log('[MOBILECLIP2] temporary resources released');
+  }
+
+  return l2Normalize(finalEmbed);
+}
+
+/**
+ * 7.7.3 階層式商品辨識 (Hierarchical Recognition)
+ * 第一階段：比較 18 個大分類，取得 Top 2
+ * 第二階段：僅在 Top 2 大分類下比對商品細分類
+ */
+async function classifyWithMobileClip2(imageSource) {
+  try {
+    let fusedImageEmbedding = null;
+    if (imageSource instanceof Float32Array || (Array.isArray(imageSource) && imageSource.length === 512)) {
+      fusedImageEmbedding = imageSource instanceof Float32Array ? imageSource : new Float32Array(imageSource);
+    } else {
+      fusedImageEmbedding = await runMobileClip2Vision(imageSource);
+    }
+    const { categories, candidates } = getMobileClip2Data();
+
+    if (!categories || categories.length === 0 || !candidates || candidates.length === 0) {
+      console.warn('[MOBILECLIP2] 離線標籤資料庫未就緒，降級使用 MobileNet');
+      return await classifyImageVisual(imageSource);
+    }
+
+    // Stage 1: 大分類比對
+    const categoryScores = categories.map(cat => ({
+      cat: cat.cat,
+      label: cat.label,
+      emoji: cat.emoji,
+      score: cosineSimilarity(fusedImageEmbedding, cat.embedding)
+    })).sort((a, b) => b.score - a.score);
+
+    const top2Cats = new Set([
+      categoryScores[0]?.cat || 'food',
+      categoryScores[1]?.cat || 'pao'
+    ]);
+
+    // Stage 2: 細分類比對 (限制於 Top 2 大分類與 'other' 保底)
+    const eligibleCandidates = candidates.filter(c => top2Cats.has(c.cat) || c.cat === 'other');
+    const candidateScores = eligibleCandidates.map(c => {
+      const sim = cosineSimilarity(fusedImageEmbedding, c.embedding);
+      return {
+        id: c.id,
+        cat: c.cat,
+        subCat: c.subCat,
+        defaultName: c.defaultName,
+        emoji: c.emoji,
+        defaultDays: c.defaultDays || 30,
+        isContainer: !!c.isContainer,
+        score: sim,
+        probability: sim,
+        candidate: c,
+        className: c.defaultName,
+        label: c.labels ? c.labels[0] : c.defaultName
+      };
+    }).sort((a, b) => b.score - a.score);
+
+    const top5 = candidateScores.slice(0, 5);
+
+    if (isCameraDebug()) {
+      console.log('[MOBILECLIP2] Stage 1 Top 2 Categories:', [categoryScores[0], categoryScores[1]]);
+      console.log('[MOBILECLIP2] visual top5:');
+      console.table(top5.map(t => ({
+        name: t.defaultName,
+        category: t.cat,
+        subCategory: t.subCat,
+        score: (t.score * 100).toFixed(1) + '%'
+      })));
+    }
+
+    return top5;
+  } catch (err) {
+    console.warn('[MOBILECLIP2] 辨識過程異常，降級使用本地 MobileNet:', err);
+    return await classifyImageVisual(imageSource);
+  }
+}
+
+/**
+ * 7.7.4 商品辨識融合演算法 (Fusion Engine)
+ * 整合 MobileCLIP2 視覺候選 + OCR 高解析度文字 + SMART_KEYWORD_MAP
+ * 嚴格遵循 OCR-only 效期規則：未讀出日期時保持 null
+ */
+function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems = []) {
+  const ocrText = (ocrData && ocrData.text) ? String(ocrData.text).trim() : '';
+  const ocrBarcode = (ocrData && ocrData.barcode) ? String(ocrData.barcode).trim() : '';
+
+  if (isCameraDebug()) {
+    console.log('[OCR] start after MobileCLIP2');
+    console.log('[OCR] raw text:\n' + (ocrText || '(無文字)'));
+  }
+
+  // 1. 原生條碼最優先 (ISBN)
+  if (ocrData && ocrData.barcodeData && ocrData.barcodeData.isIsbn) {
+    const isbnVal = ocrData.barcodeData.barcode;
+    const finalDate = (ocrData && ocrData.date && /^\d{4}-\d{2}-\d{2}$/.test(ocrData.date)) ? ocrData.date : null;
+    return {
+      success: true,
+      name: `圖書/漫畫 (ISBN: ${isbnVal})`,
+      category: 'animation',
+      subCategory: '漫畫/單行本',
+      emoji: '📚',
+      expiryDate: finalDate,
+      hasEndDate: !!finalDate,
+      remindDaysBefore: 30,
+      remindTime: '09:00',
+      confidence: 1.0,
+      visualMatch: 'ISBN條碼直鎖',
+      fusionMode: 'isbn_priority',
+      visualPredictions: visualPredictions || [],
+      ocrText: ocrText,
+      notes: `ISBN: ${isbnVal}`
+    };
+  }
+
+  // 2. OCR 關鍵字比對 (SMART_KEYWORD_MAP)
+  let ocrKeywordMatch = null;
+  let ocrMatchedWord = '';
+  if (ocrText) {
+    const ocrLower = ocrText.toLowerCase();
+    let maxKwLen = 0;
+    for (const mapItem of SMART_KEYWORD_MAP) {
+      for (const kw of mapItem.keywords) {
+        const kwLower = kw.toLowerCase();
+        if (ocrLower.includes(kwLower)) {
+          if (kwLower.length > maxKwLen) {
+            maxKwLen = kwLower.length;
+            ocrKeywordMatch = mapItem;
+            ocrMatchedWord = kw;
+          }
+        }
       }
     }
-
-    vlmPipeline = { processor: vlmProcessor, model: vlmModel };
-    if (typeof window !== 'undefined') {
-      window.vlmProcessor = vlmProcessor;
-      window.vlmModel = vlmModel;
-    }
-
-    const vlmEndTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-    const loadDuration = ((vlmEndTime - vlmStartTime) / 1000).toFixed(2);
-
-    if (isDebug) {
-      console.log(`[VLM DEBUG] 8. 模型載入完成耗時: ${loadDuration} 秒`);
-      console.log('[VLM DEBUG] 9. SmolVLM 是否建立成功: 是', { processor: !!vlmProcessor, model: !!vlmModel });
-      console.log('[VLM DEBUG] SmolVLM model ready');
-    }
-
-    vlmStatus = 'ready';
-    updateModelLoadingProgress(100, '首次載入 AI 視覺模型 100%... 之後離線免下載', '✅ 模型快取完成，已就緒！');
-    setTimeout(() => {
-      hideModelLoadingOverlay(true);
-    }, 700);
-
-    console.log('[VLM] ✅ SmolVLM 端側多模態大模型加載完成！');
-    return { processor: vlmProcessor, model: vlmModel };
-  } catch (err) {
-    if (isMobile && !mobileFailLogged) {
-      console.error('[VLM DEBUG] mobile VLM load failed');
-      mobileFailLogged = true;
-    }
-    if (isDebug) {
-      const isGpuError = err && String(err).toLowerCase().includes('webgpu');
-      console.error(`[VLM DEBUG] 15. Fallback 原因: ${isGpuError ? 'WebGPU unavailable' : 'VLM model load failed'}`);
-      console.error('[VLM DEBUG] 完整 Error Stack:', err && err.stack ? err.stack : err);
-    }
-    console.warn('[VLM] SmolVLM 模型載入失敗或 WebGPU 異常：', err);
-    vlmStatus = 'fallback';
-    hideModelLoadingOverlay(false);
-    throw err;
-  } finally {
-    isVlmLoading = false;
   }
+
+  if (isCameraDebug()) {
+    console.log('[FUSION] OCR keyword matches: ' + (ocrMatchedWord || 'none'));
+  }
+
+  // 3. 調整與重排視覺候選分數 (若 OCR 命中關鍵字，對應候選獲得強力加權)
+  let bestCandidate = (visualPredictions && visualPredictions[0]) || null;
+  if (ocrKeywordMatch && visualPredictions && visualPredictions.length > 0) {
+    const reWeighted = visualPredictions.map(p => {
+      let boost = 0;
+      if (p.cat === ocrKeywordMatch.cat) boost += 0.25;
+      if (p.subCat === ocrKeywordMatch.subCat) boost += 0.40;
+      return {
+        ...p,
+        fusedScore: (p.score || 0) + boost
+      };
+    }).sort((a, b) => b.fusedScore - a.fusedScore);
+
+    bestCandidate = reWeighted[0] || bestCandidate;
+  }
+
+  // 4. 品名決策：
+  // 優先級 1: OCR 清楚讀出的品牌 + 商品名稱
+  // 優先級 2: OCR 關鍵字或品類詞
+  // 優先級 3: MobileCLIP2 細分類標準品名
+  // 優先級 4: 「未辨識物品」
+  let finalName = '';
+  if (ocrText) {
+    finalName = extractFallbackItemName(ocrText, visualPredictions);
+  }
+  if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
+    if (bestCandidate && bestCandidate.defaultName) {
+      finalName = bestCandidate.defaultName;
+    } else {
+      finalName = '未辨識物品';
+    }
+  }
+  finalName = simplifyItemName(finalName);
+
+  // 5. 分類與圖標決策
+  let finalCategory = 'other';
+  let finalSubCategory = '';
+  let finalEmoji = '📦';
+
+  if (ocrKeywordMatch) {
+    finalCategory = ocrKeywordMatch.cat;
+    finalSubCategory = ocrKeywordMatch.subCat;
+    finalEmoji = ocrKeywordMatch.emoji;
+  } else if (bestCandidate) {
+    finalCategory = bestCandidate.cat || 'other';
+    finalSubCategory = bestCandidate.subCat || '';
+    finalEmoji = bestCandidate.emoji || '📦';
+  }
+
+  const categoryConfig = DEFAULT_CATEGORIES[finalCategory] || DEFAULT_CATEGORIES['other'];
+
+  // 6. 有效期限決策 (OCR-ONLY RULE: 絕不猜測，找不到即為 null)
+  let finalExpiry = null;
+  if (ocrData && ocrData.date && /^\d{4}-\d{2}-\d{2}$/.test(ocrData.date)) {
+    finalExpiry = ocrData.date;
+  } else if (ocrText) {
+    const parsedDate = extractDateFromText(ocrText + ' ' + ocrBarcode);
+    if (parsedDate && /^\d{4}-\d{2}-\d{2}$/.test(parsedDate)) {
+      finalExpiry = parsedDate;
+    }
+  }
+
+  if (isCameraDebug()) {
+    console.log('[FUSION] final candidate:', {
+      name: finalName,
+      category: finalCategory,
+      subCategory: finalSubCategory,
+      emoji: finalEmoji,
+      expiryDate: finalExpiry
+    });
+  }
+
+  return {
+    success: true,
+    name: finalName,
+    category: finalCategory,
+    categoryLabel: categoryConfig.label,
+    subCategory: finalSubCategory,
+    emoji: finalEmoji,
+    expiryDate: finalExpiry,
+    hasEndDate: !!finalExpiry,
+    remindDaysBefore: categoryConfig.defaultRemindDays || 3,
+    remindTime: '09:00',
+    confidence: bestCandidate ? bestCandidate.score : 0.85,
+    visualMatch: bestCandidate ? bestCandidate.defaultName : 'MobileCLIP2-S0',
+    fusionMode: ocrKeywordMatch ? 'ocr_keyword_priority' : 'mobileclip2_visual',
+    visualPredictions: visualPredictions || [],
+    ocrText: ocrText,
+    notes: ocrBarcode ? `條碼: ${ocrBarcode}` : undefined
+  };
+}
+
+/**
+ * 7.7.5 智慧相機主分析入口 (MobileCLIP2-S0 + OCR 雙軌串行)
+ * 絕不 Promise.all 兩者，嚴格保證：
+ * MobileCLIP2 推論完成 -> 釋放記憶體 -> await nextFrame -> OCR -> 融合
+ */
+async function analyzeSmartCameraWithMobileClip2(imageSource, photoDataUrl) {
+  // 1. 原生條碼快速檢查
+  const barcodeImmediate = await scanBarcodePriority(imageSource);
+  if (barcodeImmediate && barcodeImmediate.isIsbn) {
+    return {
+      success: true,
+      name: barcodeImmediate.name,
+      category: 'animation',
+      subCategory: '漫畫/單行本',
+      emoji: '📚',
+      expiryDate: null, // OCR-only, 條碼無效期
+      hasEndDate: false,
+      remindDaysBefore: 30,
+      remindTime: '09:00',
+      confidence: 1.0,
+      visualMatch: 'ISBN條碼直鎖',
+      fusionMode: 'isbn_priority',
+      notes: barcodeImmediate.notes,
+      image: photoDataUrl || null
+    };
+  }
+
+  // 2. 軌道一：MobileCLIP2 視覺特徵比對
+  if (typeof updateAiScanStep === 'function') {
+    updateAiScanStep('scanStepVisual', 'active', '正在辨識商品外觀...');
+  }
+  const statusDesc = document.getElementById('aiScanStatusText');
+  if (statusDesc) statusDesc.textContent = '正在辨識商品外觀...';
+
+  let visualPredictions = [];
+  try {
+    visualPredictions = await classifyWithMobileClip2(imageSource);
+  } catch (visErr) {
+    console.warn('[MOBILECLIP2] 視覺分析異常，降級備援:', visErr);
+  }
+
+  if (typeof updateAiScanStep === 'function') {
+    updateAiScanStep('scanStepVisual', 'done', '商品外觀特徵比對完成');
+  }
+
+  // 等待下一渲染幀，確保視覺臨時 Tensor 完全釋放
+  await nextFrame();
+
+  // 3. 軌道二：Tesseract OCR 文字與效期提取 (使用原始高解析度影像，非 256x256)
+  if (typeof updateAiScanStep === 'function') {
+    updateAiScanStep('scanStepOcr', 'active', '正在讀取包裝文字與日期...');
+  }
+  if (statusDesc) statusDesc.textContent = '正在讀取包裝文字與日期...';
+
+  let ocrData = null;
+  try {
+    if (typeof runTextAndDateOcr === 'function') {
+      ocrData = await runTextAndDateOcr(imageSource);
+    }
+  } catch (ocrErr) {
+    console.warn('[OCR] 文字辨識異常:', ocrErr);
+  }
+
+  if (typeof updateAiScanStep === 'function') {
+    updateAiScanStep('scanStepOcr', 'done', '包裝文字與效期提取完成');
+  }
+
+  // 4. 決策融合
+  if (typeof updateAiScanStep === 'function') {
+    updateAiScanStep('scanStepFuse', 'active', '正在確認商品類型...');
+  }
+  if (statusDesc) statusDesc.textContent = '正在確認商品類型...';
+
+  const itemsList = (typeof window !== 'undefined' && window.getItems) ? window.getItems() : [];
+  const fused = fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, itemsList);
+
+  if (photoDataUrl) {
+    fused.image = photoDataUrl;
+  }
+
+  // DOM 賦值連動
+  if (typeof applyVlmDomValues === 'function') {
+    applyVlmDomValues(fused.name, fused.category, fused.expiryDate);
+  }
+
+  if (typeof updateAiScanStep === 'function') {
+    updateAiScanStep('scanStepFuse', 'done', '商品分析與效期校驗完成！');
+  }
+
+  return fused;
 }
 
 /**
  * 預先觸發視覺模型初始化 (initVisionModel)
- * 使用者開啟相機或進入畫面時自動在背景靜默預載，首次下載喚起 #modelLoadingOverlay
+ * 使用者開啟相機或點擊下載時調用
  */
-async function initVisionModel(onProgress) {
-  if (isMobileClipTestMode()) {
-    console.log('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，略過 SmolVLM / MobileNet 預載');
-    return null;
-  }
-  // Mobile Stable Mode: do not preload models while camera/album UI is active.
-  // Recognition models are started only after the captured image is ready and the camera stream is closed.
-  if (isMobileDevice()) {
-    console.log('[MOBILE AI] Stable mode enabled; skip camera-time model preload');
-    return null;
-  }
-  const isDebug = isCameraDebug();
-  const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
-  if (isDebug) {
-    console.log('[VLM DEBUG] 1. navigator.gpu 是否存在 (initVisionModel 預載階段):', hasWebGpu);
-  }
-  if (!hasWebGpu) {
-    if (isDebug) {
-      console.warn('[VLM DEBUG] 15. Fallback 原因: WebGPU unavailable (預載檢測到 navigator.gpu 不存在)');
-    }
-    console.log('[VisionModel] 裝置環境不支援 WebGPU，切換為輕量 MobileNet 視覺模型');
-    return await initMobileNet();
-  }
-
-  showModelLoadingOverlay('首次載入 AI 視覺模型 0%... 之後離線免下載', 0, '正在連線模型快取庫...');
-
-  try {
-    const pipeline = await initVlmModel((percent, statusMsg) => {
-      updateModelLoadingProgress(percent, statusMsg, `模型快取進行中... ${percent}%`);
-      if (typeof onProgress === 'function') {
-        onProgress(percent, statusMsg);
-      }
-    });
-
-    setTimeout(() => {
-      hideModelLoadingOverlay(true);
-    }, 600);
-    return pipeline;
-  } catch (err) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed');
-      console.error('[VLM DEBUG] 完整 Error Stack:', err && err.stack ? err.stack : err);
-    }
-    console.warn('[VisionModel] 視覺模型預載失敗，平滑降級至輕量相機辨識：', err);
-    hideModelLoadingOverlay(false);
-    return await initMobileNet();
-  }
+async function initVisionModel(onProgress, options = {}) {
+  return await initMobileClip2(onProgress, options);
 }
 
 /**
- * 壓縮輸入影像 (限制寬高最大 768px 以提升生成速度與降低顯存佔用)
+ * 相容舊版 initVlmModel / initMoondreamModel
  */
-function compressImageForVlm(imageSource, maxDim) {
-  const targetMaxDim = (typeof maxDim === 'number' && maxDim > 0) ? maxDim : getVlmMaxDim();
+async function initVlmModel(onProgress, options = {}) {
+  return await initMobileClip2(onProgress, options);
+}
+async function initMoondreamModel(onProgress, options = {}) {
+  return await initMobileClip2(onProgress, options);
+}
+
+/**
+ * 相容舊版 analyzeSmartCameraWithMobileClip / analyzeSmartCameraWithVlm / analyzeSmartCameraWithMoondream
+ */
+async function analyzeSmartCameraWithMobileClip(imageSource, photoDataUrl) {
+  return await analyzeSmartCameraWithMobileClip2(imageSource, photoDataUrl);
+}
+async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
+  return await analyzeSmartCameraWithMobileClip2(imageSource, photoDataUrl);
+}
+async function analyzeSmartCameraWithMoondream(imageSource, photoDataUrl) {
+  return await analyzeSmartCameraWithMobileClip2(imageSource, photoDataUrl);
+}
+
+function compressImageForVlm(imageSource, maxDim = 256) {
   if (typeof document === 'undefined') return imageSource;
+  const targetMaxDim = (typeof maxDim === 'number' && maxDim > 0) ? maxDim : 256;
   let sw = imageSource.videoWidth || imageSource.naturalWidth || imageSource.width || 800;
   let sh = imageSource.videoHeight || imageSource.naturalHeight || imageSource.height || 600;
   let dw = sw;
@@ -3523,479 +4011,65 @@ function compressImageForVlm(imageSource, maxDim) {
   return vlmCanvas.toDataURL('image/jpeg', 0.85);
 }
 
-/**
- * 嚴格 Prompt 指令 (結構化 JSON 輸出要求)
- */
-const VLM_PROMPT = `Analyze this item photo for an inventory management app. Extract the exact product name, assign the best category from ["食品", "飲料", "日用品", "動畫", "遊戲", "二次元", "票券/活動", "其他"], and find the expiration date (EXP/Best Before).
-Respond ONLY with a valid JSON object in this format:
-{"name": "string", "category": "string", "expiry": "YYYY-MM-DD or null", "shelf_life_days": number}`;
+const VLM_PROMPT = '';
 
-function extractTextFromOutput(out) {
-  if (!out) return '';
-  if (typeof out === 'string') return out;
-  if (Array.isArray(out)) {
-    const last = out[out.length - 1];
-    if (typeof last === 'string') return last;
-    if (last && typeof last.generated_text === 'string') return last.generated_text;
-    if (last && Array.isArray(last.generated_text)) {
-      const msg = last.generated_text[last.generated_text.length - 1];
-      return (msg && (msg.content || msg.text)) || JSON.stringify(msg);
-    }
-    if (last && last.text) return last.text;
-    return JSON.stringify(last);
-  }
-  if (typeof out.generated_text === 'string') return out.generated_text;
-  if (out.text) return out.text;
-  return JSON.stringify(out);
+async function runVlmInference(pipeOrInstance, imgDataUrl) {
+  const top = (await classifyWithMobileClip2(imgDataUrl))?.[0];
+  return JSON.stringify({
+    name: top ? top.defaultName : '生活物品',
+    category: top ? top.cat : 'other',
+    expiry: null,
+    shelf_life_days: top ? top.defaultDays : 30
+  });
 }
 
-/**
- * 執行 VLM 視覺推論 (Hugging Face 官方 SmolVLM WebGPU 流程)
- */
-async function runVlmInference(pipeOrInstance, imgDataUrl, promptText = VLM_PROMPT) {
-  if (isMobileDevice()) {
-    throw new Error('MOBILE_VLM_DISABLED');
-  }
-  const isDebug = isCameraDebug();
-  if (isDebug) {
-    console.log('[VLM DEBUG] 11. 是否真的執行 runVlmInference(): 是', {
-      instanceAvailable: !!(pipeOrInstance || (vlmProcessor && vlmModel)),
-      promptPreview: promptText ? promptText.slice(0, 100) + '...' : ''
-    });
-  }
-
-  const processor = (pipeOrInstance && pipeOrInstance.processor) || vlmProcessor;
-  const model = (pipeOrInstance && pipeOrInstance.model) || vlmModel;
-  let loadImageFn = (typeof window !== 'undefined' && window.load_image) ? window.load_image : null;
-  if (!loadImageFn) {
-    const tf = await loadTransformers();
-    loadImageFn = (tf && tf.load_image) ? tf.load_image : (typeof window !== 'undefined' ? window.load_image : null);
-  }
-
-  if (!processor || !model) {
-    const modelErr = new Error('SmolVLM Processor or Model Unavailable');
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed (processor 或 model 實例為空)');
-      console.error('[VLM DEBUG] 完整 Error Stack:', modelErr.stack);
-    }
-    throw modelErr;
-  }
-
-  // A. 將目前的 image Data URL 用 load_image() 載入
-  let image;
-  try {
-    image = await loadImageFn(imgDataUrl);
-  } catch (imgErr) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: load_image 失敗');
-      console.error('[VLM DEBUG] 完整 Error Stack:', imgErr && imgErr.stack ? imgErr.stack : imgErr);
-    }
-    throw imgErr;
-  }
-
-  // B. 建立 messages
-  const messages = [
-    {
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          image: image
-        },
-        {
-          type: 'text',
-          text: promptText
-        }
-      ]
-    }
-  ];
-
-  // C. 使用 processor.apply_chat_template 產生文字 Prompt
-  let text;
-  try {
-    text = processor.apply_chat_template(messages, {
-      add_generation_prompt: true
-    });
-  } catch (tmplErr) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: apply_chat_template 失敗');
-      console.error('[VLM DEBUG] 完整 Error Stack:', tmplErr && tmplErr.stack ? tmplErr.stack : tmplErr);
-    }
-    throw tmplErr;
-  }
-
-  // D. 使用 processor 建立模型輸入
-  let inputs;
-  try {
-    inputs = await processor(text, [image]);
-    if (isDebug) {
-      console.log('[VLM DEBUG] processor input 建立成功');
-    }
-  } catch (procErr) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: processor 建立模型輸入失敗');
-      console.error('[VLM DEBUG] 完整 Error Stack:', procErr && procErr.stack ? procErr.stack : procErr);
-    }
-    throw procErr;
-  }
-
-  // E. 使用 model.generate() 進行推論
-  let outputs;
-  const isMobile = isMobileDevice();
-  const maxTokens = isMobile ? 64 : 160;
-  console.log(`[VLM DEBUG] max_new_tokens: ${maxTokens}`);
-
-  try {
-    if (isDebug) {
-      console.log('[VLM DEBUG] model.generate 開始');
-    }
-    outputs = await model.generate({
-      ...inputs,
-      do_sample: false,
-      max_new_tokens: maxTokens
-    });
-    if (isDebug) {
-      console.log('[VLM DEBUG] model.generate 完成');
-    }
-  } catch (genErr) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: model.generate 推論失敗');
-      console.error('[VLM DEBUG] 完整 Error Stack:', genErr && genErr.stack ? genErr.stack : genErr);
-    }
-    throw genErr;
-  }
-
-  // F. 解碼時必須只取得「模型新生成的回答」
-  let rawText = '';
-  try {
-    const seqs = (outputs && outputs.sequences) ? outputs.sequences : outputs;
-    const inputLength = inputs?.input_ids?.dims?.at(-1) || (inputs?.input_ids?.dims && inputs.input_ids.dims[inputs.input_ids.dims.length - 1]) || 0;
-
-    let generatedTokens = seqs;
-    if (seqs && typeof seqs.slice === 'function' && inputLength > 0) {
-      try {
-        generatedTokens = seqs.slice(null, [inputLength, null]);
-      } catch (sliceErr) {
-        if (isDebug) {
-          console.warn('[VLM DEBUG] seqs.slice 警告:', sliceErr);
-        }
-      }
-    }
-
-    const decodeFn = (processor.batch_decode ? processor.batch_decode.bind(processor) : (processor.tokenizer && processor.tokenizer.batch_decode ? processor.tokenizer.batch_decode.bind(processor.tokenizer) : null));
-
-    let decoded = '';
-    if (decodeFn) {
-      decoded = decodeFn(generatedTokens, { skip_special_tokens: true });
-    } else if (processor.decode) {
-      decoded = processor.decode(generatedTokens[0] || generatedTokens, { skip_special_tokens: true });
-    }
-
-    if (Array.isArray(decoded)) {
-      rawText = (decoded[0] || '').trim();
-    } else if (typeof decoded === 'string') {
-      rawText = decoded.trim();
-    } else {
-      rawText = String(decoded || '').trim();
-    }
-
-    // 防護：若未成功切除前綴 Prompt 且包含了 prompt 內容，過濾掉輸入文本
-    if (rawText && text && rawText.includes(text)) {
-      rawText = rawText.replace(text, '').trim();
-    }
-
-    if (isDebug) {
-      console.log('[VLM DEBUG] VLM 新生成文字:', rawText);
-      console.log('[VLM DEBUG] 12. VLM 原始輸出內容 (runVlmInference 產生):', rawText);
-    }
-  } catch (decErr) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: 解碼新生成文字失敗');
-      console.error('[VLM DEBUG] 完整 Error Stack:', decErr && decErr.stack ? decErr.stack : decErr);
-    }
-    throw decErr;
-  }
-
-  return rawText;
-}
-
-/**
- * 【一、容錯式 VLM 輸出解析器（解決 JSON.parse 報錯空白）】
- * VLM 生成的文字常夾雜 Markdown 標記或對話前綴，健壯抽取函式 parseVLMResponse(rawText)
- * 1. 去除 Markdown 標籤：先過濾掉 ```json 與 ``` 等標記。
- * 2. 正規表達式提取 JSON 區塊：使用 /\{[\s\S]*?\}/ 擷取最外層的大括號內容。
- * 3. 雙重解析機制：
- *    - 優先嘗試 JSON.parse(extractedJson)。
- *    - 若解析失敗（如字串未閉合），改用寬鬆的正規表達式逐欄抓取：
- *      * 品名：rawText.match(/(?:name|品名|物品名稱|商品名稱)["':\s]+["']?([^"'\n,}]+)/i)?.[1]?.trim()
- *      * 分類：rawText.match(/(?:category|分類|類別)["':\s]+["']?([^"'\n,}]+)/i)?.[1]?.trim()
- *      * 效期：rawText.match(/(?:expiry|到期日|有效期限)["':\s]+["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/i)?.[1]?.trim()
- */
 function parseVLMResponse(rawText) {
-  const isDebug = isCameraDebug();
   if (!rawText || typeof rawText !== 'string') {
-    if (isDebug) {
-      console.warn('[VLM DEBUG] 13. parseVLMResponse() 輸入無效或為空字串');
-    }
     return { name: '', category: '', expiry: null, parsedName: '', parsedCategory: '', parsedExpiry: null };
   }
-
-  // 1. 去除 Markdown 標籤：先過濾掉 ```json 與 ``` 等標記。
-  const cleanedText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-
-  // 2. 正規表達式提取 JSON 區塊：使用 /\{[\s\S]*?\}/ 擷取最外層的大括號內容。
-  let extractedJson = null;
-  const jsonMatch = cleanedText.match(/\{[\s\S]*?\}/);
-  if (jsonMatch) {
-    extractedJson = jsonMatch[0];
-  }
-
   let parsedName = '';
   let parsedCategory = '';
-  let parsedSubCategory = '';
-  let parsedEmoji = '';
   let parsedExpiry = null;
-  let parsedObject = null;
-  let jsonParseError = null;
-  let isNaturalLanguageName = false;
-  let isNaturalLanguageExpiry = false;
-
-  // 1. 保留現有 JSON 解析：如果模型真的回 {"name":"milk", ...} 仍然優先使用 JSON.parse
-  if (extractedJson) {
-    try {
-      parsedObject = JSON.parse(extractedJson);
-      if (parsedObject && typeof parsedObject === 'object') {
-        parsedName = parsedObject.name || parsedObject['品名'] || parsedObject['物品名稱'] || parsedObject['商品名稱'] || '';
-        parsedCategory = parsedObject.category || parsedObject['分類'] || parsedObject['類別'] || '';
-        parsedExpiry = parsedObject.expiry || parsedObject['到期日'] || parsedObject['有效期限'] || null;
-      }
-    } catch (parseErr) {
-      jsonParseError = parseErr;
-      try {
-        const sanitized = extractedJson.replace(/,\s*([}\]])/g, '$1');
-        parsedObject = JSON.parse(sanitized);
-        if (parsedObject && typeof parsedObject === 'object') {
-          parsedName = parsedObject.name || parsedObject['品名'] || parsedObject['物品名稱'] || parsedObject['商品名稱'] || '';
-          parsedCategory = parsedObject.category || parsedObject['分類'] || parsedObject['類別'] || '';
-          parsedExpiry = parsedObject.expiry || parsedObject['到期日'] || parsedObject['有效期限'] || null;
-          jsonParseError = null;
-        }
-      } catch (e2) {
-        parsedObject = null;
-        jsonParseError = e2;
-      }
-    }
-  }
-
-  if (jsonParseError && isDebug) {
-    console.warn('[VLM DEBUG] 15. Fallback 警告: JSON parse failed (標準 JSON.parse 解析失敗，轉用寬鬆正則逐欄抽取備援)\n完整 Error Stack:', jsonParseError && jsonParseError.stack ? jsonParseError.stack : jsonParseError);
-  }
-
-  // 2. 新增自然語言回答解析（若 JSON 未取得 name）
-  if (!parsedName) {
-    // 寬鬆 key-value 形式
-    const kvMatch = cleanedText.match(/(?:name|品名|物品名稱|商品名稱)["':\s]+["']?([^"'\n,}]+)/i);
-    if (kvMatch && kvMatch[1]) {
-      parsedName = kvMatch[1].trim();
-    }
-  }
-
-  if (!parsedName) {
-    // 自然語言回答模式 (英文與中文模式)
-    const namePatterns = [
-      /the product is\s*["']?([^"'.\n]+)["']?/i,
-      /the item is\s*["']?([^"'.\n]+)["']?/i,
-      /this is\s+(?:an|a)?\s*["']?([^"'.\n]+)["']?/i,
-      /product\s*[:：]\s*["']?([^"'\n,.]+)/i,
-      /(?:品名是|商品是|物品是|這是)\s*([^，。,\n]+)/
-    ];
-
-    for (const pattern of namePatterns) {
-      const m = cleanedText.match(pattern);
-      if (m && m[1]) {
-        let n = m[1].trim().replace(/^["']+|["']+$/g, '').trim();
-        // 防護：若未以引號包裹且後續接 and its expiry ... 截斷處理
-        n = n.replace(/\s+(?:and\s+(?:its\s+)?(?:expiry|expiration)|with\s+expiry).*$/i, '').trim();
-        if (n) {
-          parsedName = n;
-          isNaturalLanguageName = true;
-          break;
-        }
-      }
-    }
-
-    if (parsedName) {
-      console.log('[VLM DEBUG] 自然語言解析取得 name:', parsedName);
-    }
-  }
-
-  // category 解析 (JSON 或 key-value 欄位)
-  if (!parsedCategory) {
-    const catMatch = cleanedText.match(/(?:category|分類|類別)["':\s]+["']?([^"'\n,}]+)/i);
-    if (catMatch && catMatch[1]) {
-      parsedCategory = catMatch[1].trim();
-    }
-  }
-
-  // 3. 自然語言日期解析
-  if (!parsedExpiry) {
-    const expiryPatterns = [
-      /(?:expiry\s*date\s*is|expiration\s*date\s*is|expires\s*on)\s*["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/i,
-      /(?:有效期限(?:是|：|:)?|到期日(?:是|：|:)?)\s*["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/,
-      /(?:expiry|expiration|expires|到期日|有效期限)["':\s]+["']?(\d{4}[-\/]\d{2}[-\/]\d{2})/i
-    ];
-
-    for (const pattern of expiryPatterns) {
-      const em = cleanedText.match(pattern);
-      if (em && em[1]) {
-        parsedExpiry = em[1].trim().replace(/\//g, '-');
-        isNaturalLanguageExpiry = true;
-        console.log('[VLM DEBUG] 自然語言解析取得 expiry:', parsedExpiry);
-        break;
-      }
-    }
-  }
-
-  // 4. category 不應因 VLM 沒回而整體失敗：改用 matchCategoryAndSubCategory(parsedName) 從 SMART_KEYWORD_MAP 推算
-  if (parsedName && !parsedCategory) {
-    if (typeof matchCategoryAndSubCategory === 'function') {
-      const matched = matchCategoryAndSubCategory(parsedName);
-      parsedCategory = matched.category || 'other';
-      parsedSubCategory = matched.subCat || matched.subCategory || '';
-      parsedEmoji = matched.emoji || '📦';
-      console.log('[VLM DEBUG] category 由本地分類器推算:', {
-        category: parsedCategory,
-        subCategory: parsedSubCategory,
-        emoji: parsedEmoji
-      });
-    } else {
-      parsedCategory = 'other';
-    }
-  }
-
-  const vlmExpiryCandidate = parsedExpiry;
-
-  const resultObj = {
-    ...(parsedObject || {}),
-    name: parsedName,
-    category: parsedCategory,
-    subCategory: parsedSubCategory,
-    emoji: parsedEmoji,
-    expiry: parsedExpiry,
-    vlmExpiryCandidate: vlmExpiryCandidate,
-    parsedName,
-    parsedCategory,
-    parsedSubCategory,
-    parsedExpiry,
-    parsedVlmExpiryCandidate: vlmExpiryCandidate
-  };
-
-  console.log('[VLM DEBUG] 最終解析結果:', resultObj);
-
-  return resultObj;
+  try {
+    const obj = JSON.parse(rawText);
+    parsedName = obj.name || '';
+    parsedCategory = obj.category || '';
+    parsedExpiry = obj.expiry || null;
+  } catch (e) {}
+  return { name: parsedName, category: parsedCategory, expiry: parsedExpiry, parsedName, parsedCategory, parsedExpiry };
 }
 
-/**
- * 相容性舊函式別名
- */
 function parseVlmJsonResponse(rawText) {
   return parseVLMResponse(rawText);
 }
 
-/**
- * 【二、分類語意標準化對照表（Category Normalizer）】
- * VLM 回傳的分類可能使用英文或同義詞，建立標準化函式將其映射至系統現有的 8 大合法類別：
- */
 function normalizeCategory(rawCat) {
-  if (!rawCat) return '其他';
-  const c = rawCat.toLowerCase();
-  if (/食品|food|snack|dairy|milk|鮮奶|鮮乳|乳品|牛奶|食物|飲料|drink|beverage/.test(c)) return '食品';
-  if (/動畫|anime|comic|manga|漫畫|輕小說/.test(c)) return '動畫';
-  if (/遊戲|game|console|switch|playstation|xbox/.test(c)) return '遊戲';
-  if (/二次元|figure|toy|谷子|立牌|徽章|模型|黏土人/.test(c)) return '二次元';
-  if (/票券|ticket|門票|電影票|展覽/.test(c)) return '票券/活動';
-  if (/日用|清潔|cleaning|detergent|shampoo|日常|pao/.test(c)) return '日用品';
-  return '其他';
+  return normalizeCategoryKey(rawCat);
 }
 
-/**
- * 【二、表單強制賦值與事件派發】
- * 即使物品屬於「其他」分類或未命中已知詞庫，嚴禁讓物品名稱（itemNameInput）留空
- */
 function applyVlmDomValues(parsedName, parsedCategory, parsedExpiry) {
-  const detectedName = parsedName;
-  const targetCategory = normalizeCategory(parsedCategory);
-
-  const finalName = detectedName && detectedName.trim() !== '' ? detectedName.trim() : '其他物品';
-
-  if (typeof document !== 'undefined') {
-    // 2. 表單強制賦值與事件派發：
-    const nameInput = document.getElementById('itemNameInput');
-    if (nameInput) {
-      nameInput.value = finalName;
-      nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      nameInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    // 既有頁面表單欄位相容處理 (itemName / nlpConfirmName)
-    const altNameInput = document.getElementById('itemName');
-    if (altNameInput && altNameInput !== nameInput) {
-      altNameInput.value = finalName;
-      altNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      altNameInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    const nlpNameInput = document.getElementById('nlpConfirmName');
-    if (nlpNameInput && nlpNameInput !== nameInput && nlpNameInput !== altNameInput) {
-      nlpNameInput.value = finalName;
-      nlpNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      nlpNameInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    // 3. 分類選單同步選中「其他」或目標分類：
-    const catSelect = document.getElementById('itemCategorySelect');
-    if (catSelect) {
-      catSelect.value = targetCategory;
-      if (!catSelect.value || catSelect.value === '' || catSelect.value !== targetCategory) {
-        if (catSelect.options) {
-          const catKeyMap = { '食品': 'food', '動畫': 'animation', '遊戲': 'game', '二次元': 'otaku', '票券/活動': 'ticket', '日用品': 'cleaning', '其他': 'other' };
-          const mappedKey = catKeyMap[targetCategory] || 'other';
-          for (let i = 0; i < catSelect.options.length; i++) {
-            const opt = catSelect.options[i];
-            if (opt.value === targetCategory || opt.value === mappedKey || opt.text.includes(targetCategory) || (targetCategory === '其他' && (opt.value === 'other' || opt.text.includes('其他')))) {
-              catSelect.selectedIndex = i;
-              break;
-            }
-          }
-        }
-      }
-      if (!catSelect.value || catSelect.value === '') {
-        catSelect.value = '其他';
-      }
+  if (typeof document === 'undefined') return;
+  try {
+    const rawCat = parsedCategory || '';
+    const normKey = normalizeCategoryKey(rawCat);
+    const catSelect = document.getElementById('itemCategory');
+    if (catSelect && normKey) {
+      catSelect.value = normKey;
       catSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
-
-    const nlpCatSelect = document.getElementById('nlpConfirmCategory');
-    if (nlpCatSelect && nlpCatSelect !== catSelect) {
-      nlpCatSelect.value = targetCategory;
-      if (!nlpCatSelect.value || nlpCatSelect.value === '' || nlpCatSelect.value !== targetCategory) {
-        if (nlpCatSelect.options) {
-          const catKeyMap = { '食品': 'food', '動畫': 'animation', '遊戲': 'game', '二次元': 'otaku', '票券/活動': 'ticket', '日用品': 'cleaning', '其他': 'other' };
-          const mappedKey = catKeyMap[targetCategory] || 'other';
-          for (let i = 0; i < nlpCatSelect.options.length; i++) {
-            const opt = nlpCatSelect.options[i];
-            if (opt.value === targetCategory || opt.value === mappedKey || opt.text.includes(targetCategory) || (targetCategory === '其他' && (opt.value === 'other' || opt.text.includes('其他')))) {
-              nlpCatSelect.selectedIndex = i;
-              break;
-            }
-          }
-        }
-      }
-      if (!nlpCatSelect.value || nlpCatSelect.value === '') {
-        nlpCatSelect.value = '其他';
-      }
-      nlpCatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    const nameInput = document.getElementById('smartQuickAddInput');
+    if (nameInput && parsedName) {
+      nameInput.value = `${parsedName} ${parsedExpiry ? parsedExpiry + '到期' : ''}`.trim();
+      nameInput.classList.add('has-clear');
+      const clearBtn = document.getElementById('smartQuickAddClear');
+      if (clearBtn) clearBtn.style.display = 'flex';
+      nameInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
-
-    // 有效期限 (若無效期或 finalExpiry === null 保持空白，嚴禁填入假日期)：
+    const nlpNameInput = document.getElementById('nlpConfirmName');
+    if (nlpNameInput && parsedName) {
+      nlpNameInput.value = parsedName;
+      nlpNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     const formattedExpiry = parsedExpiry ? String(parsedExpiry).replace(/\//g, '-') : '';
     const expiryInput = document.getElementById('itemExpiryDateInput');
     if (expiryInput) {
@@ -4016,107 +4090,27 @@ function applyVlmDomValues(parsedName, parsedCategory, parsedExpiry) {
     if (nlpDaysInput && !parsedExpiry) {
       nlpDaysInput.value = '';
     }
-
-    // 【三、除錯日誌】
-    const currentNameVal = (nameInput && nameInput.value) || (altNameInput && altNameInput.value) || finalName;
-    const currentCatVal = (catSelect && catSelect.value) || targetCategory || '其他';
-    console.log('【自動填入結果】', { name: currentNameVal, category: currentCatVal });
-
-    // Toast 提示：「✨ 已自動辨識帶入：[物品名稱]」
-    const toastMsg = `✨ 已自動辨識帶入：${currentNameVal}`;
-    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-      window.showToast(toastMsg);
-    } else if (typeof showToast === 'function') {
-      showToast(toastMsg);
-    } else if (typeof document !== 'undefined') {
-      const toastContainer = document.getElementById('toastContainer') || document.body;
-      if (toastContainer) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = toastMsg;
-        toastContainer.appendChild(toast);
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transform = 'translateY(-10px)';
-          toast.style.transition = 'all 0.2s ease';
-          setTimeout(() => toast.remove(), 200);
-        }, 2200);
-      }
-    }
-  } else {
-    console.log('【自動填入結果】', { name: finalName, category: targetCategory });
+  } catch (domErr) {
+    console.warn('[applyVlmDomValues] DOM 賦值異常：', domErr);
   }
 }
 
-/**
- * 格式化與映射 VLM 結果，並連動表單輸入欄位
- */
 function formatVlmResult(result, photoDataUrl, skipDom = false) {
-  let name = (result && (result.name || result.parsedName)) ? String(result.name || result.parsedName).trim() : '';
-  if (!name || name === '') {
-    name = (targetCategory === '其他') ? '生活物品' : (targetCategory + '物品');
-  }
-  const rawCat = (result && (result.category || result.parsedCategory)) ? String(result.category || result.parsedCategory).trim() : '其他';
-  const targetCategory = normalizeCategory(rawCat);
+  const name = (result && (result.name || result.parsedName)) || '生活物品';
+  const rawCat = (result && (result.category || result.parsedCategory)) || 'other';
+  const category = normalizeCategoryKey(rawCat);
+  const categoryLabel = (typeof DEFAULT_CATEGORIES !== 'undefined' && DEFAULT_CATEGORIES[category])
+    ? DEFAULT_CATEGORIES[category].label
+    : normalizeCategory(rawCat);
+  const subCategory = (result && (result.subCategory || result.parsedSubCategory)) || '';
+  const emoji = (typeof DEFAULT_CATEGORIES !== 'undefined' && DEFAULT_CATEGORIES[category])
+    ? DEFAULT_CATEGORIES[category].emoji
+    : '📦';
 
-  // 映射合法分類
-  let category = (result && (result.category || result.parsedCategory)) || 'other';
-  let categoryLabel = targetCategory;
-  let emoji = (result && result.emoji) || '📦';
-  let subCategory = (result && (result.subCategory || result.parsedSubCategory)) || '未分類';
-
-  if (targetCategory === '食品') {
-    category = 'food';
-    categoryLabel = '食品';
-    if (!emoji || emoji === '📦') {
-      emoji = /飲料|飲品|水|酒|茶|咖啡|乳品|鮮奶|milk/i.test(rawCat + ' ' + name) ? '🥛' : '🥦';
-    }
-    if (!subCategory || subCategory === '未分類') {
-      subCategory = /飲料|飲品|水|酒|茶|咖啡|乳品|鮮奶|milk/i.test(rawCat + ' ' + name) ? '鮮乳' : '生鮮/食品';
-    }
-  } else if (targetCategory === '日用品') {
-    category = (category === 'pao') ? 'pao' : 'cleaning';
-    categoryLabel = '日用品';
-    if (!emoji || emoji === '📦') {
-      emoji = '🧴';
-    }
-    if (!subCategory || subCategory === '未分類') {
-      subCategory = '日常用品';
-    }
-  } else if (targetCategory === '動畫') {
-    category = 'animation';
-    categoryLabel = '動畫';
-    if (!emoji || emoji === '📦') emoji = '🎬';
-    if (!subCategory || subCategory === '未分類') subCategory = '動漫周邊';
-  } else if (targetCategory === '遊戲') {
-    category = 'game';
-    categoryLabel = '遊戲';
-    if (!emoji || emoji === '📦') emoji = '🎮';
-    if (!subCategory || subCategory === '未分類') subCategory = '遊戲卡帶/光碟';
-  } else if (targetCategory === '二次元') {
-    category = 'otaku';
-    categoryLabel = '二次元';
-    if (!emoji || emoji === '📦') emoji = '✨';
-    if (!subCategory || subCategory === '未分類') subCategory = '二次元周邊';
-  } else if (targetCategory === '票券/活動') {
-    category = 'ticket';
-    categoryLabel = '票券/活動';
-    if (!emoji || emoji === '📦') emoji = '🎟️';
-    if (!subCategory || subCategory === '未分類') subCategory = '票券/活動';
-  } else {
-    category = 'other';
-    categoryLabel = '其他';
-    if (!emoji || emoji === '📦') emoji = '📦';
-    if (!subCategory || subCategory === '未分類') subCategory = '未分類';
-  }
-
-  // 效期計算：僅採用真實讀取之 OCR 日期，禁止依商品類型自動猜測保存天數 (milk -> 7天等)
   let expiryDate = null;
   const candidateExpiry = (result && (result.expiry || result.parsedExpiry)) ? String(result.expiry || result.parsedExpiry).trim().replace(/\//g, '-') : '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(candidateExpiry)) {
     expiryDate = candidateExpiry;
-  } else {
-    expiryDate = null;
   }
 
   if (!skipDom) {
@@ -4134,284 +4128,46 @@ function formatVlmResult(result, photoDataUrl, skipDom = false) {
     hasEndDate: !!expiryDate,
     remindDaysBefore: 3,
     remindTime: '09:00',
-    confidence: 0.95,
-    visualMatch: 'SmolVLM 端側多模態大模型',
-    fusionMode: 'vlm_webgpu',
+    confidence: 0.96,
+    visualMatch: 'MobileCLIP2-S0',
+    fusionMode: 'mobileclip2_s0',
     image: photoDataUrl || null,
-    vlmExpiryCandidate: (result && result.vlmExpiryCandidate) || null,
+    vlmExpiryCandidate: null,
     ocrText: (result && result.ocrRawText) || '',
     dateCandidates: (result && result.ocrDateCandidates) || [],
-    dateSource: (result && result.dateSource) || (expiryDate ? 'OCR' : 'none')
+    dateSource: expiryDate ? 'OCR' : 'none'
   };
 }
 
-/**
- * 端側視覺語言大模型辨識核心 (支援 WebGPU 環境檢查、8秒超時控制與舊版雙軌降級)
- */
-async function analyzeSmartCameraWithVlm(imageSource, photoDataUrl) {
-  if (isMobileClipTestMode()) {
-    console.warn('[MOBILECLIP TEST] 測試模式啟用 (?mobilecliptest=1)，跳過 analyzeSmartCameraWithVlm');
-    return null;
-  }
-  // Mobile Stable Mode: phones/tablets never enter SmolVLM.
-  if (isMobileDevice()) {
-    console.log('[MOBILE AI] Stable mode: bypass SmolVLM -> MobileNet + OCR');
-    return await analyzeSmartCameraDualTrack(imageSource, photoDataUrl);
-  }
-  const isDebug = isCameraDebug();
-
-  // 1. 執行前先偵測使用者裝置環境 (WebGPU 檢查)
-  const hasWebGpu = typeof navigator !== 'undefined' && !!navigator.gpu;
-  if (isDebug) {
-    console.log('[VLM DEBUG] 10. 拍照後是否真的進入 analyzeSmartCameraWithVlm(): 是', {
-      hasImageSource: !!imageSource,
-      hasPhotoDataUrl: !!photoDataUrl
-    });
-    console.log('[VLM DEBUG] 1. navigator.gpu 是否存在:', hasWebGpu);
-  }
-
-  if (!hasWebGpu) {
-    if (isDebug) {
-      console.error('[VLM DEBUG] 15. Fallback 原因: WebGPU unavailable (navigator.gpu 不存在或不支援)');
-    }
-    console.log('[VLM] 裝置環境未支援 WebGPU，切換為輕量相機辨識');
-    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-      window.showToast('已切換為輕量相機辨識');
-    }
-    return await analyzeSmartCameraDualTrack(imageSource, photoDataUrl);
-  }
-
-  // 2. 嘗試執行端側 VLM 視覺推論
-  try {
-    // 檢查模型是否就緒，若未就緒則首次觸發加載與進度追蹤
-    let pipe;
-    try {
-      pipe = await initVlmModel();
-    } catch (loadErr) {
-      if (isDebug) {
-        console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed');
-        console.error('[VLM DEBUG] 完整 Error Stack:', loadErr && loadErr.stack ? loadErr.stack : loadErr);
-      }
-      throw loadErr;
-    }
-
-    if (!pipe) {
-      const pipeErr = new Error('VLM Pipeline Unavailable');
-      if (isDebug) {
-        console.error('[VLM DEBUG] 15. Fallback 原因: VLM model load failed (pipe 實例為空)');
-        console.error('[VLM DEBUG] 完整 Error Stack:', pipeErr.stack);
-      }
-      throw pipeErr;
-    }
-
-    const isMobile = isMobileDevice();
-    const vlmMaxDim = isMobile ? 512 : 768;
-    console.log(`[VLM DEBUG] VLM image maxDim: ${vlmMaxDim}`);
-
-    // 壓縮輸入影像 (手機限制 512px，桌面限制 768px 供 SmolVLM 進行品名與分類推論)
-    const compressedImg = compressImageForVlm(imageSource, vlmMaxDim);
-
-    // 2. 啟動既有 Tesseract OCR (使用原始高解析照片 photoDataUrl 或未壓縮之 imageSource 畫布，絕不使用壓縮至 512px/768px 之圖片)
-    const ocrTargetImage = photoDataUrl || imageSource;
-
-    // 8 秒推論超時控制器 (Promise.race)
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('VLM_TIMEOUT_8S')), 8000);
-    });
-
-    let rawOutput;
-    let ocrData = null;
-    const inferencePromise = runVlmInference(pipe, compressedImg, VLM_PROMPT);
-
-    try {
-      if (isIosSafari()) {
-        // iOS Safari 特別保護：
-        // 1. 不同時初始化 MobileNet、OCR、VLM 三套模型
-        // 2. 先只載入/執行 SmolVLM 推論
-        // 3. SmolVLM 推論完成後再按需要啟動 OCR，避免同時間佔用過多記憶體
-        if (isDebug) {
-          console.log('[iOS Safari 保護] 啟用序列推論模式：先執行 SmolVLM，推論結束後再按需啟動 OCR');
-        }
-        rawOutput = await Promise.race([inferencePromise, timeoutPromise]);
-
-        if (typeof runTextAndDateOcr === 'function') {
-          try {
-            ocrData = await runTextAndDateOcr(ocrTargetImage);
-          } catch (ocrErr) {
-            console.warn('[OCR] runTextAndDateOcr 執行異常：', ocrErr);
-            ocrData = null;
-          }
-        }
-      } else {
-        // 桌面及非 iOS 模式維持雙軌並行 (Promise.all)
-        const ocrPromise = (typeof runTextAndDateOcr === 'function')
-          ? runTextAndDateOcr(ocrTargetImage).catch(ocrErr => {
-              console.warn('[OCR] runTextAndDateOcr 執行異常：', ocrErr);
-              return null;
-            })
-          : Promise.resolve(null);
-
-        [rawOutput, ocrData] = await Promise.all([
-          Promise.race([inferencePromise, timeoutPromise]),
-          ocrPromise
-        ]);
-      }
-    } catch (infErr) {
-      if (isDebug) {
-        if (infErr && (infErr.message === 'VLM_TIMEOUT_8S' || infErr.message?.includes('timeout'))) {
-          console.error('[VLM DEBUG] 15. Fallback 原因: inference timeout (>8s)');
-        } else {
-          console.error('[VLM DEBUG] 15. Fallback 原因: inference error');
-        }
-        console.error('[VLM DEBUG] 完整 Error Stack:', infErr && infErr.stack ? infErr.stack : infErr);
-      }
-      throw infErr;
-    }
-
-    const rawText = (typeof rawOutput === 'string') ? rawOutput : extractTextFromOutput(rawOutput);
-
-    // 【四、除錯日誌與 Toast 提示】：印出 VLM 原始輸出
-    if (isDebug) {
-      console.log('[VLM DEBUG] 12. VLM 原始輸出內容:', rawText);
-    }
-    console.log('[VLM Raw Output]:', rawText);
-
-    // 【一、容錯式 VLM 輸出解析器】
-    const parsed = parseVLMResponse(rawText);
-    const parsedName = parsed ? (parsed.name || parsed.parsedName || '') : '';
-    const parsedCategory = parsed ? (parsed.category || parsed.parsedCategory || '') : '';
-    const parsedSubCategory = parsed ? (parsed.subCategory || parsed.parsedSubCategory || '') : '';
-    const vlmExpiryCandidate = parsed ? (parsed.vlmExpiryCandidate || parsed.expiry || parsed.parsedExpiry || null) : null;
-
-    // 【二、既有 Tesseract OCR 日期與文字提取】
-    const ocrRawText = (ocrData && ocrData.text) ? ocrData.text : '';
-    const ocrDateCandidates = (ocrData && Array.isArray(ocrData.dateCandidates)) ? ocrData.dateCandidates : [];
-    const ocrFinalDate = (ocrData && ocrData.date) ? ocrData.date : null;
-
-    // 【三、最終日期決策規則】
-    // A. OCR 有找到日期 -> 使用 OCR 日期
-    // B. OCR 沒找到日期 -> finalExpiry = null
-    // C. VLM 有日期但 OCR 完全沒有看到日期 -> 不得使用 VLM 日期
-    // D. VLM 日期與 OCR 日期相同 -> 記錄為高可信
-    // E. VLM 日期與 OCR 日期不同 -> 一律以 OCR 為主，並輸出 Debug 警告
-    let finalExpiry = null;
-    let dateSource = 'none';
-
-    if (ocrFinalDate) {
-      finalExpiry = ocrFinalDate;
-      dateSource = 'OCR';
-      if (vlmExpiryCandidate && vlmExpiryCandidate !== ocrFinalDate) {
-        console.warn('[VLM DEBUG] VLM 日期與 OCR 不一致，已採用 OCR');
-      } else if (vlmExpiryCandidate && vlmExpiryCandidate === ocrFinalDate) {
-        console.log('[VLM DEBUG] VLM 日期與 OCR 日期相同（高可信）:', finalExpiry);
-      }
-    } else {
-      finalExpiry = null;
-      dateSource = 'none';
-      if (vlmExpiryCandidate) {
-        console.log('[VLM DEBUG] OCR 未發現日期，已捨棄 VLM 猜測日期:', vlmExpiryCandidate);
-      }
-    }
-
-    // 【7. Debug 資訊輸出】
-    console.log('[VLM DEBUG] VLM 日期候選:', vlmExpiryCandidate);
-    console.log('[OCR DEBUG] OCR 原始文字:', ocrRawText);
-    console.log('[OCR DEBUG] OCR 找到的日期候選:', ocrDateCandidates);
-    console.log('[OCR DEBUG] OCR 最終日期:', ocrFinalDate);
-    console.log('[VLM DEBUG] 最終採用 expiry:', finalExpiry);
-    console.log('[VLM DEBUG] 日期來源:', dateSource);
-
-    parsed.expiry = finalExpiry;
-    parsed.parsedExpiry = finalExpiry;
-    parsed.vlmExpiryCandidate = vlmExpiryCandidate;
-    parsed.ocrRawText = ocrRawText;
-    parsed.ocrDateCandidates = ocrDateCandidates;
-    parsed.ocrFinalDate = ocrFinalDate;
-    parsed.dateSource = dateSource;
-
-    // 【四、除錯日誌】：印出解析結果
-    if (isDebug) {
-      console.log('[VLM DEBUG] 13. parseVLMResponse() 解析後內容:', { parsedName, parsedCategory, parsedSubCategory, vlmExpiryCandidate, finalExpiry });
-    }
-    console.log('[VLM Parsed]:', { parsedName, parsedCategory, parsedSubCategory, vlmExpiryCandidate, finalExpiry });
-
-    // 5. 修改失敗條件：只有在「連 parsedName 都無法取得」時，才視為 VLM 回答無法使用。只要能取得物品名稱，就不要因 category 缺失而 fallback。
-    if (!parsedName) {
-      const jsonErr = new Error('JSON parse failed (無法從 VLM 原始輸出擷取出物品名稱 name)');
-      if (isDebug) {
-        console.error('[VLM DEBUG] 15. Fallback 原因: JSON parse failed (連物品名稱 parsedName 都無法取得)\n[VLM DEBUG] 原始輸出內容:', rawText);
-        console.error('[VLM DEBUG] 完整 Error Stack:', jsonErr.stack);
-      }
-      throw jsonErr;
-    }
-
-    // 【精確 DOM 賦值與觸發連動】及 Toast 提示 (傳入 finalExpiry，null 則保持空白)
-    applyVlmDomValues(parsedName, parsedCategory, finalExpiry);
-
-    const finalResult = formatVlmResult(parsed, photoDataUrl, true);
-    finalResult.ocrText = ocrRawText;
-    finalResult.dateCandidates = ocrDateCandidates;
-    finalResult.dateSource = dateSource;
-    finalResult.vlmExpiryCandidate = vlmExpiryCandidate;
-
-    if (isDebug) {
-      console.log('[VLM DEBUG] 14. 最終 name / category / subCategory / expiryDate / confidence:', {
-        name: finalResult.name,
-        category: finalResult.category,
-        subCategory: finalResult.subCategory,
-        expiryDate: finalResult.expiryDate,
-        confidence: finalResult.confidence
-      });
-    }
-    return finalResult;
-  } catch (err) {
-    if (isDebug) {
-      let fallbackReason = 'inference error';
-      if (err?.message === 'VLM_TIMEOUT_8S' || err?.message?.includes('timeout')) {
-        fallbackReason = 'inference timeout';
-      } else if (err?.message?.includes('JSON parse failed') || err?.message === 'VLM_INVALID_JSON_RESPONSE') {
-        fallbackReason = 'JSON parse failed';
-      } else if (err?.message?.includes('Pipeline') || err?.message?.includes('model load') || err?.message?.includes('Transformers.js')) {
-        fallbackReason = 'VLM model load failed';
-      } else if (err?.message?.includes('WebGPU')) {
-        fallbackReason = 'WebGPU unavailable';
-      }
-      console.error(`[VLM DEBUG] 15. Fallback 原因: ${fallbackReason}`);
-      console.error('[VLM DEBUG] 完整 Error Stack:', err && err.stack ? err.stack : err);
-    }
-    console.warn('[VLM] 端側推論異常或超時 (>8s)，自動切換至輕量相機辨識：', err);
-    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-      window.showToast('已切換為輕量相機辨識');
-    }
-    return await analyzeSmartCameraDualTrack(imageSource, photoDataUrl);
+function disposeMobileClip2TemporaryResources() {
+  if (isCameraDebug()) {
+    console.log('[MOBILECLIP2] temporary resources released');
   }
 }
 
-// ==========================================
-// 7.8 獨立 MobileCLIP 測試套件 (Xenova/mobileclip_s0 WASM) - 僅供手機手動測試相容性
-// ==========================================
-let mobileClipPipeline = null;
-let mobileClipLoadingPromise = null;
+function isMobileClip2Loaded() {
+  return !!(mobileClip2VisionModel && mobileClip2Processor);
+}
 
-const MOBILECLIP_TEST_CANDIDATES = [
-  'a carton or bottle of fresh milk',
-  'a bottle of shampoo',
-  'a bottle of body wash',
-  'a tube of toothpaste',
-  'a food snack package',
-  'a medicine or supplement bottle',
-  'an air purifier filter',
-  'a water filter cartridge',
-  'a comic book',
-  'a video game',
-  'a collectible figure or toy',
-  'an unknown household item'
-];
+function isMobileClip2LoadingStatus() {
+  return !!isMobileClip2Loading;
+}
 
-/**
- * 判斷是否啟用 MobileCLIP 手機測試模式
- * 僅在網址包含 ?mobilecliptest=1 時啟用
- */
+function resetMobileClip2Model() {
+  if (mobileClip2VisionModel) {
+    try {
+      mobileClip2VisionModel.dispose?.();
+    } catch (e) {}
+  }
+  mobileClip2VisionModel = null;
+  mobileClip2Processor = null;
+  isMobileClip2Loading = false;
+  mobileClip2LoadPromise = null;
+}
+
+// ==========================================
+// 7.8 獨立 MobileCLIP2 手機測試套件 (?mobilecliptest=1)
+// ==========================================
 function isMobileClipTestMode() {
   if (typeof window === 'undefined' || !window.location) return false;
   try {
@@ -4423,208 +4179,44 @@ function isMobileClipTestMode() {
 }
 
 async function initMobileClipTest(onProgress = null) {
-  if (mobileClipPipeline) {
-    return mobileClipPipeline;
-  }
-  if (mobileClipLoadingPromise) {
-    return mobileClipLoadingPromise;
-  }
-
-  mobileClipLoadingPromise = (async () => {
-    console.log('[MOBILECLIP TEST] loading start');
-    console.log('[MOBILECLIP TEST] backend: WASM');
-    const loadStartTime = performance.now();
-
-    try {
-      let tf = null;
-      if (typeof window !== 'undefined' && window.transformersLib) {
-        tf = window.transformersLib;
-      } else if (typeof getVisionEngine === 'function') {
-        tf = await getVisionEngine();
-      } else {
-        tf = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.1');
-      }
-
-      if (!tf || !tf.pipeline) {
-        throw new Error('Transformers.js pipeline 函式無法取得');
-      }
-
-      // 確保啟用瀏覽器快取 (browser cache)
-      if (tf.env) {
-        tf.env.useBrowserCache = true;
-        tf.env.allowLocalModels = false;
-      }
-
-      const pipelineFn = tf.pipeline;
-
-      const progressCallback = (p) => {
-        if (!p) return;
-        if (p.status === 'progress' && typeof p.progress === 'number') {
-          console.log(`[MOBILECLIP TEST] download progress: ${p.file || ''} ${p.progress.toFixed(1)}%`);
-          if (typeof onProgress === 'function') {
-            onProgress(p.progress, p.file);
-          }
-        } else if (p.status === 'done') {
-          console.log(`[MOBILECLIP TEST] download progress: ${p.file || ''} [done]`);
-          if (typeof onProgress === 'function') {
-            onProgress(100, p.file);
-          }
-        } else if (p.status) {
-          console.log(`[MOBILECLIP TEST] download progress: ${p.file || ''} [${p.status}]`);
-        }
-      };
-
-      let pipe = null;
-      let usedDtype = 'q8';
-      console.log('[MOBILECLIP TEST] dtype requested: q8');
-
-      try {
-        // 優先以 q8 載入，不指定 device: 'webgpu'，使用瀏覽器預設 WASM backend
-        pipe = await pipelineFn('zero-shot-image-classification', 'Xenova/mobileclip_s0', {
-          dtype: 'q8',
-          progress_callback: progressCallback
-        });
-      } catch (q8Err) {
-        console.warn('[MOBILECLIP TEST] dtype q8 載入失敗，嘗試 fallback 到 int8:', q8Err);
-        console.log('[MOBILECLIP TEST] dtype requested: int8');
-        usedDtype = 'int8';
-        try {
-          pipe = await pipelineFn('zero-shot-image-classification', 'Xenova/mobileclip_s0', {
-            dtype: 'int8',
-            progress_callback: progressCallback
-          });
-        } catch (int8Err) {
-          console.error('[MOBILECLIP TEST] ERROR: int8 載入亦失敗，停止載入（禁止自動使用 fp32）', int8Err && int8Err.stack ? int8Err.stack : int8Err);
-          throw int8Err;
-        }
-      }
-
-      mobileClipPipeline = pipe;
-      const loadDurationMs = (performance.now() - loadStartTime).toFixed(1);
-      console.log(`[MOBILECLIP TEST] model ready (載入耗時: ${loadDurationMs} ms, dtype: ${usedDtype})`);
-      return mobileClipPipeline;
-    } catch (error) {
-      console.error('[MOBILECLIP TEST] ERROR', error && error.stack ? error.stack : error);
-      mobileClipPipeline = null;
-      throw error;
-    } finally {
-      mobileClipLoadingPromise = null;
-    }
-  })();
-
-  return mobileClipLoadingPromise;
+  return await initMobileClip2(onProgress);
 }
 
-async function testMobileClip(imageDataUrl, candidateLabels = MOBILECLIP_TEST_CANDIDATES, onProgress = null) {
+async function testMobileClip(imageDataUrl, candidateLabels = null, onProgress = null) {
   try {
     if (!imageDataUrl) {
-      const err = new Error('請提供圖片參數 imageDataUrl (例如 Data URL、圖片網址或 Image 元素)');
-      console.error('[MOBILECLIP TEST] ERROR', err.stack || err);
-      throw err;
+      throw new Error('請提供圖片參數 imageDataUrl');
     }
-
-    const pipe = await initMobileClipTest(onProgress);
-    if (!pipe) {
-      const err = new Error('MobileCLIP pipeline 初始化失敗');
-      console.error('[MOBILECLIP TEST] ERROR', err.stack || err);
-      throw err;
-    }
-
-    console.log('[MOBILECLIP TEST] inference start');
-    const infStartTime = performance.now();
-
-    const candidates = Array.isArray(candidateLabels) && candidateLabels.length > 0
-      ? candidateLabels
-      : MOBILECLIP_TEST_CANDIDATES;
-
-    const rawResults = await pipe(imageDataUrl, candidates);
-
-    const infDurationMs = (performance.now() - infStartTime).toFixed(1);
-    console.log(`[MOBILECLIP TEST] inference finished (推論耗時: ${infDurationMs} ms)`);
-
-    const sorted = Array.isArray(rawResults)
-      ? [...rawResults].sort((a, b) => (b.score || 0) - (a.score || 0))
-      : [];
-
-    const top5 = sorted.slice(0, 5).map(item => ({
-      label: item.label,
+    const top5 = await classifyWithMobileClip2(imageDataUrl);
+    return top5.map(item => ({
+      label: `${item.defaultName} (${item.subCat})`,
       score: typeof item.score === 'number' ? Number(item.score.toFixed(4)) : item.score
     }));
-
-    console.log('[MOBILECLIP TEST] top 5:');
-    console.table(top5);
-
-    return top5;
   } catch (error) {
     console.error('[MOBILECLIP TEST] ERROR', error && error.stack ? error.stack : error);
     throw error;
   }
 }
 
-/**
- * MobileCLIP 手機測試模式專用執行流程
- * 當網址包含 ?mobilecliptest=1 時由拍照完成後觸發
- */
 async function runMobileClipCameraTest(photoDataUrl) {
-  console.log('[MOBILECLIP TEST] 執行手機測試模式分析...');
-
-  // 1. Loading 顯示：模型第一次下載時沿用 modelLoadingOverlay 顯示「MobileCLIP 模型下載中...」
+  console.log('[MOBILECLIP TEST] 執行手機測試模式分析 (MobileCLIP2-S0)...');
   try {
-    if (typeof showModelLoadingOverlay === 'function') {
-      showModelLoadingOverlay('MobileCLIP 模型下載中...', 0, '正在連線下載模型權重...');
-    }
     if (typeof showAiScanLoading === 'function') {
       showAiScanLoading(photoDataUrl);
       const desc = document.getElementById('aiScanStatusText');
-      if (desc) desc.textContent = 'MobileCLIP 模型下載中...';
-      const tag = document.getElementById('aiScanEngineTag');
-      if (tag) tag.textContent = 'MobileCLIP WASM';
+      if (desc) desc.textContent = 'MobileCLIP2 辨識中...';
     }
 
-    const onProgress = (percent, file) => {
-      const p = Math.max(0, Math.min(100, Math.round(percent)));
-      if (typeof updateModelLoadingProgress === 'function') {
-        updateModelLoadingProgress(p, 'MobileCLIP 模型下載中...', file ? `下載進度: ${file} (${p}%)` : '下載中...');
-      }
-      const desc = document.getElementById('aiScanStatusText');
-      if (desc) {
-        desc.textContent = `MobileCLIP 模型下載中... ${p}%`;
-      }
-    };
+    const results = await testMobileClip(photoDataUrl);
 
-    // 初始化模型（下載階段，若已下載過則自快取秒載）
-    await initMobileClipTest(onProgress);
-
-    // 2. 推論階段顯示「MobileCLIP 分析中...」
-    if (typeof updateModelLoadingProgress === 'function') {
-      updateModelLoadingProgress(100, 'MobileCLIP 分析中...', '正在比對 12 項候選特徵標籤...');
-    }
-    const desc = document.getElementById('aiScanStatusText');
-    if (desc) {
-      desc.textContent = 'MobileCLIP 分析中...';
-    }
-
-    // 3. 執行推論
-    const results = await testMobileClip(photoDataUrl, MOBILECLIP_TEST_CANDIDATES);
-
-    // 4. 完成後關閉 Loading 與相機視窗
-    if (typeof hideModelLoadingOverlay === 'function') {
-      hideModelLoadingOverlay(false);
-    }
     if (typeof hideAiScanLoading === 'function') {
       hideAiScanLoading();
-    }
-    const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.style.display = 'none';
     }
     if (typeof closeCameraScanModal === 'function') {
       closeCameraScanModal();
     }
 
-    // 5. 格式化顯示前 5 名結果（例如：1. a carton or bottle of fresh milk — 82.3%）
-    let msg = 'MobileCLIP 測試結果\n\n';
+    let msg = 'MobileCLIP2-S0 測試結果\n\n';
     if (Array.isArray(results) && results.length > 0) {
       results.slice(0, 5).forEach((item, idx) => {
         const scoreNum = typeof item.score === 'number' ? item.score : parseFloat(item.score);
@@ -4637,39 +4229,40 @@ async function runMobileClipCameraTest(photoDataUrl) {
       msg += '（未取得辨識結果）';
     }
 
-    console.log('[MOBILECLIP TEST] 測試結果輸出:\n' + msg);
-    setTimeout(() => {
-      alert(msg);
-    }, 100);
-
+    setTimeout(() => alert(msg), 100);
     return results;
   } catch (error) {
-    console.error('[MOBILECLIP TEST] ERROR', error && error.stack ? error.stack : error);
-
-    // 關閉 Loading
-    if (typeof hideModelLoadingOverlay === 'function') {
-      hideModelLoadingOverlay(false);
-    }
+    console.error('[MOBILECLIP TEST] ERROR', error);
     if (typeof hideAiScanLoading === 'function') {
       hideAiScanLoading();
-    }
-    const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.style.display = 'none';
     }
     if (typeof closeCameraScanModal === 'function') {
       closeCameraScanModal();
     }
-
-    // 畫面顯示：MobileCLIP TEST ERROR + error.message
-    const errorMsg = `MobileCLIP TEST ERROR\n${error && error.message ? error.message : error}`;
-    setTimeout(() => {
-      alert(errorMsg);
-    }, 100);
+    setTimeout(() => alert(`MobileCLIP TEST ERROR\n${error && error.message ? error.message : error}`), 100);
     throw error;
   }
 }
+
+// 相容舊版 MobileCLIP 測試常數與函式
+const MOBILECLIP_TEST_CANDIDATES = MOBILECLIP2_CANDIDATES;
+const MOBILECLIP_CANDIDATES = MOBILECLIP2_CANDIDATES;
+const MOBILECLIP_CANDIDATE_MAP = {};
+function getMobileClipCandidate(id) {
+  return MOBILECLIP2_CANDIDATES.find(c => c.id === id) || null;
+}
+function initMobileClipTest() {
+  return initMobileClip2();
+}
+function isMobileClipTestMode() {
+  if (typeof window !== 'undefined' && window.location) {
+    return new URLSearchParams(window.location.search).get('mobilecliptest') === '1';
+  }
+  return false;
+}
+const initMobileClipModel = initMobileClip2;
+const classifyImageWithMobileClip = classifyWithMobileClip2;
+const testMobileClip2 = testMobileClip;
 
 // ==========================================
 // 8. 全域掛載與自啟動
@@ -4745,9 +4338,40 @@ if (typeof window !== 'undefined') {
   window.MOBILECLIP_TEST_CANDIDATES = MOBILECLIP_TEST_CANDIDATES;
   window.isMobileClipTestMode = isMobileClipTestMode;
   window.runMobileClipCameraTest = runMobileClipCameraTest;
+  window.MOBILECLIP_CANDIDATES = MOBILECLIP_CANDIDATES;
+  window.MOBILECLIP_CANDIDATE_MAP = MOBILECLIP_CANDIDATE_MAP;
+  window.getMobileClipCandidate = getMobileClipCandidate;
+  window.isMoondreamModelDownloaded = isMoondreamModelDownloaded;
+  window.markMoondreamModelDownloaded = markMoondreamModelDownloaded;
+  window.initMoondreamModel = initMoondreamModel;
+  window.analyzeSmartCameraWithMoondream = analyzeSmartCameraWithMoondream;
+  window.updateAiModelSettingsUI = updateAiModelSettingsUI;
+  window.setupAiModelSettingsHandler = setupAiModelSettingsHandler;
+  window.moondreamModelInstance = () => moondreamModelInstance;
 
-  // DOM 載入後自動嘗試啟動非同步模型初始化
-  // AI 模型載入全面改為「點擊相機按鈕」時非同步觸發，初始化不自動載入任何模型
+  // v1.8.22 MobileCLIP2-S0 exports
+  window.initMobileClip2 = initMobileClip2;
+  window.runMobileClip2Vision = runMobileClip2Vision;
+  window.classifyWithMobileClip2 = classifyWithMobileClip2;
+  window.fuseMobileClip2AndOcrDecision = fuseMobileClip2AndOcrDecision;
+  window.analyzeSmartCameraWithMobileClip2 = analyzeSmartCameraWithMobileClip2;
+  window.testMobileClip2 = testMobileClip2;
+  window.isMobileClip2Loaded = isMobileClip2Loaded;
+  window.isMobileClip2LoadingStatus = isMobileClip2LoadingStatus;
+  window.resetMobileClip2Model = resetMobileClip2Model;
+  window.MOBILECLIP2_CATEGORIES = MOBILECLIP2_CATEGORIES;
+  window.MOBILECLIP2_CANDIDATES = MOBILECLIP2_CANDIDATES;
+
+  // DOM 載入後自動綁定設定頁面 AI 模型按鈕與更新狀態
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setupAiModelSettingsHandler();
+      });
+    } else {
+      setupAiModelSettingsHandler();
+    }
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -4820,6 +4444,31 @@ if (typeof module !== 'undefined' && module.exports) {
     initMobileClipTest,
     MOBILECLIP_TEST_CANDIDATES,
     isMobileClipTestMode,
-    runMobileClipCameraTest
+    runMobileClipCameraTest,
+    MOBILECLIP_CANDIDATES,
+    MOBILECLIP_CANDIDATE_MAP,
+    getMobileClipCandidate,
+    initMobileClipModel,
+    classifyImageWithMobileClip,
+    analyzeSmartCameraWithMobileClip,
+    isMoondreamModelDownloaded,
+    markMoondreamModelDownloaded,
+    initMoondreamModel,
+    analyzeSmartCameraWithMoondream,
+    updateAiModelSettingsUI,
+    setupAiModelSettingsHandler,
+    moondreamModelInstance: () => moondreamModelInstance,
+    // v1.8.22 MobileCLIP2-S0 exports
+    initMobileClip2,
+    runMobileClip2Vision,
+    classifyWithMobileClip2,
+    fuseMobileClip2AndOcrDecision,
+    analyzeSmartCameraWithMobileClip2,
+    testMobileClip2,
+    isMobileClip2Loaded,
+    isMobileClip2LoadingStatus,
+    resetMobileClip2Model,
+    MOBILECLIP2_CATEGORIES,
+    MOBILECLIP2_CANDIDATES
   };
 }

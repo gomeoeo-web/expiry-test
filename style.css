@@ -6519,8 +6519,43 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   text-align: center !important;
 }
 
+.btn-download-ai-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
+}
+
+.btn-download-ai-model:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.btn-download-ai-model.downloading {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  cursor: wait;
+}
+
+.btn-download-ai-model.downloaded {
+  background: rgba(48, 209, 88, 0.16);
+  border-color: rgba(48, 209, 88, 0.45);
+  color: #30d158;
+  box-shadow: none;
+}
+
 /* ==========================================================================
-   Model Loading Overlay (首次載入 AI 視覺模型進度面板 v1.8.14)
+   Model Loading Overlay (v1.8.21 Moondream2 1.8B VLM 首次下載動畫優化)
    ========================================================================== */
 .model-loading-overlay {
   position: absolute;
@@ -6531,13 +6566,13 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 99;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  z-index: 999;
   padding: 1.25rem;
   box-sizing: border-box;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .model-loading-overlay.fade-out {
@@ -6548,21 +6583,21 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 .model-loading-card {
   width: 100%;
   max-width: 360px;
-  background: rgba(26, 26, 32, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 20px;
-  padding: 1.25rem 1.4rem;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  background: linear-gradient(180deg, rgba(30, 32, 44, 0.96) 0%, rgba(18, 20, 28, 0.98) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 22px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(99, 102, 241, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.95rem;
   box-sizing: border-box;
-  animation: modelOverlayPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modelOverlayPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modelOverlayPop {
-  0% { transform: scale(0.92); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0.9) translateY(12px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .model-loading-header {
@@ -6574,12 +6609,18 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 .model-loading-badge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .model-icon {
-  font-size: 1.15rem;
-  animation: vlmPulse 1.6s infinite alternate ease-in-out;
+  font-size: 1.3rem;
+  animation: modelIconPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes modelIconPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.85)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4)); }
 }
 
 .model-name {
@@ -6594,9 +6635,9 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(48, 209, 88, 0.2);
-  color: #30d158;
-  border: 1px solid rgba(48, 209, 88, 0.4);
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.4);
 }
 
 .model-status-row {
@@ -6608,37 +6649,39 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .model-status-text {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(255, 255, 255, 0.92);
   margin: 0;
   font-weight: 500;
   line-height: 1.35;
 }
 
 .model-progress-percent {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #0a84ff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #60a5fa;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
 .model-progress-track {
   width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.12);
+  height: 9px;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   overflow: hidden;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .model-progress-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #0a84ff 0%, #30d158 100%);
+  background: linear-gradient(90deg, #6366f1 0%, #3b82f6 50%, #10b981 100%);
   border-radius: 999px;
-  transition: width 0.25s ease-out;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
 }
 
 .model-progress-shimmer {
@@ -6647,8 +6690,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-  animation: modelShimmer 1.5s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: modelShimmer 1.4s infinite;
 }
 
 @keyframes modelShimmer {
@@ -6661,7 +6704,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   align-items: center;
   justify-content: space-between;
   font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .model-progress-detail {
@@ -6675,4 +6718,5 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.45);
 }
+
 
