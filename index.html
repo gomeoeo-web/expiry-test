@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.8.27">
+  <link rel="stylesheet" href="style.css?v=1.9.0">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7170,22 +7170,13 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         </div>
 
-        <!-- Group: AI 視覺辨識模型 (MobileCLIP2-S0 端側輕量 Vision Encoder) -->
-        <div class="settings-group" id="groupAiModelSettings">
-          <div class="settings-row" id="rowAiModelDownload" onclick="window.triggerAiModelDownload ? window.triggerAiModelDownload(event) : (window.setupAiModelSettingsHandler && window.setupAiModelSettingsHandler(), window.triggerAiModelDownload && window.triggerAiModelDownload(event))">
-            <div class="settings-icon">🤖</div>
-            <div class="settings-info">
-              <span class="settings-title">AI 辨識模型 (MobileCLIP2-S0)</span>
-              <span class="settings-desc" id="settingsAiModelStatusText">端側輕量 Vision Encoder (~43MB)，點擊立即下載至本機快取</span>
-            </div>
-            <button type="button" id="btnDownloadAiModel" class="btn-download-ai-model" title="下載 AI 辨識模型" onclick="window.triggerAiModelDownload ? window.triggerAiModelDownload(event) : (window.setupAiModelSettingsHandler && window.setupAiModelSettingsHandler(), window.triggerAiModelDownload && window.triggerAiModelDownload(event))">
-              <span class="btn-download-icon">📥</span>
-              <span id="btnDownloadAiModelText">下載模型</span>
-            </button>
+        <div class="settings-group" id="groupCloudRecognition">
+          <div class="settings-row">
+            <div class="settings-icon">☁️</div>
+            <div class="settings-info"><span class="settings-title">雲端照片辨識</span>
+              <span class="settings-desc">連線辨識商品與日期，無需下載模型。照片經同意後送至雲端。</span></div>
           </div>
-          <div class="settings-download-progress-track" id="settingsDownloadProgressTrack" style="display:none;">
-            <div class="settings-download-progress-bar" id="settingsDownloadProgressBar" style="width:0%;"></div>
-          </div>
+          <button type="button" class="settings-row-btn" onclick="window.revokeCloudPhotoConsent && window.revokeCloudPhotoConsent()">撤回照片上傳同意</button>
         </div>
 
         <!-- Group 2: Archive & Recently Deleted Trash -->
@@ -7241,7 +7232,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.27</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.0</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -7293,31 +7284,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         </div>
         <!-- Flash animation overlay on shutter -->
         <div id="cameraFlashOverlay" class="camera-flash-overlay"></div>
-        <!-- AI 模型載入 / 快取進度浮層 (v1.8.27 MobileCLIP2-S0 首次載入優化) -->
-        <div id="modelLoadingOverlay" class="model-loading-overlay" style="display: none;">
-          <div class="model-loading-card">
-            <div class="model-loading-header">
-              <div class="model-loading-badge">
-                <span class="model-icon">🤖</span>
-                <span class="model-name" id="modelLoadingTitle">MobileCLIP2-S0 (端側輕量 Vision Encoder)</span>
-              </div>
-              <span class="model-cache-tag" id="modelCacheTag">端側離線</span>
-            </div>
-            <div class="model-status-row">
-              <p id="modelStatusText" class="model-status-text">首次下載 MobileCLIP2 0%... 之後離線免下載</p>
-              <span id="modelProgressPercent" class="model-progress-percent">0%</span>
-            </div>
-            <div class="model-progress-track">
-              <div id="modelProgressBar" class="model-progress-bar" style="width: 0%;">
-                <div class="model-progress-shimmer"></div>
-              </div>
-            </div>
-            <div class="model-detail-row">
-              <span id="modelProgressDetail" class="model-progress-detail">正在下載模型權重至本機快取...</span>
-              <span class="model-subhint">首次下載後永久離線可用</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Camera Bottom Controls Bar -->
@@ -7375,58 +7341,28 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         <div class="ai-scan-title-group">
           <div class="ai-scan-title-row">
             <span class="ai-scan-title">AI 智慧分析辨識中</span>
-            <span class="ai-scan-tag" id="aiScanEngineTag">MobileCLIP2 / 雙軌</span>
+            <span class="ai-scan-tag" id="aiScanEngineTag">雲端辨識</span>
           </div>
-          <p id="aiScanStatusText" class="ai-scan-desc">正在啟動端側視覺特徵模型...</p>
-        </div>
-      </div>
-
-      <!-- VLM 首次載入 / 下載進度提示卡片 -->
-      <div id="vlmModelLoadingCard" class="vlm-loading-card" style="display: none;">
-        <div class="vlm-loading-header">
-          <div class="vlm-header-title">
-            <span class="vlm-badge-icon">⚡</span>
-            <span class="vlm-title-text">端側 MobileCLIP2 視覺模型</span>
-            <span class="vlm-badge-webgpu">WebGPU / FP32</span>
-          </div>
-          <span class="vlm-offline-tag">永久離線</span>
-        </div>
-        
-        <p id="vlmStatusText" class="vlm-status-text">首次載入 AI 視覺模型 0%... 之後離線免下載</p>
-        
-        <div class="vlm-progress-track">
-          <div id="vlmProgressBar" class="vlm-progress-bar" style="width: 0%;">
-            <div class="vlm-progress-shimmer"></div>
-          </div>
-        </div>
-        
-        <div class="vlm-progress-footer">
-          <span id="vlmProgressPercent" class="vlm-progress-percent">0%</span>
-          <span id="vlmProgressDetail" class="vlm-progress-detail">正在自 IndexedDB 快取加載...</span>
-        </div>
-
-        <div class="vlm-hint-note">
-          <span class="vlm-hint-icon">💡</span>
-          <span>模型僅需首次下載一次，日後完全離線免連網秒速辨識！</span>
+          <p id="aiScanStatusText" class="ai-scan-desc">正在上傳並辨識照片...</p>
         </div>
       </div>
 
       <div class="ai-scan-steps">
         <div class="ai-scan-step-item active" id="scanStepVlm">
           <span class="step-dot"></span>
-          <span class="step-text">MobileCLIP2 端側輕量視覺特徵比對</span>
+          <span class="step-text">上傳照片至雲端</span>
         </div>
         <div class="ai-scan-step-item active" id="scanStepVisual">
           <span class="step-dot"></span>
-          <span class="step-text">物品特徵分類與結構化屬性提取</span>
+          <span class="step-text">辨識商品名稱與分類</span>
         </div>
         <div class="ai-scan-step-item active" id="scanStepOcr">
           <span class="step-dot"></span>
-          <span class="step-text">效期文字提取與到期日推算</span>
+          <span class="step-text">讀取包裝上的有效日期</span>
         </div>
         <div class="ai-scan-step-item" id="scanStepFuse">
           <span class="step-dot"></span>
-          <span class="step-text">特徵交叉校對與提醒排程</span>
+          <span class="step-text">整理結果，等待你確認</span>
         </div>
       </div>
     </div>
@@ -8832,7 +8768,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.8.27';
+  const APP_VERSION = '1.9.0';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -15700,6 +15636,14 @@ function extractCleanName(rawText) {
 
   function openNlpConfirmModal(parsed) {
     currentNlpParsed = parsed;
+    let cloudNotice = document.getElementById('cloudRecognitionNotice');
+    if (!cloudNotice) {
+      cloudNotice = document.createElement('p'); cloudNotice.id = 'cloudRecognitionNotice';
+      cloudNotice.style.cssText = 'margin:12px 20px;padding:12px;border-radius:12px;background:rgba(128,128,128,.12);white-space:pre-wrap;line-height:1.6;';
+      document.querySelector('#nlpConfirmModal .ios-modal-header')?.after(cloudNotice);
+    }
+    cloudNotice.textContent = parsed.recognitionNotice || '';
+    cloudNotice.hidden = !parsed.recognitionNotice;
     const modal = document.getElementById('nlpConfirmModal');
     const titleEl = document.getElementById('nlpConfirmModalTitle');
     const badgeEl = document.getElementById('nlpConfirmBadge');
@@ -16666,6 +16610,9 @@ function extractCleanName(rawText) {
   }
 
   function initCameraScanner() {
+    const scannerButton = document.getElementById('btnCameraScan');
+    if (scannerButton?.dataset.scannerBound) return;
+    if (scannerButton) scannerButton.dataset.scannerBound = 'true';
     const btnCameraScan = document.getElementById('btnCameraScan');
     const btnClose = document.getElementById('btnCloseCameraModal');
     const btnShutter = document.getElementById('btnCameraShutter');
@@ -16685,9 +16632,6 @@ function extractCleanName(rawText) {
     }
     if (btnAlbum && fileInput) {
       btnAlbum.addEventListener('click', () => {
-        if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
-          window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
-        }
         fileInput.click();
       });
       fileInput.addEventListener('change', handleAlbumFileSelect);
@@ -16743,11 +16687,6 @@ function extractCleanName(rawText) {
     modal.style.display = 'flex';
     lockBodyScroll();
     setCameraZoom(1);
-    // 自動預先觸發下載（無感快取）：
-    // 使用者一「點擊開啟相機」或進入辨識畫面時，立即於背景靜默或以進度條觸發 initVisionModel()，不要等到拍照按下的瞬間才卡住下載。
-    if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
-      window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
-    }
     await startCameraStream(currentCameraFacing);
   }
 
@@ -16755,14 +16694,13 @@ function extractCleanName(rawText) {
     stopCameraStream();
     const modal = document.getElementById('cameraScanModal');
     if (modal) modal.style.display = 'none';
-    if (typeof hideModelLoadingOverlay === 'function') {
-      hideModelLoadingOverlay(false);
-    }
     unlockBodyScroll();
   }
 
+  let cameraRequestVersion = 0;
   async function startCameraStream(facingMode = 'environment') {
     stopCameraStream();
+    const requestVersion = cameraRequestVersion;
     currentCameraFacing = facingMode;
     const video = document.getElementById('cameraVideo');
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -16770,7 +16708,7 @@ function extractCleanName(rawText) {
       return;
     }
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({
+      const nextStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
@@ -16778,6 +16716,11 @@ function extractCleanName(rawText) {
         },
         audio: false
       });
+      if (requestVersion !== cameraRequestVersion) {
+        nextStream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      cameraStream = nextStream;
       if (video) {
         video.srcObject = cameraStream;
         await video.play().catch(e => console.warn('Camera video play caught:', e));
@@ -16790,6 +16733,7 @@ function extractCleanName(rawText) {
   }
 
   function stopCameraStream() {
+    cameraRequestVersion++;
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => {
         try { track.stop(); } catch(e){}
@@ -16850,9 +16794,7 @@ function extractCleanName(rawText) {
 
     if (img && photoDataUrl) img.src = photoDataUrl;
     if (desc) {
-      desc.textContent = (typeof navigator !== 'undefined' && navigator.gpu)
-        ? '正在啟動端側 MobileCLIP2-S0 視覺特徵比對模型...'
-        : '正在啟動 MobileCLIP2 雙軌相機辨識管線...';
+      desc.textContent = '正在辨識商品與日期，請稍候...';
     }
     if (stepVlm) { stepVlm.className = 'ai-scan-step-item active'; }
     if (stepVisual) { stepVisual.className = 'ai-scan-step-item active'; }
@@ -16890,157 +16832,44 @@ function extractCleanName(rawText) {
    * 【四、UI 與錯誤處理】
    * 辨識流程統一包裝在 try...finally 中，開始時開啟 .camera-recognition-overlay.active，無論成功或失敗均確保關閉遮罩並開啟確認彈窗。
    */
+  let isCameraProcessing = false;
   async function processCapturedImage(source) {
-    const canvas = document.getElementById('cameraCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let sw = source.videoWidth || source.naturalWidth || source.width || 800;
-    let sh = source.videoHeight || source.naturalHeight || source.height || 600;
-
-    const maxDim = 1200;
-    let dw = sw;
-    let dh = sh;
-    if (dw > maxDim || dh > maxDim) {
-      if (dw > dh) {
-        dh = Math.round((dh * maxDim) / dw);
-        dw = maxDim;
-      } else {
-        dw = Math.round((dw * maxDim) / dh);
-        dh = maxDim;
-      }
-    }
-    canvas.width = dw;
-    canvas.height = dh;
-
-    // 若鏡頭進行了縮放 (currentCameraZoom > 1)，裁切中央可視區域輸出到畫布
-    let sx = 0, sy = 0, sWidth = sw, sHeight = sh;
-    if (currentCameraZoom > 1 && source.tagName === 'VIDEO') {
-      sWidth = Math.round(sw / currentCameraZoom);
-      sHeight = Math.round(sh / currentCameraZoom);
-      sx = Math.round((sw - sWidth) / 2);
-      sy = Math.round((sh - sHeight) / 2);
-    }
-    ctx.drawImage(source, sx, sy, sWidth, sHeight, 0, 0, dw, dh);
-
-    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.86);
-
-    // 【MobileCLIP 手機測試模式分流】
-    // 只有當網址包含 ?mobilecliptest=1 時才進入測試模式，正常網址完全不受影響
-    const isMobileClipTest = (typeof window !== 'undefined' && (
-      (typeof window.isMobileClipTestMode === 'function' && window.isMobileClipTestMode()) ||
-      new URLSearchParams(window.location.search).get('mobilecliptest') === '1'
-    ));
-
-    if (isMobileClipTest) {
-      console.log('[MOBILECLIP TEST] 拍照完成，進入 MobileCLIP 手機測試模式');
-      if (typeof window.runMobileClipCameraTest === 'function') {
-        await window.runMobileClipCameraTest(photoDataUrl);
-      } else if (typeof window.testMobileClip === 'function') {
-        try {
-          if (typeof window.showModelLoadingOverlay === 'function') {
-            window.showModelLoadingOverlay('MobileCLIP 模型下載中...', 0, '正在連線下載模型...');
-          }
-          const results = await window.testMobileClip(photoDataUrl);
-          if (typeof window.hideModelLoadingOverlay === 'function') {
-            window.hideModelLoadingOverlay(false);
-          }
-          if (typeof closeCameraScanModal === 'function') {
-            closeCameraScanModal();
-          }
-          let msg = 'MobileCLIP 測試結果\n\n';
-          if (Array.isArray(results) && results.length > 0) {
-            results.slice(0, 5).forEach((item, idx) => {
-              const scoreNum = typeof item.score === 'number' ? item.score : parseFloat(item.score);
-              const pct = !isNaN(scoreNum)
-                ? (scoreNum <= 1 ? (scoreNum * 100).toFixed(1) : scoreNum.toFixed(1)) + '%'
-                : item.score;
-              msg += `${idx + 1}. ${item.label} — ${pct}\n`;
-            });
-          } else {
-            msg += '（未取得辨識結果）';
-          }
-          setTimeout(() => alert(msg), 100);
-        } catch (err) {
-          if (typeof window.hideModelLoadingOverlay === 'function') {
-            window.hideModelLoadingOverlay(false);
-          }
-          if (typeof closeCameraScanModal === 'function') {
-            closeCameraScanModal();
-          }
-          setTimeout(() => alert(`MobileCLIP TEST ERROR\n${err && err.message ? err.message : err}`), 100);
-        }
-      }
-      return; // 測試模式在此結束，絕不執行 analyzeSmartCameraWithVlm 或 analyzeSmartCameraDualTrack，亦不寫入表單
-    }
-
-    // 關閉相機取景，立即啟動辨識遮罩與 AI 雙軌載入動畫
-    closeCameraScanModal();
-    const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');
-    if (overlay) {
-      overlay.classList.add('active');
-      overlay.style.display = 'flex';
-    }
-    showAiScanLoading(photoDataUrl);
-
-    let parsed = null;
+    if (isCameraProcessing) return;
+    isCameraProcessing = true;
+    let photoDataUrl = null, parsed = null, notice = '';
     try {
-      // 最優先呼叫 MobileCLIP2-S0 Vision Encoder + OCR 雙軌辨識引擎 (免生成式 VLM，穩定防 Crash)
-      if (typeof window.analyzeSmartCameraWithMobileClip2 === 'function') {
-        parsed = await window.analyzeSmartCameraWithMobileClip2(canvas, photoDataUrl);
-      } else if (typeof window.analyzeSmartCameraWithMobileClip === 'function') {
-        parsed = await window.analyzeSmartCameraWithMobileClip(canvas, photoDataUrl);
-      } else if (typeof window.analyzeSmartCameraDualTrack === 'function') {
-        parsed = await window.analyzeSmartCameraDualTrack(canvas, photoDataUrl);
-      }
-      updateAiScanStep('scanStepVlm', 'done', 'MobileCLIP2 視覺特徵比對完成');
-      updateAiScanStep('scanStepVisual', 'done', '物品特徵分類與提取完成');
-      updateAiScanStep('scanStepOcr', 'done', '文字效期提取解析完成');
-    } catch (err) {
-      console.warn('[Camera] 辨識流程異常：', err);
+      const canvas = document.getElementById('cameraCanvas');
+      const ctx = canvas?.getContext('2d');
+      const sw = source.videoWidth || source.naturalWidth || source.width;
+      const sh = source.videoHeight || source.naturalHeight || source.height;
+      if (!ctx || !sw || !sh) throw new Error('照片尚未準備好，請重新拍照。');
+      const scale = Math.min(1, 1600 / Math.max(sw, sh));
+      canvas.width = Math.max(1, Math.round(sw * scale));
+      canvas.height = Math.max(1, Math.round(sh * scale));
+      const zoom = source.tagName === 'VIDEO' ? currentCameraZoom : 1;
+      const cw = sw / zoom, ch = sh / zoom;
+      ctx.drawImage(source, (sw-cw)/2, (sh-ch)/2, cw, ch, 0, 0, canvas.width, canvas.height);
+      // Small local thumbnail; the higher resolution canvas is uploaded separately.
+      const thumbnail = document.createElement('canvas');
+      const ratio = Math.min(1, 640/Math.max(canvas.width, canvas.height));
+      thumbnail.width = Math.max(1, Math.round(canvas.width*ratio));
+      thumbnail.height = Math.max(1, Math.round(canvas.height*ratio));
+      thumbnail.getContext('2d').drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
+      photoDataUrl = thumbnail.toDataURL('image/jpeg',0.75);
+      thumbnail.width = thumbnail.height = 1;
+      closeCameraScanModal();
+      showAiScanLoading(photoDataUrl);
+      if (typeof window.recognizeCloudCamera !== 'function') throw new Error(location.protocol === 'file:' ? '目前是直接開啟 HTML 檔案，無法載入辨識功能。請關閉此頁，雙擊「啟動期效管家.bat」，從 http://localhost:8080/ 使用 APP。' : '辨識程式未載入。請重新整理；若仍失敗，請確認網站包含 cloud-camera.js。');
+      parsed = await window.recognizeCloudCamera(canvas, photoDataUrl);
+    } catch (error) {
+      notice = error.message || '辨識未完成，請手動填寫。';
     } finally {
-      // 無論成功或失敗均確保關閉遮罩並開啟確認彈窗
-      if (overlay) {
-        overlay.classList.remove('active');
-      }
+      closeCameraScanModal();
       hideAiScanLoading();
-
-      if (!parsed) {
-        parsed = {
-          success: true,
-          name: '新收錄物品',
-          category: 'other',
-          subCategory: '未分類',
-          emoji: '📦',
-          expiryDate: getOffsetDateString(getTodayString(), 30),
-          hasEndDate: false,
-          remindDaysBefore: 3,
-          remindTime: '09:00'
-        };
-      } else {
-        if (!parsed.name || parsed.name.trim() === '') {
-          parsed.name = '新收錄物品';
-        }
-      }
-      if (typeof window.applyVlmDomValues === 'function') {
-        window.applyVlmDomValues(parsed.name, parsed.category, parsed.expiryDate);
-      }
-
-      if (!parsed.remindTime) parsed.remindTime = '09:00';
-      if (photoDataUrl && !parsed.image) parsed.image = photoDataUrl;
-
-      updateAiScanStep('scanStepFuse', 'done', '特徵校驗與排程計算完成！');
-
-      const input = document.getElementById('smartQuickAddInput');
-      const clearBtn = document.getElementById('smartQuickAddClear');
-      if (input && parsed.name) {
-        input.value = `${parsed.name} ${parsed.expiryDate ? parsed.expiryDate + '到期' : ''}`.trim();
-        input.classList.add('has-clear');
-        if (clearBtn) clearBtn.style.display = 'flex';
-      }
-
-      // 開啟確認彈窗
-      openNlpConfirmModal(parsed);
+      isCameraProcessing = false;
     }
+    if (!parsed) parsed = {success:false, name:'', category:'other', subCategory:'', emoji:'📦', expiryDate:null, hasEndDate:false, remindDaysBefore:3, remindTime:'09:00', image:photoDataUrl, recognitionNotice:notice};
+    openNlpConfirmModal(parsed);
   }
 
   window.addItem = addItem;
@@ -17134,14 +16963,6 @@ function extractCleanName(rawText) {
         };
       }
 
-      // 4. 相機按鈕
-      const btnCameraScan = document.getElementById('btnCameraScan');
-      if (btnCameraScan) {
-        btnCameraScan.onclick = function (e) {
-          e.preventDefault();
-          openCameraScanModal();
-        };
-      }
     } catch (btnErr) {
       console.warn('[ensureButtonListeners] error:', btnErr);
     }
@@ -17321,13 +17142,7 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <!-- TensorFlow.js 與 MobileNet 視覺外觀分類模型 (雙軌後備引擎) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
-  <!-- Tesseract.js 本地/離線 OCR 文字辨識引擎 -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <!-- MobileCLIP2 預計算特徵資料庫與主控制器 (v1.8.27) -->
-  <script type="module" src="mobileclip2-labels.js?v=1.8.27"></script>
-  <script type="module" src="app.js?v=1.8.27"></script>
+  <script type="module" src="app.js?v=1.9.0"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.0"></script>
 </body>
 </html>
