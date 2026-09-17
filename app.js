@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.24
+ * Smart Quick Add & On-Device NER Parser v1.8.25
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -15,7 +15,7 @@
  *    - 保留 lastCreatedItem 機制，若使用者輸入「那隻貓叫小黑」，辨識出新名詞後直接覆蓋上一筆名稱。
  * 6. 錯誤降級處理：
  *    - 若模型尚未下載完成、處於離線環境或推論異常，自動降級使用純本地正則解析器 (parseNaturalInput)。
- * 7. MobileCLIP2-S0 輕量視覺特徵比對 + Tesseract OCR + SMART_KEYWORD_MAP 決策融合 (v1.8.22 全新升級)
+ * 7. MobileCLIP2-S0 輕量視覺特徵比對 + Tesseract OCR + SMART_KEYWORD_MAP 決策融合 (v1.8.25 全新升級)
  */
 
 // Universal MobileCLIP2-S0 特徵庫載入 (相容 Node.js CommonJS require 與瀏覽器環境)
@@ -230,7 +230,7 @@ const SMART_KEYWORD_MAP = [
 
   { keywords: [
     '鮮乳', '牛乳', '羊乳', '保久乳', '全脂乳', '低脂乳', '鮮奶', '牛奶', '優格', '起司',
-    '豆漿', '奶粉', 'milk', '生乳', 'fresh milk', '優酪乳', '燕麥奶', '堅果奶', '黑豆漿', '米漿', '鮮奶油',
+    '豆漿', '奶粉', 'milk', '優酪乳', '燕麥奶', '堅果奶', '黑豆漿', '米漿', '鮮奶油',
     '乳酪', '奶酪', '起司片', '起司條', '奶油', '牛油', '優格飲', '發酵乳', '養樂多',
     '布丁', '木瓜牛奶'
   ], emoji: '🥛', cat: 'food', subCat: '鮮乳' },
@@ -1801,10 +1801,10 @@ const VISUAL_APPEARANCE_DICT = [
   },
   {
     keywords: ['lotion', 'soap dispenser', 'sunscreen', 'lotion bottle', 'spray'],
-    name: '瓶裝洗劑/保養品',
-    category: 'cleaning',
-    categoryLabel: '清潔',
-    subCategory: '衛浴保養',
+    name: '瓶裝物品（待確認）',
+    category: 'other',
+    categoryLabel: '其他',
+    subCategory: '未分類',
     defaultDays: 180,
     emoji: '🧴',
     isContainer: true
@@ -2552,7 +2552,7 @@ function extractFallbackItemName(ocrText = '', visualPredictions = []) {
       // 保留中文字、英文字母、日文假名、數字與空格
       cleaned = cleaned.replace(/[^\p{L}\p{N}\u4e00-\u9fa5\u3040-\u30ff\s]/gu, '').trim();
 
-      if (cleaned.length >= 2 && cleaned.length <= 15) {
+      if (cleaned.length >= 2 && cleaned.length <= 15 && !/^[A-Za-z]{1,3}$/.test(cleaned)) {
         if (!/^\d+$/.test(cleaned) && !/^(batch|lot|no|tel|sn|exp|mfg|date|time)$/i.test(cleaned)) {
           return cleaned;
         }
@@ -3085,7 +3085,7 @@ async function analyzeSmartCameraDualTrack(imageSource, photoDataUrl) {
 }
 
 // ==========================================
-// 7.7 MobileCLIP2-S0 輕量視覺特徵比對與智慧決策融合引擎 (v1.8.22)
+// 7.7 MobileCLIP2-S0 輕量視覺特徵比對與智慧決策融合引擎 (v1.8.25)
 // ==========================================
 
 let mobileClip2VisionModel = null;
@@ -3111,15 +3111,11 @@ function getMobileClip2Data() {
  * 檢查 MobileCLIP2-S0 模型是否已經下載並快取至本機 (IndexedDB / CacheStorage)
  */
 function isMobileClip2Downloaded() {
-  if (typeof window === 'undefined') return false;
-  try {
-    return localStorage.getItem('mobileclip2_downloaded') === 'true' ||
-           localStorage.getItem('ai_model_downloaded') === 'true' ||
-           !!mobileClip2VisionModel;
-  } catch (e) {
-    return !!mobileClip2VisionModel;
-  }
+  // A localStorage flag does not prove the browser still has the model files.
+  return !!(mobileClip2VisionModel && mobileClip2Processor);
 }
+let aiModelUiState = 'idle';
+let aiModelUiProgress = 0;
 
 /**
  * 標記 MobileCLIP2-S0 模型已成功下載完畢
@@ -3144,55 +3140,26 @@ function markMoondreamModelDownloaded() { markMobileClip2Downloaded(); }
  * 同步更新「設定頁面」中的 AI 辨識下載按鈕與狀態文字
  */
 function updateAiModelSettingsUI(progress = null, state = null) {
+  if (state) aiModelUiState = state;
+  if (progress !== null) aiModelUiProgress = progress;
   if (typeof document === 'undefined') return;
   const btn = document.getElementById('btnDownloadAiModel');
-  const btnText = document.getElementById('btnDownloadAiModelText');
-  const statusText = document.getElementById('settingsAiModelStatusText');
-
-  if (state === 'downloaded') {
-    if (btn) {
-      btn.className = 'btn-download-ai-model downloaded';
-    }
-    if (btnText) {
-      btnText.textContent = '✅ 已下載 (離線可用)';
-    }
-    if (statusText) {
-      statusText.textContent = '✅ 已快取至本機 IndexedDB (~43MB 離線隨開即用)';
-    }
-  } else if (
-    state === 'downloading' ||
-    (isMobileClip2Loading && progress !== null)
-  ) {
-    const p = Math.max(0, Math.min(100, Math.round(progress || 0)));
-    if (btn) {
-      btn.className = 'btn-download-ai-model downloading';
-    }
-    if (btnText) {
-      btnText.textContent = `下載中 ${p}%`;
-    }
-    if (statusText) {
-      statusText.textContent = `正在下載 MobileCLIP2-S0 視覺模型 ${p}%...`;
-    }
-  } else if (isMobileClip2Downloaded()) {
-    if (btn) {
-      btn.className = 'btn-download-ai-model downloaded';
-    }
-    if (btnText) {
-      btnText.textContent = '✅ 已下載 (離線可用)';
-    }
-    if (statusText) {
-      statusText.textContent = '✅ 已快取至本機 IndexedDB (~43MB 離線隨開即用)';
-    }
-  } else {
-    if (btn) {
-      btn.className = 'btn-download-ai-model';
-    }
-    if (btnText) {
-      btnText.textContent = '下載模型';
-    }
-    if (statusText) {
-      statusText.textContent = 'MobileCLIP2-S0 輕量視覺模型 (~43MB)，點擊立即下載至本機快取';
-    }
+  const text = document.getElementById('btnDownloadAiModelText');
+  const status = document.getElementById('settingsAiModelStatusText');
+  const busy = aiModelUiState === 'downloading';
+  const ready = aiModelUiState === 'downloaded' && isMobileClip2Downloaded();
+  const failed = aiModelUiState === 'error';
+  const p = Math.max(0, Math.min(99, Math.round(aiModelUiProgress || 0)));
+  if (btn) {
+    btn.disabled = busy;
+    btn.setAttribute('aria-busy', String(busy));
+    btn.className = 'btn-download-ai-model' + (busy ? ' downloading' : ready ? ' downloaded' : failed ? ' error' : '');
+  }
+  if (text) text.textContent = busy ? `下載／載入中 ${p}%` : ready ? '模型已就緒' : failed ? '下載失敗，點此重試' : '下載模型';
+  if (status) {
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    status.textContent = busy ? '正在下載或讀取快取，完成後會自動更新…' : ready ? 'MobileCLIP2-S0 已載入；快取是否保留由瀏覽器管理。' : failed ? '模型未就緒，請檢查網路後重試。' : '首次下載視覺模型約 43 MB；已有快取時會優先讀取。';
   }
 }
 
@@ -3204,20 +3171,17 @@ function setupAiModelSettingsHandler() {
   const btn = document.getElementById('btnDownloadAiModel');
   if (btn && !btn.dataset.bound) {
     btn.dataset.bound = 'true';
-    console.log('[AI MODEL BUTTON] handler bound');
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('[AI MODEL BUTTON] clicked');
-      const isDownloaded = isMobileClip2Downloaded();
-      if (isDownloaded) {
-        const reDownload = confirm('MobileCLIP2-S0 視覺模型已在本地 IndexedDB 快取就緒（離線秒速辨識）。\n\n是否需要重新檢查並重新下載？');
-        if (!reDownload) return;
-      }
+      if (isMobileClip2Loading) return;
+      updateAiModelSettingsUI(0, 'downloading');
+
       try {
-        console.log('[MOBILECLIP2] init requested by download button');
         await initMobileClip2(null, { forceShowOverlay: true });
+        updateAiModelSettingsUI(100, 'downloaded');
       } catch (err) {
+        updateAiModelSettingsUI(0, 'error');
         alert('下載模型失敗：' + (err?.message || err));
       }
     });
@@ -3382,6 +3346,7 @@ async function initMobileClip2(onProgress = null, options = {}) {
   }
 
   isMobileClip2Loading = true;
+  for (const key of Object.keys(mobileClip2DownloadProgress)) delete mobileClip2DownloadProgress[key];
   const loadStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   const alreadyDownloaded = isMobileClip2Downloaded();
   const shouldShowOverlay = options.forceShowOverlay === true || (!alreadyDownloaded && options.silent !== true);
@@ -3407,7 +3372,8 @@ async function initMobileClip2(onProgress = null, options = {}) {
             progress: p.progress !== undefined ? p.progress : (p.total ? (p.loaded / p.total) * 100 : 0)
           };
         } else if (p.status === 'done' && p.file) {
-          mobileClip2DownloadProgress[p.file] = { loaded: 100, total: 100, progress: 100 };
+          const previous = mobileClip2DownloadProgress[p.file] || {};
+          mobileClip2DownloadProgress[p.file] = { loaded: previous.total || previous.loaded || 0, total: previous.total || 0, progress: 100 };
         }
 
         let totalLoaded = 0;
@@ -3511,10 +3477,6 @@ async function initMobileClip2(onProgress = null, options = {}) {
     } finally {
       isMobileClip2Loading = false;
       mobileClip2LoadPromise = null;
-
-      if (isMobileClip2Downloaded()) {
-        updateAiModelSettingsUI(100, 'downloaded');
-      }
     }
   })();
 
@@ -3658,10 +3620,24 @@ async function runMobileClip2Vision(imageSource) {
 }
 
 /**
- * 7.7.3 全域商品特徵比對 (Global Candidate Matching & Category Prior)
- * 所有 97 個候選商品皆參與比對，不採用硬性 Top 2 Category Gating
- * 最終分數 = visualSimilarity * 0.90 + categoryPrior * 0.10
+ * 7.7.3 階層式商品辨識 (Hierarchical Recognition)
+ * 大分類分數僅供診斷；商品比對涵蓋全部候選，避免排除正確類別。
  */
+function normalizeLegacyPredictions(predictions) {
+  return (predictions || []).map(p => {
+    const label = String(p.className || '').toLowerCase();
+    const cat = /\b(tabby|tiger cat|persian cat|siamese cat|egyptian cat|cat)\b/.test(label);
+    const container = /bottle|jug|lotion|dispenser|carton|pitcher|spray/.test(label);
+    const known = VISUAL_APPEARANCE_DICT.find(entry => entry.keywords.some(k => label.includes(k)));
+    return { ...p, source: 'mobilenet', score: p.probability || 0,
+      defaultName: cat ? '貓咪（圖樣或實物待確認）' : container ? '瓶裝／盒裝物品（待確認）' : known ? known.name : '未辨識物品',
+      cat: cat || container ? 'other' : known ? known.category : 'other',
+      subCat: cat ? '動物圖像／實物' : container ? '未分類' : known ? known.subCategory : '',
+      emoji: cat ? '🐱' : container ? '📦' : known ? known.emoji : '📦',
+      needsConfirmation: true };
+  });
+}
+
 async function classifyWithMobileClip2(imageSource) {
   try {
     let fusedImageEmbedding = null;
@@ -3673,11 +3649,11 @@ async function classifyWithMobileClip2(imageSource) {
     const { categories, candidates } = getMobileClip2Data();
 
     if (!categories || categories.length === 0 || !candidates || candidates.length === 0) {
-      console.warn('[MOBILECLIP2] FALLBACK TO MOBILENET\nreason = 離線標籤資料庫未就緒');
-      return await classifyImageVisual(imageSource);
+      console.warn('[MOBILECLIP2] 離線標籤資料庫未就緒，降級使用 MobileNet');
+      return normalizeLegacyPredictions(await classifyImageVisual(imageSource));
     }
 
-    // Stage 1: 大分類比對 (作為先驗 Prior，不作硬性過濾 Gate)
+    // Stage 1: 大分類比對
     const categoryScores = categories.map(cat => ({
       cat: cat.cat,
       label: cat.label,
@@ -3685,14 +3661,16 @@ async function classifyWithMobileClip2(imageSource) {
       score: cosineSimilarity(fusedImageEmbedding, cat.embedding)
     })).sort((a, b) => b.score - a.score);
 
-    const catScoreMap = new Map(categoryScores.map(c => [c.cat, c.score]));
+    const top2Cats = new Set([
+      categoryScores[0]?.cat || 'food',
+      categoryScores[1]?.cat || 'pao'
+    ]);
 
-    // 全域 97 個細分類商品候選全面參與比對
-    const allCandidateScores = candidates.map(c => {
-      const visualSimilarity = cosineSimilarity(fusedImageEmbedding, c.embedding);
-      const categoryPrior = catScoreMap.get(c.cat) ?? 0;
-      // 商品本身的 image <-> text similarity 佔 90%，category prior 佔 10%
-      const finalScore = visualSimilarity * 0.90 + categoryPrior * 0.10;
+    // Stage 2: 細分類比對 (限制於 Top 2 大分類與 'other' 保底)
+    // Compare all candidates: a broad category must not eliminate a valid product.
+    const eligibleCandidates = candidates;
+    const candidateScores = eligibleCandidates.map(c => {
+      const sim = cosineSimilarity(fusedImageEmbedding, c.embedding);
       return {
         id: c.id,
         cat: c.cat,
@@ -3701,44 +3679,37 @@ async function classifyWithMobileClip2(imageSource) {
         emoji: c.emoji,
         defaultDays: c.defaultDays || 30,
         isContainer: !!c.isContainer,
-        visualSimilarity,
-        categoryPrior,
-        finalScore,
-        score: finalScore,
-        probability: finalScore,
+        score: sim,
+        probability: sim,
         candidate: c,
         className: c.defaultName,
         label: c.labels ? c.labels[0] : c.defaultName
       };
-    }).sort((a, b) => b.finalScore - a.finalScore);
+    }).sort((a, b) => b.score - a.score);
 
-    const top10 = allCandidateScores.slice(0, 10);
+    const top5 = candidateScores.slice(0, 5);
 
     if (isCameraDebug()) {
-      console.log('[MOBILECLIP2] CATEGORY SCORES');
-      categoryScores.forEach((c, idx) => {
-        console.log(`  ${(idx + 1).toString().padStart(2, ' ')}. ${c.cat.padEnd(14, ' ')} : ${c.score.toFixed(4)} (${c.label})`);
-      });
-
-      console.log('[MOBILECLIP2] GLOBAL CANDIDATE TOP10');
-      top10.forEach((cand, idx) => {
-        console.log(
-          `  ${(idx + 1).toString().padStart(2, ' ')}. id=${cand.id.padEnd(20, ' ')} cat=${cand.cat.padEnd(12, ' ')} subCat=${(cand.subCat || '').padEnd(8, ' ')} ` +
-          `visualSimilarity=${cand.visualSimilarity.toFixed(4)} categoryPrior=${cand.categoryPrior.toFixed(4)} finalScore=${cand.finalScore.toFixed(4)}`
-        );
-      });
+      console.log('[MOBILECLIP2] Stage 1 Top 2 Categories:', [categoryScores[0], categoryScores[1]]);
+      console.log('[MOBILECLIP2] visual top5:');
+      console.table(top5.map(t => ({
+        name: t.defaultName,
+        category: t.cat,
+        subCategory: t.subCat,
+        similarity: t.score.toFixed(4)
+      })));
     }
 
-    return top10;
+    return top5;
   } catch (err) {
-    console.warn('[MOBILECLIP2] FALLBACK TO MOBILENET\nreason = 辨識過程異常: ' + (err?.message || err));
-    return await classifyImageVisual(imageSource);
+    console.warn('[MOBILECLIP2] 辨識過程異常，降級使用本地 MobileNet:', err);
+    return normalizeLegacyPredictions(await classifyImageVisual(imageSource));
   }
 }
 
 /**
  * 7.7.4 商品辨識融合演算法 (Fusion Engine)
- * 整合 MobileCLIP2 視覺候選 + OCR 高解析度文字 + SMART_KEYWORD_MAP + Dairy Safety Check
+ * 整合 MobileCLIP2 視覺候選 + OCR 高解析度文字 + SMART_KEYWORD_MAP
  * 嚴格遵循 OCR-only 效期規則：未讀出日期時保持 null
  */
 function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems = []) {
@@ -3746,6 +3717,7 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
   const ocrBarcode = (ocrData && ocrData.barcode) ? String(ocrData.barcode).trim() : '';
 
   if (isCameraDebug()) {
+    console.log('[OCR] start after MobileCLIP2');
     console.log('[OCR] raw text:\n' + (ocrText || '(無文字)'));
   }
 
@@ -3753,7 +3725,7 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
   if (ocrData && ocrData.barcodeData && ocrData.barcodeData.isIsbn) {
     const isbnVal = ocrData.barcodeData.barcode;
     const finalDate = (ocrData && ocrData.date && /^\d{4}-\d{2}-\d{2}$/.test(ocrData.date)) ? ocrData.date : null;
-    const result = {
+    return {
       success: true,
       name: `圖書/漫畫 (ISBN: ${isbnVal})`,
       category: 'animation',
@@ -3770,32 +3742,13 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
       ocrText: ocrText,
       notes: `ISBN: ${isbnVal}`
     };
-    if (isCameraDebug()) {
-      console.log('[FUSION] final result:', {
-        name: result.name,
-        category: result.category,
-        subCategory: result.subCategory,
-        emoji: result.emoji,
-        expiryDate: result.expiryDate,
-        fusionMode: result.fusionMode,
-        confidence: result.confidence
-      });
-    }
-    return result;
   }
 
   // 2. OCR 關鍵字比對 (SMART_KEYWORD_MAP)
   let ocrKeywordMatch = null;
   let ocrMatchedWord = '';
-  const ocrLower = ocrText.toLowerCase();
-
-  const DAIRY_KEYWORDS = ['牛奶', '鮮乳', '鮮奶', '生乳', '牛乳', 'milk', 'fresh milk'];
-  const hasDairyOcrKeyword = DAIRY_KEYWORDS.some(kw => ocrLower.includes(kw.toLowerCase()));
-
-  const CLEANING_KEYWORDS = ['洗衣精', '洗衣球', '洗衣膠囊', '洗衣粉', '柔軟精', '漂白水', '洗碗精', '洗潔精', '潔廁劑', '清潔劑', '除黴', '除霉', '去漬', '洗手乳', '洗手液', '地板清潔', '馬桶刷', '芳香劑', '馬桶清潔', '水垢清', '小蘇打', '過碳酸鈉'];
-  const hasCleaningOcrKeyword = CLEANING_KEYWORDS.some(kw => ocrLower.includes(kw.toLowerCase()));
-
   if (ocrText) {
+    const ocrLower = ocrText.toLowerCase();
     let maxKwLen = 0;
     for (const mapItem of SMART_KEYWORD_MAP) {
       for (const kw of mapItem.keywords) {
@@ -3811,97 +3764,46 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
     }
   }
 
-  if (isCameraDebug() && ocrMatchedWord) {
-    console.log('[FUSION] OCR keyword matches: ' + ocrMatchedWord);
+  if (isCameraDebug()) {
+    console.log('[FUSION] OCR keyword matches: ' + (ocrMatchedWord || 'none'));
   }
 
-  // 3. 調整與重排視覺候選分數 (OCR 融合)
-  // 如果 OCR 讀到乳品關鍵字，food_milk 獲得 +0.50 強力提升
+  // 3. 調整與重排視覺候選分數 (若 OCR 命中關鍵字，對應候選獲得強力加權)
   let bestCandidate = (visualPredictions && visualPredictions[0]) || null;
-  let reWeighted = visualPredictions || [];
-
-  if (visualPredictions && visualPredictions.length > 0) {
-    reWeighted = visualPredictions.map(p => {
+  if (ocrKeywordMatch && visualPredictions && visualPredictions.length > 0) {
+    const reWeighted = visualPredictions.map(p => {
       let boost = 0;
-      if (ocrKeywordMatch) {
-        if (p.cat === ocrKeywordMatch.cat) boost += 0.25;
-        if (p.subCat === ocrKeywordMatch.subCat) boost += 0.40;
-      }
-      if (p.id === 'food_milk' && hasDairyOcrKeyword) {
-        boost += 0.50;
-      }
-      const baseScore = p.finalScore !== undefined ? p.finalScore : (p.score || 0);
+      if (p.cat === ocrKeywordMatch.cat) boost += 0.25;
+      if (p.subCat === ocrKeywordMatch.subCat) boost += 0.40;
       return {
         ...p,
-        fusedScore: baseScore + boost
+        fusedScore: (p.score || 0) + boost
       };
     }).sort((a, b) => b.fusedScore - a.fusedScore);
 
     bestCandidate = reWeighted[0] || bestCandidate;
   }
 
-  // 4. Dairy Safety Check (乳品安全防護)
-  const milkCandInVisual = (visualPredictions || []).find(c => c.id === 'food_milk');
-  const top1Cand = (visualPredictions && visualPredictions[0]) || null;
-  const top1Score = top1Cand ? (top1Cand.finalScore !== undefined ? top1Cand.finalScore : top1Cand.score || 0) : 0;
-  const milkScore = milkCandInVisual ? (milkCandInVisual.finalScore !== undefined ? milkCandInVisual.finalScore : milkCandInVisual.score || 0) : 0;
-  const isMilkScoreClose = milkCandInVisual && ((top1Score - milkScore) < 0.05);
-  const isContainerAmbiguity = top1Cand && ['cleaning', 'pao', 'food'].includes(top1Cand.cat);
-
-  const isDairyExplicitByOcr = hasDairyOcrKeyword || (ocrKeywordMatch && ocrKeywordMatch.cat === 'food' && ocrKeywordMatch.subCat === '鮮乳');
-
-  let isDairyBySafetyCheck = false;
-  if (isDairyExplicitByOcr) {
-    isDairyBySafetyCheck = true;
-    if (milkCandInVisual) bestCandidate = milkCandInVisual;
-  } else if (isMilkScoreClose && isContainerAmbiguity) {
-    // 視覺接近且候選落在 cleaning / pao / food
-    // 若 OCR 明確命中清潔用品關鍵字，依清潔用品為準；
-    // 否則「不要直接判成清潔用品」，優先保留 food_milk 候選
-    const ocrConfirmsCleaning = hasCleaningOcrKeyword || (ocrKeywordMatch && ocrKeywordMatch.cat === 'cleaning');
-    if (!ocrConfirmsCleaning) {
-      if (top1Cand.cat === 'cleaning') {
-        isDairyBySafetyCheck = true;
-        if (milkCandInVisual) bestCandidate = milkCandInVisual;
-      }
-    }
-  }
-
-  // 5. 品名決策：
-  // 優先級 1: OCR 清楚讀出的品牌 + 商品名稱
-  // 優先級 2: Dairy Safety Check 保底品名「鮮乳」
-  // 優先級 3: OCR 關鍵字或品類詞
-  // 優先級 4: MobileCLIP2 細分類標準品名
-  // 優先級 5: 「未辨識物品」
-  let finalName = '';
-  if (ocrText) {
-    finalName = extractFallbackItemName(ocrText, visualPredictions);
-  }
-  if (isDairyBySafetyCheck) {
-    if (!finalName || finalName === '新收錄物品' || finalName === '生活物品' || hasDairyOcrKeyword) {
-      if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
-        finalName = '鮮乳';
-      }
-    }
-  } else if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
-    if (bestCandidate && bestCandidate.defaultName) {
-      finalName = bestCandidate.defaultName;
-    } else {
-      finalName = '未辨識物品';
-    }
+  const runnerUp = (visualPredictions || [])[1];
+  const minScore = bestCandidate?.source === 'mobilenet' ? 0.50 : 0.20;
+  const differentCategory = (visualPredictions || []).find(p => p.cat !== bestCandidate?.cat);
+  const closeAlternative = !!runnerUp && bestCandidate.score - runnerUp.score < 0.025;
+  const confidentVisual = !!bestCandidate && Number.isFinite(bestCandidate.score) && bestCandidate.score >= minScore &&
+    (!differentCategory || bestCandidate.score - differentCategory.score >= 0.025);
+  if (!confidentVisual && !ocrKeywordMatch) bestCandidate = null;
+  let finalName = ocrKeywordMatch ? extractFallbackItemName(ocrText, []) : '';
+  if (!finalName || finalName === '新收錄物品' || finalName === '生活物品') {
+    finalName = bestCandidate?.defaultName || '未辨識物品';
   }
   finalName = simplifyItemName(finalName);
+  if (!ocrKeywordMatch && bestCandidate && closeAlternative && !finalName.includes('待確認')) finalName += '（待確認）';
 
-  // 6. 分類與圖標決策
+  // 5. 分類與圖標決策
   let finalCategory = 'other';
   let finalSubCategory = '';
   let finalEmoji = '📦';
 
-  if (isDairyBySafetyCheck) {
-    finalCategory = 'food';
-    finalSubCategory = '鮮乳';
-    finalEmoji = '🥛';
-  } else if (ocrKeywordMatch) {
+  if (ocrKeywordMatch) {
     finalCategory = ocrKeywordMatch.cat;
     finalSubCategory = ocrKeywordMatch.subCat;
     finalEmoji = ocrKeywordMatch.emoji;
@@ -3913,7 +3815,7 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
 
   const categoryConfig = DEFAULT_CATEGORIES[finalCategory] || DEFAULT_CATEGORIES['other'];
 
-  // 7. 有效期限決策 (OCR-ONLY RULE: 絕不猜測，找不到即為 null)
+  // 6. 有效期限決策 (OCR-ONLY RULE: 絕不猜測，找不到即為 null)
   let finalExpiry = null;
   if (ocrData && ocrData.date && /^\d{4}-\d{2}-\d{2}$/.test(ocrData.date)) {
     finalExpiry = ocrData.date;
@@ -3924,14 +3826,17 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
     }
   }
 
-  let fusionMode = 'mobileclip2_visual';
-  if (isDairyBySafetyCheck) {
-    fusionMode = isDairyExplicitByOcr ? 'dairy_ocr_priority' : 'dairy_safety_override';
-  } else if (ocrKeywordMatch) {
-    fusionMode = 'ocr_keyword_priority';
+  if (isCameraDebug()) {
+    console.log('[FUSION] final candidate:', {
+      name: finalName,
+      category: finalCategory,
+      subCategory: finalSubCategory,
+      emoji: finalEmoji,
+      expiryDate: finalExpiry
+    });
   }
 
-  const finalResult = {
+  return {
     success: true,
     name: finalName,
     category: finalCategory,
@@ -3942,27 +3847,14 @@ function fuseMobileClip2AndOcrDecision(visualPredictions, ocrData, existingItems
     hasEndDate: !!finalExpiry,
     remindDaysBefore: categoryConfig.defaultRemindDays || 3,
     remindTime: '09:00',
-    confidence: bestCandidate ? (bestCandidate.finalScore !== undefined ? bestCandidate.finalScore : bestCandidate.score) : 0.85,
+    confidence: bestCandidate ? bestCandidate.score : 0,
+    needsConfirmation: !ocrKeywordMatch && (!confidentVisual || closeAlternative || !!bestCandidate?.needsConfirmation),
     visualMatch: bestCandidate ? bestCandidate.defaultName : 'MobileCLIP2-S0',
-    fusionMode: fusionMode,
+    fusionMode: ocrKeywordMatch ? 'ocr_keyword_priority' : 'mobileclip2_visual',
     visualPredictions: visualPredictions || [],
     ocrText: ocrText,
     notes: ocrBarcode ? `條碼: ${ocrBarcode}` : undefined
   };
-
-  if (isCameraDebug()) {
-    console.log('[FUSION] final result:', {
-      name: finalResult.name,
-      category: finalResult.category,
-      subCategory: finalResult.subCategory,
-      emoji: finalResult.emoji,
-      expiryDate: finalResult.expiryDate,
-      fusionMode: finalResult.fusionMode,
-      confidence: finalResult.confidence
-    });
-  }
-
-  return finalResult;
 }
 
 /**
@@ -4352,6 +4244,15 @@ const MOBILECLIP_CANDIDATE_MAP = {};
 function getMobileClipCandidate(id) {
   return MOBILECLIP2_CANDIDATES.find(c => c.id === id) || null;
 }
+function initMobileClipTest() {
+  return initMobileClip2();
+}
+function isMobileClipTestMode() {
+  if (typeof window !== 'undefined' && window.location) {
+    return new URLSearchParams(window.location.search).get('mobilecliptest') === '1';
+  }
+  return false;
+}
 const initMobileClipModel = initMobileClip2;
 const classifyImageWithMobileClip = classifyWithMobileClip2;
 const testMobileClip2 = testMobileClip;
@@ -4418,8 +4319,8 @@ if (typeof window !== 'undefined') {
   window.showVlmLoadingCard = showVlmLoadingCard;
   window.updateVlmProgress = updateVlmProgress;
   window.hideVlmLoadingCard = hideVlmLoadingCard;
-  window.vlmProcessor = vlmProcessor;
-  window.vlmModel = vlmModel;
+  Object.defineProperty(window, "vlmProcessor", { configurable: true, get: () => mobileClip2Processor });
+  Object.defineProperty(window, "vlmModel", { configurable: true, get: () => mobileClip2VisionModel });
   window.VLM_PROMPT = VLM_PROMPT;
   window.cameraDebug = true;
   window.isCameraDebug = isCameraDebug;
@@ -4439,9 +4340,9 @@ if (typeof window !== 'undefined') {
   window.analyzeSmartCameraWithMoondream = analyzeSmartCameraWithMoondream;
   window.updateAiModelSettingsUI = updateAiModelSettingsUI;
   window.setupAiModelSettingsHandler = setupAiModelSettingsHandler;
-  window.moondreamModelInstance = () => moondreamModelInstance;
+  window.moondreamModelInstance = () => mobileClip2VisionModel;
 
-  // v1.8.22 MobileCLIP2-S0 exports
+  // v1.8.25 MobileCLIP2-S0 exports
   window.initMobileClip2 = initMobileClip2;
   window.runMobileClip2Vision = runMobileClip2Vision;
   window.classifyWithMobileClip2 = classifyWithMobileClip2;
@@ -4451,8 +4352,9 @@ if (typeof window !== 'undefined') {
   window.isMobileClip2Loaded = isMobileClip2Loaded;
   window.isMobileClip2LoadingStatus = isMobileClip2LoadingStatus;
   window.resetMobileClip2Model = resetMobileClip2Model;
-  window.MOBILECLIP2_CATEGORIES = MOBILECLIP2_CATEGORIES;
-  window.MOBILECLIP2_CANDIDATES = MOBILECLIP2_CANDIDATES;
+  // Do not overwrite a label module that finished loading after this module.
+  if (MOBILECLIP2_CATEGORIES.length) window.MOBILECLIP2_CATEGORIES = MOBILECLIP2_CATEGORIES;
+  if (MOBILECLIP2_CANDIDATES.length) window.MOBILECLIP2_CANDIDATES = MOBILECLIP2_CANDIDATES;
 
   // DOM 載入後自動綁定設定頁面 AI 模型按鈕與更新狀態
   if (typeof document !== 'undefined') {
@@ -4516,8 +4418,8 @@ if (typeof module !== 'undefined' && module.exports) {
     isIosSafari,
     getVlmMaxDim,
     initVlmModel,
-    vlmProcessor: () => vlmProcessor,
-    vlmModel: () => vlmModel,
+    vlmProcessor: () => mobileClip2Processor,
+    vlmModel: () => mobileClip2VisionModel,
     compressImageForVlm,
     runVlmInference,
     parseVLMResponse,
@@ -4549,8 +4451,8 @@ if (typeof module !== 'undefined' && module.exports) {
     analyzeSmartCameraWithMoondream,
     updateAiModelSettingsUI,
     setupAiModelSettingsHandler,
-    moondreamModelInstance: () => moondreamModelInstance,
-    // v1.8.22 MobileCLIP2-S0 exports
+    moondreamModelInstance: () => mobileClip2VisionModel,
+    // v1.8.25 MobileCLIP2-S0 exports
     initMobileClip2,
     runMobileClip2Vision,
     classifyWithMobileClip2,
