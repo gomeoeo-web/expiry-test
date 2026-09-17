@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.1">
+  <link rel="stylesheet" href="style.css?v=1.9.2">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -288,7 +288,6 @@ body {
 /* ==========================================================================
    Header Smart Quick Add / Update Input (頂部自然語言速記與修改輸入框)
    ========================================================================== */
-
 .header-smart-input-form {
   flex: 1;
   width: 100%;
@@ -458,8 +457,14 @@ body {
 }
 
 /* 強制最高權重校準 (防止三星/Android 瀏覽器深色模式強制反轉或繼承成深灰色/黑色) */
-.fab-add-btn, #fabAddBtn, .floating-btn, .ios-fab-btn,
-.tab-btn.active, .filter-pill.active, [data-filter="all"].active, .home-filter-btn[data-filter="all"].active {
+.fab-add-btn,
+#fabAddBtn,
+.floating-btn,
+.ios-fab-btn,
+.tab-btn.active,
+.filter-pill.active,
+[data-filter="all"].active,
+.home-filter-btn[data-filter="all"].active {
   background: linear-gradient(#FFFFFF, #FFFFFF) !important;
   background-image: linear-gradient(#FFFFFF, #FFFFFF) !important;
   background-color: rgba(255, 255, 255, 0.99) !important;
@@ -468,18 +473,30 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
 }
 
-.fab-add-btn, #fabAddBtn, .floating-btn, .ios-fab-btn,
-.tab-btn.active, .filter-pill.active,
+.fab-add-btn,
+#fabAddBtn,
+.floating-btn,
+.ios-fab-btn,
+.tab-btn.active,
+.filter-pill.active,
 .home-filter-btn[data-filter="all"].active .filter-btn-text,
 [data-filter="all"].active .filter-btn-text {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
 }
 
-.fab-add-btn svg, .fab-add-btn i, .fab-add-btn span,
-#fabAddBtn svg, #fabAddBtn i, #fabAddBtn span,
-.floating-btn svg, .floating-btn i, .floating-btn span,
-.ios-fab-btn svg, .ios-fab-btn i, .ios-fab-btn span {
+.fab-add-btn svg,
+.fab-add-btn i,
+.fab-add-btn span,
+#fabAddBtn svg,
+#fabAddBtn i,
+#fabAddBtn span,
+.floating-btn svg,
+.floating-btn i,
+.floating-btn span,
+.ios-fab-btn svg,
+.ios-fab-btn i,
+.ios-fab-btn span {
   fill: #000000 !important;
   stroke: #000000 !important;
   color: #000000 !important;
@@ -503,195 +520,298 @@ body {
 }
 
 /* ==========================================================================
-   AI Camera Scanning & Recognition Loading HUD (智慧鏡頭拍攝後雙軌分析載入動畫)
+   Camera Scan & Offline Recognition Modal (相機取景與本地離線辨識視窗)
    ========================================================================== */
-.ai-scan-loading-backdrop {
-  z-index: 10000;
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  background: rgba(0, 0, 0, 0.78);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ai-scan-loading-card {
-  width: 90%;
-  max-width: 360px;
-  background: rgba(28, 28, 30, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+.camera-scan-card {
+  max-width: 480px;
+  width: 95%;
+  height: 85vh;
+  max-height: 720px;
+  background: #000000;
   border-radius: 28px;
-  padding: 1.5rem 1.25rem 1.35rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 30px rgba(10, 132, 255, 0.15);
-  animation: aiCardPopIn 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-@keyframes aiCardPopIn {
-  from { opacity: 0; transform: scale(0.88); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.ai-scan-preview-container {
-  width: 140px;
-  height: 140px;
-  border-radius: 20px;
-  position: relative;
   overflow: hidden;
-  background: #121214;
-  border: 1.5px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  margin-bottom: 1.25rem;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.ai-scan-preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.ai-scan-laser-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #0a84ff, #30d158, #0a84ff, transparent);
-  box-shadow: 0 0 12px #0a84ff, 0 0 6px #30d158;
-  animation: aiScanLaserMove 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-  z-index: 5;
-}
-
-@keyframes aiScanLaserMove {
-  0% { top: 4%; opacity: 0.6; }
-  50% { opacity: 1; height: 3.5px; }
-  100% { top: 94%; opacity: 0.6; }
-}
-
-.ai-scan-corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: #0a84ff;
-  border-style: solid;
-  z-index: 6;
-  pointer-events: none;
-}
-.ai-scan-corner.corner-tl { top: 4px; left: 4px; border-width: 2.5px 0 0 2.5px; border-top-left-radius: 6px; }
-.ai-scan-corner.corner-tr { top: 4px; right: 4px; border-width: 2.5px 2.5px 0 0; border-top-right-radius: 6px; }
-.ai-scan-corner.corner-bl { bottom: 4px; left: 4px; border-width: 0 0 2.5px 2.5px; border-bottom-left-radius: 6px; }
-.ai-scan-corner.corner-br { bottom: 4px; right: 4px; border-width: 0 2.5px 2.5px 0; border-bottom-right-radius: 6px; }
-
-.ai-scan-status-wrap {
+.camera-modal-header {
+  padding: 16px 20px 12px 20px;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  width: 100%;
-  margin-bottom: 1rem;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.ai-scan-spinner-ring {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 3px solid rgba(10, 132, 255, 0.2);
-  border-top-color: #0a84ff;
-  border-right-color: #30d158;
-  animation: aiSpinRing 0.9s linear infinite;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-@keyframes aiSpinRing {
-  to { transform: rotate(360deg); }
-}
-
-.ai-scan-title-group {
+.camera-header-title {
   display: flex;
   flex-direction: column;
-  min-width: 0;
 }
 
-.ai-scan-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.ai-scan-title {
-  font-size: 1.02rem;
+.camera-title-text {
+  font-size: 1.05rem;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: -0.01em;
 }
 
-.ai-scan-tag {
-  font-size: 0.66rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(10, 132, 255, 0.25), rgba(48, 209, 88, 0.25));
-  color: #64d2ff;
-  border: 1px solid rgba(100, 210, 255, 0.3);
+.camera-subtitle-text {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
 }
 
-.ai-scan-desc {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.65);
-  margin: 0.2rem 0 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ai-scan-steps {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.32);
-  border-radius: 14px;
-  padding: 0.65rem 0.85rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.ai-scan-step-item {
+.camera-btn-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.45);
-  transition: all 0.2s ease;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
 }
 
-.ai-scan-step-item.active {
-  color: rgba(255, 255, 255, 0.95);
-  font-weight: 600;
-}
-
-.ai-scan-step-item.done {
-  color: #30d158;
-}
-
-.ai-scan-step-item .step-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.camera-btn-close:active {
+  transform: scale(0.92);
   background: rgba(255, 255, 255, 0.3);
 }
 
-.ai-scan-step-item.active .step-dot {
-  background: #0a84ff;
-  box-shadow: 0 0 6px #0a84ff;
+.camera-viewport-wrap {
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.ai-scan-step-item.done .step-dot {
-  background: #30d158;
-  box-shadow: 0 0 6px #30d158;
+.camera-viewport-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-viewfinder-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.camera-viewfinder-frame {
+  width: 75%;
+  aspect-ratio: 4 / 3;
+  max-width: 320px;
+  position: relative;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  border-radius: 18px;
+}
+
+.viewfinder-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: #34c759;
+  border-style: solid;
+}
+
+.viewfinder-corner.top-left {
+  top: 0;
+  left: 0;
+  border-width: 3.5px 0 0 3.5px;
+  border-top-left-radius: 12px;
+}
+
+.viewfinder-corner.top-right {
+  top: 0;
+  right: 0;
+  border-width: 3.5px 3.5px 0 0;
+  border-top-right-radius: 12px;
+}
+
+.viewfinder-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 3.5px 3.5px;
+  border-bottom-left-radius: 12px;
+}
+
+.viewfinder-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  border-width: 0 3.5px 3.5px 0;
+  border-bottom-right-radius: 12px;
+}
+
+.camera-scan-laser {
+  position: absolute;
+  top: 0;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #34c759, #30d158, transparent);
+  box-shadow: 0 0 10px #34c759;
+  border-radius: 2px;
+  animation: scanLaserMove 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes scanLaserMove {
+  0% {
+    top: 8%;
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 92%;
+    opacity: 0.3;
+  }
+}
+
+.camera-viewfinder-hint {
+  margin-top: 18px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ==========================================================================
+   Camera Focus Reticle & Zoom Controls (v1.8.9)
+   ========================================================================== */
+.camera-focus-reticle {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border: 2px solid #ffd60a;
+  border-radius: 8px;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.2);
+  opacity: 0;
+  z-index: 12;
+  box-shadow: 0 0 10px rgba(255, 214, 10, 0.45);
+  transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.camera-focus-reticle.pulsing {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  animation: reticlePulse 1.2s ease-out forwards;
+}
+
+@keyframes reticlePulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.9;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+.camera-zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 4px 6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  z-index: 15;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.camera-zoom-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.camera-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.camera-zoom-btn:active {
+  transform: scale(0.9);
+}
+
+.camera-zoom-btn.active {
+  background: #ffd60a;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(255, 214, 10, 0.4);
+}
+
+/* 辨識遮罩 (Recognition Overlay) */
+.camera-recognition-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.camera-recognition-overlay.active {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* ==========================================================================
@@ -878,348 +998,6 @@ body {
   background: rgba(0, 0, 0, 0.02);
   border-color: rgba(0, 0, 0, 0.05);
   color: rgba(0, 0, 0, 0.55);
-}
-
-/* 提醒通知排程與提醒時間橫向排列樣式 (v1.8.14) */
-.nlp-reminder-time-grid {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.nlp-reminder-time-grid .nlp-confirm-field-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-#nlpConfirmReminderWrap {
-  flex: 1.15;
-}
-
-#nlpConfirmTimeRow {
-  flex: 1;
-}
-
-/* 提醒通知時間格式下拉選單與上午/下午選擇器 */
-.nlp-time-format-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.nlp-time-mode-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 3px;
-  border-radius: 12px;
-  margin-bottom: 0;
-}
-
-.nlp-time-mode-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.38rem 0.25rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #a1a1a6;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  font-family: inherit;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.nlp-time-mode-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.nlp-time-mode-btn.active {
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  border-color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-}
-
-[data-theme="light"] .nlp-time-mode-selector {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="light"] .nlp-time-mode-btn {
-  color: #636366;
-}
-
-[data-theme="light"] .nlp-time-mode-btn:hover {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.04);
-}
-
-[data-theme="light"] .nlp-time-mode-btn.active {
-  background: #007aff !important;
-  color: #ffffff !important;
-  border-color: #007aff !important;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
-}
-
-[data-theme="amoled"] .nlp-time-mode-selector {
-  background: #121216;
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* 物品複製按鈕樣式 */
-.btn-modal-duplicate {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.32rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  padding: 0.32rem 0.65rem;
-  border-radius: var(--radius-pill, 9999px);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  font-family: inherit;
-}
-
-.btn-modal-duplicate:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.btn-modal-duplicate:active {
-  transform: scale(0.96);
-}
-
-[data-theme="light"] .btn-modal-duplicate {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #000000;
-}
-
-.nlp-quick-time-pills {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-.nlp-time-pill {
-  padding: 4px 10px;
-  border-radius: var(--radius-pill, 9999px);
-  border: 1px solid var(--ios-border-strong);
-  background: var(--ios-surface-secondary);
-  color: var(--ios-text-secondary);
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.16s ease;
-  font-variant-numeric: tabular-nums;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.nlp-time-pill:hover {
-  background: var(--ios-surface-tertiary);
-  color: var(--ios-text-primary);
-  border-color: #0a84ff;
-}
-
-.nlp-time-pill.active {
-  background: rgba(10, 132, 255, 0.18);
-  color: #0a84ff;
-  border-color: rgba(10, 132, 255, 0.45);
-}
-
-[data-theme="light"] .nlp-time-pill.active {
-  background: rgba(0, 122, 255, 0.12);
-  color: #007aff;
-  border-color: rgba(0, 122, 255, 0.4);
-}
-
-.nlp-time-input-24h {
-  font-variant-numeric: tabular-nums;
-  font-size: 1.05rem !important;
-  font-weight: 600 !important;
-  text-align: center !important;
-}
-
-/* ==========================================================================
-   Camera Scan & Offline Recognition Modal (相機取景與本地離線辨識視窗)
-   ========================================================================== */
-.camera-scan-card {
-  max-width: 480px;
-  width: 95%;
-  height: 85vh;
-  max-height: 720px;
-  background: #000000;
-  border-radius: 28px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.camera-modal-header {
-  padding: 16px 20px 12px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 10;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.camera-header-title {
-  display: flex;
-  flex-direction: column;
-}
-
-.camera-title-text {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.camera-subtitle-text {
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 2px;
-}
-
-.camera-btn-close {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
-}
-
-.camera-btn-close:active {
-  transform: scale(0.92);
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.camera-viewport-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: #000000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.camera-viewport-wrap video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.camera-viewfinder-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.camera-viewfinder-frame {
-  width: 75%;
-  aspect-ratio: 4 / 3;
-  max-width: 320px;
-  position: relative;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-  border-radius: 18px;
-}
-
-.viewfinder-corner {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-color: #34c759;
-  border-style: solid;
-}
-
-.viewfinder-corner.top-left {
-  top: 0;
-  left: 0;
-  border-width: 3.5px 0 0 3.5px;
-  border-top-left-radius: 12px;
-}
-
-.viewfinder-corner.top-right {
-  top: 0;
-  right: 0;
-  border-width: 3.5px 3.5px 0 0;
-  border-top-right-radius: 12px;
-}
-
-.viewfinder-corner.bottom-left {
-  bottom: 0;
-  left: 0;
-  border-width: 0 0 3.5px 3.5px;
-  border-bottom-left-radius: 12px;
-}
-
-.viewfinder-corner.bottom-right {
-  bottom: 0;
-  right: 0;
-  border-width: 0 3.5px 3.5px 0;
-  border-bottom-right-radius: 12px;
-}
-
-.camera-scan-laser {
-  position: absolute;
-  top: 0;
-  left: 6px;
-  right: 6px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #34c759, #30d158, transparent);
-  box-shadow: 0 0 10px #34c759;
-  border-radius: 2px;
-  animation: scanLaserMove 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-}
-
-@keyframes scanLaserMove {
-  0% { top: 8%; opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { top: 92%; opacity: 0.3; }
-}
-
-.camera-viewfinder-hint {
-  margin-top: 18px;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .camera-flash-overlay {
@@ -1731,13 +1509,13 @@ body {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.52rem 0.98rem;
+  gap: 0.35rem;
+  padding: 0.36rem 0.72rem;
   border-radius: var(--radius-pill);
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-ios);
@@ -4022,8 +3800,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-create-card {
   background: var(--ios-surface-secondary);
   border: 1.5px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  padding: 1.15rem;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -4035,7 +3813,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .category-create-title,
 .category-list-title {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   margin: 0;
@@ -4044,20 +3822,20 @@ input[type="time"]::-webkit-date-and-time-value {
 .emoji-select-row {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-top: 0.35rem;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
   width: 100%;
 }
 
 .emoji-select-row input.emoji-input-box {
-  width: 52px !important;
-  min-width: 52px !important;
-  max-width: 52px !important;
-  height: 44px !important;
-  min-height: 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   padding: 0 !important;
   text-align: center;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
@@ -4100,11 +3878,11 @@ input[type="time"]::-webkit-date-and-time-value {
 .cat-manage-item {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.4rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
   transition: background 0.15s ease;
   box-sizing: border-box;
   width: 100%;
@@ -4141,7 +3919,7 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .cat-manage-label {
-  font-size: 0.98rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   white-space: nowrap;
@@ -4161,9 +3939,9 @@ input[type="time"]::-webkit-date-and-time-value {
   background: var(--ios-surface-elevated);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-primary);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
-  padding: 0.35rem 0.65rem;
+  padding: 0.28rem 0.55rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -4864,12 +4642,12 @@ input[type="time"]::-webkit-date-and-time-value {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.65rem;
-  padding: 0.75rem 0.95rem;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  margin-top: 0.65rem;
+  border-radius: 14px;
+  margin-top: 0.4rem;
   box-shadow: none;
 }
 
@@ -4882,8 +4660,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-info-badge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.95rem;
+  gap: 0.35rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   width: 100%;
@@ -4892,14 +4670,14 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .cat-active-emoji {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .cat-active-name {
-  font-weight: 800;
-  font-size: 1.02rem;
+  font-weight: 700;
+  font-size: 0.88rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4917,7 +4695,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .cat-active-count {
   color: var(--ios-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
@@ -4926,7 +4704,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-action-buttons-group {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
   width: 100%;
 }
 
@@ -4939,9 +4717,9 @@ input[type="time"]::-webkit-date-and-time-value {
   background: #363646;
   border: 1px solid rgba(255, 255, 255, 0.28);
   color: #ffffff;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  padding: 0.34rem 0.62rem;
   border-radius: var(--radius-pill);
   cursor: pointer;
   white-space: nowrap;
@@ -4978,12 +4756,12 @@ input[type="time"]::-webkit-date-and-time-value {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   background: #ffffff;
   color: #000000;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  padding: 0.34rem 0.62rem;
   border-radius: var(--radius-pill);
   border: none;
   cursor: pointer;
@@ -6169,6 +5947,7 @@ body.modal-open .view-panel {
 .btn-unarchive:active {
   transform: scale(0.96);
 }
+
 /* ==========================================================================
    Settings Bottom Version Badge (設置裡的左下角版本號碼)
    ========================================================================== */
@@ -6208,7 +5987,7 @@ body.modal-open .view-panel {
    NLP Confirmation Modal (自然語言解析確認彈窗 - 防止阻擋文字與自訂時間支援)
    ========================================================================== */
 .nlp-confirm-card {
-  max-width: 440px;
+  max-width: 420px;
   width: 92%;
   max-height: 90vh;
   display: flex;
@@ -6222,7 +6001,7 @@ body.modal-open .view-panel {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.75rem 1.25rem 1.5rem 1.25rem;
+  padding: 0.65rem 0.95rem 1.25rem 0.95rem;
 }
 
 .nlp-confirm-header-wrap {
@@ -6335,22 +6114,22 @@ body.modal-open .view-panel {
 }
 
 .nlp-confirm-field {
-  margin-bottom: 0.95rem;
+  margin-bottom: 0.65rem;
 }
 
 .nlp-elapsed-hint-box {
   background: rgba(10, 132, 255, 0.12);
   border: 1px solid rgba(10, 132, 255, 0.28);
   color: #0a84ff;
-  border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.86rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.25rem;
-  margin-bottom: 0.85rem;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.65rem;
 }
 
 [data-theme="light"] .nlp-elapsed-hint-box {
@@ -6361,32 +6140,32 @@ body.modal-open .view-panel {
 
 .nlp-confirm-label {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--ios-text-secondary);
-  margin-bottom: 0.42rem;
-  line-height: 1.3;
+  margin-bottom: 0.26rem;
+  line-height: 1.25;
 }
 
 .nlp-confirm-input,
 .nlp-confirm-select {
   width: 100%;
-  height: 44px;
+  height: 38px;
   box-sizing: border-box;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border-strong);
-  border-radius: var(--radius-subcard);
-  padding: 0 0.95rem;
+  border-radius: 10px;
+  padding: 0 0.75rem;
   color: var(--ios-text-primary);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 500;
   outline: none;
   transition: border-color var(--transition-ios), box-shadow var(--transition-ios);
 }
 
 .nlp-confirm-select {
-  padding-right: 2.5rem;
+  padding-right: 2.2rem;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -6404,6 +6183,7 @@ body.modal-open .view-panel {
 
 .nlp-select-wrap {
   width: 100%;
+  height: 38px;
   position: relative;
   display: flex;
   align-items: center;
@@ -6411,10 +6191,10 @@ body.modal-open .view-panel {
 
 .nlp-select-wrap .select-arrow {
   position: absolute;
-  right: 0.95rem;
+  right: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--ios-text-secondary);
   pointer-events: none;
 }
@@ -6468,12 +6248,15 @@ body.modal-open .view-panel {
   border: none !important;
 }
 
-/* 原生 date 與 datetime-local 的 WebKit 預設樣式重設與垂直置中排版 */
+/* 原生 date, time 與 datetime-local 的 WebKit 預設樣式重設與嚴格垂直置中 */
 input[type="date"],
+input[type="time"],
 input[type="datetime-local"],
 .date-picker-input,
 .custom-time-input,
 #nlpConfirmCustomTime,
+#nlpConfirmReminderTime,
+.nlp-time-input-24h,
 input[type="datetime-local"].nlp-confirm-input {
   -webkit-appearance: none !important;
   appearance: none !important;
@@ -6482,30 +6265,45 @@ input[type="datetime-local"].nlp-confirm-input {
   justify-content: center !important;
   text-align: center !important;
   width: 100% !important;
-  min-height: 46px !important;
-  padding: 10px 16px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  line-height: 38px !important;
+  padding: 0 10px !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   color: #FFFFFF !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   box-sizing: border-box !important;
   outline: none !important;
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   max-width: 100%;
+  margin: 0 !important;
 }
 
-/* 清除 iOS WebKit 內部偽元素的預設外距與位移 */
+/* 清除 iOS WebKit 內部偽元素的預設外距與位移，修正提醒時間與日期文字偏上問題 */
 input[type="date"]::-webkit-date-and-time-value,
-input[type="datetime-local"]::-webkit-date-and-time-value {
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value,
+#nlpConfirmReminderTime::-webkit-date-and-time-value,
+.nlp-time-input-24h::-webkit-date-and-time-value {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
+  line-height: normal !important;
+  box-sizing: border-box !important;
 }
 
 input[type="date"]::-webkit-inner-spin-button,
+input[type="time"]::-webkit-inner-spin-button,
 input[type="datetime-local"]::-webkit-inner-spin-button {
   display: none !important;
 }
@@ -6522,12 +6320,13 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .nlp-confirm-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.35rem;
+  gap: 0.6rem;
+  margin-top: 0.95rem;
 }
 
 .nlp-confirm-actions button {
-  height: 44px;
+  height: 38px;
+  font-size: 0.88rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6584,7 +6383,410 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   color: #000000;
 }
 
-  </style>
+/* 提醒通知排程與提醒時間橫向排列樣式 (v1.8.9) */
+.nlp-reminder-time-grid {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.nlp-reminder-time-grid .nlp-confirm-field-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#nlpConfirmReminderWrap {
+  flex: 1.15;
+}
+
+#nlpConfirmTimeRow {
+  flex: 1;
+}
+
+.nlp-time-input-container {
+  width: 100%;
+  height: 38px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* 提醒通知時間格式下拉選單與上午/下午選擇器 */
+.nlp-time-format-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.nlp-time-mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 3px;
+  border-radius: 12px;
+  margin-bottom: 0;
+}
+
+.nlp-time-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.38rem 0.25rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a1a1a6;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  font-family: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nlp-time-mode-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nlp-time-mode-btn.active {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="light"] .nlp-time-mode-selector {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .nlp-time-mode-btn {
+  color: #636366;
+}
+
+[data-theme="light"] .nlp-time-mode-btn:hover {
+  color: #000000;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .nlp-time-mode-btn.active {
+  background: #007aff !important;
+  color: #ffffff !important;
+  border-color: #007aff !important;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
+}
+
+[data-theme="amoled"] .nlp-time-mode-selector {
+  background: #121216;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* 物品複製按鈕樣式 */
+.btn-modal-duplicate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  padding: 0.32rem 0.65rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  font-family: inherit;
+}
+
+.btn-modal-duplicate:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.btn-modal-duplicate:active {
+  transform: scale(0.96);
+}
+
+[data-theme="light"] .btn-modal-duplicate {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
+.nlp-quick-time-pills {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.nlp-time-pill {
+  padding: 3px 8px;
+  border-radius: var(--radius-pill, 9999px);
+  border: 1px solid var(--ios-border-strong);
+  background: var(--ios-surface-secondary);
+  color: var(--ios-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nlp-time-pill:hover {
+  background: var(--ios-surface-tertiary);
+  color: var(--ios-text-primary);
+  border-color: #0a84ff;
+}
+
+.nlp-time-pill.active {
+  background: rgba(10, 132, 255, 0.18);
+  color: #0a84ff;
+  border-color: rgba(10, 132, 255, 0.45);
+}
+
+[data-theme="light"] .nlp-time-pill.active {
+  background: rgba(0, 122, 255, 0.12);
+  color: #007aff;
+  border-color: rgba(0, 122, 255, 0.4);
+}
+
+.nlp-time-input-24h {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+}
+
+.btn-download-ai-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
+}
+
+.btn-download-ai-model:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.btn-download-ai-model.downloading {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  cursor: wait;
+}
+
+.btn-download-ai-model.downloaded {
+  background: rgba(48, 209, 88, 0.16);
+  border-color: rgba(48, 209, 88, 0.45);
+  color: #30d158;
+  box-shadow: none;
+}
+
+.settings-download-progress-track {
+  height: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.settings-download-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0a84ff, #30d158);
+  border-radius: 2px;
+  transition: width 0.22s ease;
+}
+
+/* ==========================================================================
+   Model Loading Overlay (v1.8.21 Moondream2 1.8B VLM 首次下載動畫優化)
+   ========================================================================== */
+.model-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  z-index: 999;
+  padding: 1.25rem;
+  box-sizing: border-box;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.model-loading-overlay.fade-out {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.model-loading-card {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(180deg, rgba(30, 32, 44, 0.96) 0%, rgba(18, 20, 28, 0.98) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 22px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(99, 102, 241, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  box-sizing: border-box;
+  animation: modelOverlayPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modelOverlayPop {
+  0% { transform: scale(0.9) translateY(12px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.model-loading-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.model-loading-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.model-icon {
+  font-size: 1.3rem;
+  animation: modelIconPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes modelIconPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.85)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4)); }
+}
+
+.model-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.model-cache-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.model-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.model-status-text {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.model-progress-percent {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #60a5fa;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.model-progress-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.model-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #6366f1 0%, #3b82f6 50%, #10b981 100%);
+  border-radius: 999px;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+}
+
+.model-progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: modelShimmer 1.4s infinite;
+}
+
+@keyframes modelShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.model-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.model-progress-detail {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.model-subhint {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+
+
+</style>
 </head>
 <body>
   <div class="ios-app-container">
@@ -7232,7 +7434,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.1</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.2</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -7511,21 +7713,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
             <input type="date" id="nlpConfirmCustomDate" class="nlp-confirm-input date-picker-input">
           </div>
 
-          <!-- Field 5.2: Time Format Dropdown & AM/PM Selector -->
-          <div class="nlp-time-adjust-wrap" id="nlpTimeAdjustWrap" style="margin-top: 8px;">
-            <div class="nlp-time-format-row" id="nlpTimeFormatRow" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <div class="ios-select-wrapper" style="flex: 1; max-width: 140px;">
-                <select id="nlpTimeFormatSelect" class="ios-select" style="font-size: 0.82rem; height: 34px; padding: 0 26px 0 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #ffffff;">
-                  <option value="24h" selected>24小時制</option>
-                  <option value="12h">12小時制</option>
-                </select>
-                <span class="select-chevron" style="right: 8px; font-size: 10px; pointer-events: none;">▾</span>
-              </div>
-              <div class="nlp-time-mode-selector" id="nlpTimeModeSelector" style="display: none; flex: 1; margin: 0;">
-                <button type="button" class="nlp-time-mode-btn active" data-mode="am">上午</button>
-                <button type="button" class="nlp-time-mode-btn" data-mode="pm">下午</button>
-              </div>
-            </div>
+          <!-- Field 5.2: 24小時制快捷時間膠囊 (統一為24小時制，取消12/24切換按鈕) -->
+          <div class="nlp-time-adjust-wrap" id="nlpTimeAdjustWrap" style="margin-top: 6px;">
             <!-- Quick Time Pills (快捷時間膠囊) -->
             <div class="nlp-quick-time-pills" id="nlpQuickTimePills">
               <button type="button" class="nlp-time-pill active" data-time="09:00">09:00 上午</button>
@@ -8768,7 +8957,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.1';
+  const APP_VERSION = '1.9.2';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -10645,6 +10834,7 @@ var CapacitorBridgeBundle = (() => {
 
   function renderApp() {
     updateNoticeCardAndPillCounts();
+    renderCategoryChips();
     renderCards();
   }
 
@@ -13670,7 +13860,7 @@ var CapacitorBridgeBundle = (() => {
     switchViewTab('inventory', true, true);
   });
 
-  // 動態渲染分類膠囊標籤, 第一個群組預設在最左側, 支援群組狀態記憶與平滑對齊
+  // 動態渲染分類膠囊標籤, 僅顯示主頁物品庫中實際已有物品的分類, 第一個群組預設在最左側, 支援群組狀態記憶與平滑對齊
   function renderCategoryChips() {
     const categoryChipRow = document.getElementById('categoryChipRow');
     const chipRow = categoryChipRow;
@@ -13680,6 +13870,13 @@ var CapacitorBridgeBundle = (() => {
     const allCats = getAllCategories();
     const catKeys = Object.keys(allCats);
     const firstPageCat = getFirstPageCategory();
+
+    // 取得主頁物品庫中實際存在的分類（僅顯示在庫中有物品的分類）
+    const existingCatKeys = new Set(
+      items
+        .map(it => it.category)
+        .filter(Boolean)
+    );
 
     // 優先採用自訂分類排序
     let orderedKeys = getCustomCategoryOrder();
@@ -13692,11 +13889,25 @@ var CapacitorBridgeBundle = (() => {
       });
     }
 
+    // 過濾：未在主頁物品庫裡的分類不顯示，只呈現已有物品的分類
+    orderedKeys = orderedKeys.filter(k => allCats[k] && existingCatKeys.has(k));
+
+    if (orderedKeys.length === 0) {
+      const emptyNote = document.createElement('div');
+      emptyNote.className = 'category-chip-empty-hint';
+      emptyNote.style.cssText = 'padding: 0.35rem 0.75rem; font-size: 0.8rem; color: var(--ios-text-secondary); white-space: nowrap;';
+      emptyNote.textContent = '物品庫尚無分類物品';
+      categoryChipRow.appendChild(emptyNote);
+      currentCategoryChip = '';
+      updateCategoryActionBar();
+      return;
+    }
+
     const rememberedCat = getRememberedCategoryState();
-    if (rememberedCat && allCats[rememberedCat]) {
+    if (rememberedCat && allCats[rememberedCat] && existingCatKeys.has(rememberedCat)) {
       currentCategoryChip = rememberedCat;
-    } else if (currentCategoryChip === 'all' || !allCats[currentCategoryChip]) {
-      currentCategoryChip = orderedKeys[0] || firstPageCat;
+    } else if (currentCategoryChip === 'all' || !allCats[currentCategoryChip] || !existingCatKeys.has(currentCategoryChip)) {
+      currentCategoryChip = orderedKeys[0];
     }
 
     orderedKeys.forEach((catKey, chipIdx) => {
@@ -15661,6 +15872,7 @@ function extractCleanName(rawText) {
       if (elapsedStartDateWrap) elapsedStartDateWrap.style.display = 'block';
       if (reminderWrap) reminderWrap.style.display = 'none';
       const reminderSection = document.getElementById('nlpReminderScheduleTimeSection');
+    const timeAdjustWrap = document.getElementById('nlpTimeAdjustWrap');
       if (reminderSection) reminderSection.style.display = 'none';
       if (customRow) customRow.style.display = 'none';
       if (elapsedHint) elapsedHint.style.display = 'flex';
@@ -15891,42 +16103,20 @@ function extractCleanName(rawText) {
       updateNlpStartDateHint(startDateInput.value);
     }
 
-    // 常駐提醒時間與自訂日期判定 (v1.8.14 下拉式選單選擇12小時制/24小時制)
+    // 常駐提醒時間與自訂日期判定 (統一為 24 小時制，取消 12/24 切換按鈕)
     const timeRow = document.getElementById('nlpConfirmTimeRow');
     const timeInput = document.getElementById('nlpConfirmReminderTime');
     const customDateRow = document.getElementById('nlpCustomDateRow');
     const customDateInput = document.getElementById('nlpConfirmCustomDate');
     const pillsContainer = document.getElementById('nlpQuickTimePills');
-    const timeFormatSelect = document.getElementById('nlpTimeFormatSelect');
-    const timeModeSelector = document.getElementById('nlpTimeModeSelector');
-    const timeAdjustWrap = document.getElementById('nlpTimeAdjustWrap');
     const reminderSection = document.getElementById('nlpReminderScheduleTimeSection');
 
-    const TIME_MODE_PRESETS = {
-      am: [
-        { time: '07:00', label: '07:00 上午' },
-        { time: '08:30', label: '08:30 上午' },
-        { time: '09:00', label: '09:00 上午' },
-        { time: '10:30', label: '10:30 上午' },
-        { time: '11:45', label: '11:45 上午' }
-      ],
-      pm: [
-        { time: '12:00', label: '12:00 中午' },
-        { time: '13:30', label: '13:30 下午' },
-        { time: '15:00', label: '15:00 下午' },
-        { time: '18:00', label: '18:00 傍晚' },
-        { time: '20:00', label: '20:00 晚間' }
-      ],
-      '24h': [
-        { time: '09:00', label: '09:00 上午' },
-        { time: '12:00', label: '12:00 中午' },
-        { time: '15:00', label: '15:00 下午' },
-        { time: '20:00', label: '20:00 晚間' }
-      ]
-    };
-
-    let currentTimeFormat = '24h';
-    let currentTimeMode = 'am';
+    const TIME_PRESETS_24H = [
+      { time: '09:00', label: '09:00 上午' },
+      { time: '12:00', label: '12:00 中午' },
+      { time: '15:00', label: '15:00 下午' },
+      { time: '20:00', label: '20:00 晚間' }
+    ];
 
     // 格式化為 24 小時制 HH:mm (00:00 ~ 23:59)
     let initial24hTime = '09:00';
@@ -15941,29 +16131,13 @@ function extractCleanName(rawText) {
       timeInput.value = initial24hTime;
     }
 
-    const initHour = parseInt(initial24hTime.split(':')[0], 10);
-    currentTimeMode = (initHour >= 12) ? 'pm' : 'am';
-
-    // 渲染對應模式的快捷時間膠囊
-    function renderTimePills(mode, activeTime) {
+    // 渲染 24 小時制快捷時間膠囊
+    function renderTimePills(activeTime) {
       if (!pillsContainer) return;
-      const presets = TIME_MODE_PRESETS[mode] || TIME_MODE_PRESETS['24h'];
-      pillsContainer.innerHTML = presets.map(p => {
+      pillsContainer.innerHTML = TIME_PRESETS_24H.map(p => {
         const isActive = (p.time === activeTime) ? ' active' : '';
         return `<button type="button" class="nlp-time-pill${isActive}" data-time="${p.time}">${p.label}</button>`;
       }).join('');
-    }
-
-    // 更新上午/下午按鈕 active 樣式
-    function updateTimeModeButtons(mode) {
-      if (!timeModeSelector) return;
-      timeModeSelector.querySelectorAll('.nlp-time-mode-btn').forEach(btn => {
-        if (btn.dataset.mode === mode) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
     }
 
     // 更新膠囊按鈕 active 樣式
@@ -15978,80 +16152,8 @@ function extractCleanName(rawText) {
       });
     }
 
-    // 設定時段模式 (am / pm / 24h)
-    function setTimeMode(mode, adjustTime = true) {
-      currentTimeMode = mode;
-      updateTimeModeButtons(mode);
-
-      if (adjustTime && timeInput && timeInput.value) {
-        const parts = timeInput.value.split(':');
-        let h = parseInt(parts[0], 10) || 0;
-        const m = parts[1] || '00';
-
-        if (mode === 'am') {
-          if (h >= 12) {
-            h = (h - 12 >= 6 && h - 12 <= 11) ? (h - 12) : 9;
-            timeInput.value = `${String(h).padStart(2, '0')}:${m}`;
-          }
-        } else if (mode === 'pm') {
-          if (h < 12) {
-            h = (h + 12 >= 12 && h + 12 <= 21) ? (h + 12) : 15;
-            timeInput.value = `${String(h).padStart(2, '0')}:${m}`;
-          }
-        }
-      }
-
-      const activeTime = timeInput ? timeInput.value : initial24hTime;
-      const pillsMode = (currentTimeFormat === '12h') ? currentTimeMode : '24h';
-      renderTimePills(pillsMode, activeTime);
-    }
-
-    // 切換時間格式 (24h vs 12h)
-    function setTimeFormat(format) {
-      currentTimeFormat = format;
-      if (timeFormatSelect) {
-        timeFormatSelect.value = format;
-      }
-
-      if (format === '12h') {
-        // 選擇 12 小時制：跳出顯示上午/下午切換按鈕
-        if (timeModeSelector) {
-          timeModeSelector.style.display = 'grid';
-        }
-        const curH = timeInput ? (parseInt(timeInput.value.split(':')[0], 10) || 9) : initHour;
-        currentTimeMode = (curH >= 12) ? 'pm' : 'am';
-        updateTimeModeButtons(currentTimeMode);
-        renderTimePills(currentTimeMode, timeInput ? timeInput.value : initial24hTime);
-      } else {
-        // 選擇 24 小時制：隱藏上午/下午按鈕
-        if (timeModeSelector) {
-          timeModeSelector.style.display = 'none';
-        }
-        renderTimePills('24h', timeInput ? timeInput.value : initial24hTime);
-      }
-    }
-
-    // 初始化時間格式：預設 24 小時制
-    setTimeFormat('24h');
-
-    // 時間格式下拉選單事件綁定
-    if (timeFormatSelect && !timeFormatSelect.dataset.bound) {
-      timeFormatSelect.dataset.bound = 'true';
-      timeFormatSelect.addEventListener('change', (e) => {
-        setTimeFormat(e.target.value);
-      });
-    }
-
-    // 上午/下午時段選擇器事件綁定
-    if (timeModeSelector && !timeModeSelector.dataset.bound) {
-      timeModeSelector.dataset.bound = 'true';
-      timeModeSelector.addEventListener('click', (e) => {
-        const btn = e.target.closest('.nlp-time-mode-btn');
-        if (btn && btn.dataset.mode) {
-          setTimeMode(btn.dataset.mode, true);
-        }
-      });
-    }
+    // 初始化渲染 24 小時制快捷時間膠囊
+    renderTimePills(timeInput ? timeInput.value : initial24hTime);
 
     // 快捷膠囊委派點擊事件綁定
     if (pillsContainer && !pillsContainer.dataset.bound) {
@@ -16065,19 +16167,11 @@ function extractCleanName(rawText) {
       });
     }
 
-    // 時間手動輸入監聽
+    // 時間手動輸入監聽 (嚴格統一 24 小時制)
     if (timeInput && !timeInput.dataset.bound) {
       timeInput.dataset.bound = 'true';
       timeInput.addEventListener('input', () => {
         const curVal = timeInput.value;
-        if (curVal && curVal.includes(':') && currentTimeFormat === '12h') {
-          const curH = parseInt(curVal.split(':')[0], 10);
-          if (currentTimeMode === 'am' && curH >= 12) {
-            setTimeMode('pm', false);
-          } else if (currentTimeMode === 'pm' && curH < 12) {
-            setTimeMode('am', false);
-          }
-        }
         updateActiveTimePill(curVal);
       });
     }
@@ -16089,6 +16183,7 @@ function extractCleanName(rawText) {
 
     // 依據追蹤模式與提醒天數，控制常駐提醒時間與自訂日期的顯示
     function updateNlpReminderDisplay() {
+      const timeAdjustWrap = document.getElementById('nlpTimeAdjustWrap');
       const isElapsedMode = (document.getElementById('btnNlpTrackElapsed') && document.getElementById('btnNlpTrackElapsed').classList.contains('active'));
       const val = remindSelect ? remindSelect.value : '3';
       if (isElapsedMode) {
@@ -17332,7 +17427,7 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <script type="module" src="app.js?v=1.9.1"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.1"></script>
+  <script type="module" src="app.js?v=1.9.2"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.2"></script>
 </body>
 </html>

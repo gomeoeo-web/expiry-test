@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.9.1
+ * Smart Quick Add & On-Device NER Parser v1.9.2
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。

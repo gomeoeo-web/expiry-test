@@ -1492,13 +1492,13 @@ body {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.52rem 0.98rem;
+  gap: 0.35rem;
+  padding: 0.36rem 0.72rem;
   border-radius: var(--radius-pill);
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-ios);
@@ -3783,8 +3783,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-create-card {
   background: var(--ios-surface-secondary);
   border: 1.5px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  padding: 1.15rem;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -3796,7 +3796,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .category-create-title,
 .category-list-title {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   margin: 0;
@@ -3805,20 +3805,20 @@ input[type="time"]::-webkit-date-and-time-value {
 .emoji-select-row {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-top: 0.35rem;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
   width: 100%;
 }
 
 .emoji-select-row input.emoji-input-box {
-  width: 52px !important;
-  min-width: 52px !important;
-  max-width: 52px !important;
-  height: 44px !important;
-  min-height: 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   padding: 0 !important;
   text-align: center;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
@@ -3861,11 +3861,11 @@ input[type="time"]::-webkit-date-and-time-value {
 .cat-manage-item {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.4rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
   transition: background 0.15s ease;
   box-sizing: border-box;
   width: 100%;
@@ -3902,7 +3902,7 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .cat-manage-label {
-  font-size: 0.98rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   white-space: nowrap;
@@ -3922,9 +3922,9 @@ input[type="time"]::-webkit-date-and-time-value {
   background: var(--ios-surface-elevated);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-primary);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
-  padding: 0.35rem 0.65rem;
+  padding: 0.28rem 0.55rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -4625,12 +4625,12 @@ input[type="time"]::-webkit-date-and-time-value {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.65rem;
-  padding: 0.75rem 0.95rem;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  margin-top: 0.65rem;
+  border-radius: 14px;
+  margin-top: 0.4rem;
   box-shadow: none;
 }
 
@@ -4643,8 +4643,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-info-badge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.95rem;
+  gap: 0.35rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   width: 100%;
@@ -4653,14 +4653,14 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .cat-active-emoji {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .cat-active-name {
-  font-weight: 800;
-  font-size: 1.02rem;
+  font-weight: 700;
+  font-size: 0.88rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4678,7 +4678,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .cat-active-count {
   color: var(--ios-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
@@ -4687,7 +4687,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-action-buttons-group {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
   width: 100%;
 }
 
@@ -4700,9 +4700,9 @@ input[type="time"]::-webkit-date-and-time-value {
   background: #363646;
   border: 1px solid rgba(255, 255, 255, 0.28);
   color: #ffffff;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  padding: 0.34rem 0.62rem;
   border-radius: var(--radius-pill);
   cursor: pointer;
   white-space: nowrap;
@@ -4739,12 +4739,12 @@ input[type="time"]::-webkit-date-and-time-value {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   background: #ffffff;
   color: #000000;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  padding: 0.34rem 0.62rem;
   border-radius: var(--radius-pill);
   border: none;
   cursor: pointer;
@@ -5970,7 +5970,7 @@ body.modal-open .view-panel {
    NLP Confirmation Modal (自然語言解析確認彈窗 - 防止阻擋文字與自訂時間支援)
    ========================================================================== */
 .nlp-confirm-card {
-  max-width: 440px;
+  max-width: 420px;
   width: 92%;
   max-height: 90vh;
   display: flex;
@@ -5984,7 +5984,7 @@ body.modal-open .view-panel {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.75rem 1.25rem 1.5rem 1.25rem;
+  padding: 0.65rem 0.95rem 1.25rem 0.95rem;
 }
 
 .nlp-confirm-header-wrap {
@@ -6097,22 +6097,22 @@ body.modal-open .view-panel {
 }
 
 .nlp-confirm-field {
-  margin-bottom: 0.95rem;
+  margin-bottom: 0.65rem;
 }
 
 .nlp-elapsed-hint-box {
   background: rgba(10, 132, 255, 0.12);
   border: 1px solid rgba(10, 132, 255, 0.28);
   color: #0a84ff;
-  border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.86rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.25rem;
-  margin-bottom: 0.85rem;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.65rem;
 }
 
 [data-theme="light"] .nlp-elapsed-hint-box {
@@ -6123,32 +6123,32 @@ body.modal-open .view-panel {
 
 .nlp-confirm-label {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--ios-text-secondary);
-  margin-bottom: 0.42rem;
-  line-height: 1.3;
+  margin-bottom: 0.26rem;
+  line-height: 1.25;
 }
 
 .nlp-confirm-input,
 .nlp-confirm-select {
   width: 100%;
-  height: 44px;
+  height: 38px;
   box-sizing: border-box;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border-strong);
-  border-radius: var(--radius-subcard);
-  padding: 0 0.95rem;
+  border-radius: 10px;
+  padding: 0 0.75rem;
   color: var(--ios-text-primary);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 500;
   outline: none;
   transition: border-color var(--transition-ios), box-shadow var(--transition-ios);
 }
 
 .nlp-confirm-select {
-  padding-right: 2.5rem;
+  padding-right: 2.2rem;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -6166,6 +6166,7 @@ body.modal-open .view-panel {
 
 .nlp-select-wrap {
   width: 100%;
+  height: 38px;
   position: relative;
   display: flex;
   align-items: center;
@@ -6173,10 +6174,10 @@ body.modal-open .view-panel {
 
 .nlp-select-wrap .select-arrow {
   position: absolute;
-  right: 0.95rem;
+  right: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--ios-text-secondary);
   pointer-events: none;
 }
@@ -6230,12 +6231,15 @@ body.modal-open .view-panel {
   border: none !important;
 }
 
-/* 原生 date 與 datetime-local 的 WebKit 預設樣式重設與垂直置中排版 */
+/* 原生 date, time 與 datetime-local 的 WebKit 預設樣式重設與嚴格垂直置中 */
 input[type="date"],
+input[type="time"],
 input[type="datetime-local"],
 .date-picker-input,
 .custom-time-input,
 #nlpConfirmCustomTime,
+#nlpConfirmReminderTime,
+.nlp-time-input-24h,
 input[type="datetime-local"].nlp-confirm-input {
   -webkit-appearance: none !important;
   appearance: none !important;
@@ -6244,30 +6248,45 @@ input[type="datetime-local"].nlp-confirm-input {
   justify-content: center !important;
   text-align: center !important;
   width: 100% !important;
-  min-height: 46px !important;
-  padding: 10px 16px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  line-height: 38px !important;
+  padding: 0 10px !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   color: #FFFFFF !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   box-sizing: border-box !important;
   outline: none !important;
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   max-width: 100%;
+  margin: 0 !important;
 }
 
-/* 清除 iOS WebKit 內部偽元素的預設外距與位移 */
+/* 清除 iOS WebKit 內部偽元素的預設外距與位移，修正提醒時間與日期文字偏上問題 */
 input[type="date"]::-webkit-date-and-time-value,
-input[type="datetime-local"]::-webkit-date-and-time-value {
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value,
+#nlpConfirmReminderTime::-webkit-date-and-time-value,
+.nlp-time-input-24h::-webkit-date-and-time-value {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
+  line-height: normal !important;
+  box-sizing: border-box !important;
 }
 
 input[type="date"]::-webkit-inner-spin-button,
+input[type="time"]::-webkit-inner-spin-button,
 input[type="datetime-local"]::-webkit-inner-spin-button {
   display: none !important;
 }
@@ -6284,12 +6303,13 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .nlp-confirm-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.35rem;
+  gap: 0.6rem;
+  margin-top: 0.95rem;
 }
 
 .nlp-confirm-actions button {
-  height: 44px;
+  height: 38px;
+  font-size: 0.88rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6349,7 +6369,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 /* 提醒通知排程與提醒時間橫向排列樣式 (v1.8.9) */
 .nlp-reminder-time-grid {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
 }
 
@@ -6366,6 +6386,14 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 #nlpConfirmTimeRow {
   flex: 1;
+}
+
+.nlp-time-input-container {
+  width: 100%;
+  height: 38px;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 /* 提醒通知時間格式下拉選單與上午/下午選擇器 */
@@ -6483,12 +6511,12 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 .nlp-time-pill {
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-pill, 9999px);
   border: 1px solid var(--ios-border-strong);
   background: var(--ios-surface-secondary);
   color: var(--ios-text-secondary);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.16s ease;
@@ -6517,7 +6545,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .nlp-time-input-24h {
   font-variant-numeric: tabular-nums;
-  font-size: 1.05rem !important;
+  font-size: 0.95rem !important;
   font-weight: 600 !important;
   text-align: center !important;
 }
