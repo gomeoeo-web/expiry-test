@@ -1,6 +1,6 @@
 {
   "name": "my-app-tracker",
-  "version": "1.9.2",
+  "version": "1.9.4",
   "description": "期效管家 - 極簡物品生命週期與保固管家",
   "private": true,
   "main": "index.html",

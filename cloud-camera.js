@@ -1,6 +1,31 @@
-// 1.9.2 — public endpoint only; no API key or developer password in the app.
+// 1.9.4 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
 const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
+
+let isRecognizing = false;
+
+export function isCloudCameraBusy() {
+  return isRecognizing;
+}
+
+export function setCloudCameraBusy(busy) {
+  const shutterBtn = document.getElementById('btnCameraShutter');
+  const albumBtn = document.getElementById('btnCameraAlbum');
+  const confirmBtn = document.getElementById('btnApplyNlpConfirm');
+  const consentAcceptBtn = document.querySelector('[data-accept]');
+
+  const targets = [shutterBtn, albumBtn, confirmBtn, consentAcceptBtn].filter(Boolean);
+  targets.forEach(btn => {
+    btn.disabled = !!busy;
+    btn.classList.toggle('disabled', !!busy);
+    btn.classList.toggle('loading', !!busy);
+    if (busy) {
+      btn.setAttribute('aria-disabled', 'true');
+    } else {
+      btn.removeAttribute('aria-disabled');
+    }
+  });
+}
 
 async function consent() {
   try { if (localStorage.getItem(CONSENT_KEY) === 'yes') return true; } catch {}
@@ -10,8 +35,16 @@ async function consent() {
     dialog.innerHTML = '<h2 style="font-size:20px;margin-top:0">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 Google Gemini，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept style="font:inherit;padding:12px;border:0;border-radius:12px;background:#205f40;color:white;width:100%">同意並辨識</button><button type="button" data-cancel style="font:inherit;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:12px;background:white;width:100%">改用手動填寫</button>';
     let finished = false;
     const finish = value => { if (finished) return; finished = true; dialog.close(); dialog.remove(); resolve(value); };
-    dialog.querySelector('[data-accept]').onclick = () => { try { localStorage.setItem(CONSENT_KEY, 'yes'); } catch {} finish(true); };
-    dialog.querySelector('[data-cancel]').onclick = () => finish(false);
+    const acceptBtn = dialog.querySelector('[data-accept]');
+    const cancelBtn = dialog.querySelector('[data-cancel]');
+    acceptBtn.onclick = () => {
+      acceptBtn.disabled = true;
+      acceptBtn.classList.add('loading');
+      if (cancelBtn) cancelBtn.disabled = true;
+      try { localStorage.setItem(CONSENT_KEY, 'yes'); } catch {}
+      finish(true);
+    };
+    cancelBtn.onclick = () => finish(false);
     dialog.addEventListener('cancel', e => { e.preventDefault(); finish(false); });
     document.body.append(dialog); dialog.showModal();
   });
@@ -22,13 +55,16 @@ function dateOrNull(value, evidence) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
 }
 export async function recognizeCanvas(canvas, photoDataUrl) {
-  if (!await consent()) throw new Error('已選擇手動填寫，照片未上傳。');
-  if (!navigator.onLine) throw new Error('目前沒有網路，請手動填寫或連線後重新拍照。');
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-  if (!blob || blob.size > 2 * 1024 * 1024) throw new Error('照片太大，請靠近單一商品再拍一次。');
+  if (isRecognizing) throw new Error('前一筆照片辨識進行中，請稍候。');
+  setCloudCameraBusy(true);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 55000);
   try {
+    if (!await consent()) throw new Error('已選擇手動填寫，照片未上傳。');
+    setCloudCameraBusy(true);
+    if (!navigator.onLine) throw new Error('目前沒有網路，請手動填寫或連線後重新拍照。');
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (!blob || blob.size > 2 * 1024 * 1024) throw new Error('照片太大，請靠近單一商品再拍一次。');
     const response = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, signal: controller.signal, credentials: 'omit' });
     let payload;
     try { payload = await response.json(); } catch { throw new Error('辨識服務尚未就緒，請先手動填寫。'); }
@@ -49,9 +85,14 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     if (error.name === 'AbortError') throw new Error('辨識等待逾時，請手動填寫或稍後重試。');
     if (error instanceof TypeError) throw new Error('無法連線至辨識服務，請確認網路或稍後重試。');
     throw error;
-  } finally { clearTimeout(timer); }
+  } finally {
+    clearTimeout(timer);
+    setCloudCameraBusy(false);
+  }
 }
 window.recognizeCloudCamera = recognizeCanvas;
+window.isCloudCameraBusy = isCloudCameraBusy;
+window.setCloudCameraBusy = setCloudCameraBusy;
 window.revokeCloudPhotoConsent = () => {
   try { localStorage.removeItem(CONSENT_KEY); } catch {}
   alert('已撤回雲端照片同意。下次拍照辨識會重新詢問。');

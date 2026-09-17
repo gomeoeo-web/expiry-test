@@ -774,27 +774,221 @@ body {
   box-shadow: 0 2px 8px rgba(255, 214, 10, 0.4);
 }
 
-/* 辨識遮罩 (Recognition Overlay) */
+/* 辨識遮罩與純文字載入動畫 (Recognition Overlay & Text Animation v1.9.4) */
 .camera-recognition-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   opacity: 0;
+  padding: 20px;
+  box-sizing: border-box;
   pointer-events: none;
-  transition: opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .camera-recognition-overlay.active {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+
+.ai-scan-loading-card {
+  width: 100%;
+  max-width: 320px;
+  max-height: 85vh;
+  margin: 0 auto;
+  padding: 20px 20px;
+  background: rgba(28, 28, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: scanCardFadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scanCardFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 預覽照片尺寸約束 - 修正辨識中畫面過大問題 */
+.ai-scan-preview-container {
+  width: 100%;
+  height: 110px;
+  max-height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ai-scan-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ai-scan-status-wrap {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.ai-scan-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 純文字光影動畫 (Shimmer Wave Effect - 無任何圖示符號) */
+.ai-scan-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, rgba(255,255,255,0.55) 0%, #ffffff 50%, rgba(255,255,255,0.55) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 2.2s infinite linear;
+}
+
+@keyframes textShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.ai-scan-desc {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* 純文字省略號動畫 */
+.ai-scan-anim-dots::after {
+  content: '';
+  animation: ellipsisDots 1.8s infinite steps(4, jump-none);
+  display: inline-block;
+  width: 18px;
+  text-align: left;
+}
+
+@keyframes ellipsisDots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: '...'; }
+}
+
+/* 純文字進度步驟 - 無圖示、無符號 */
+.ai-scan-steps {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-scan-step-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.28s ease;
+}
+
+.ai-scan-step-item.active {
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.12);
+  font-weight: 600;
+  animation: activeStepPulse 1.8s infinite ease-in-out;
+}
+
+.ai-scan-step-item.done {
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+}
+
+@keyframes activeStepPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* 相機拍攝頂部導航與額度膠囊 */
+.camera-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-quota-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.16);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.35);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.camera-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.18);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.38);
+}
+
+/* 設定頁面額度膠囊 */
+.settings-quota-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.settings-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.35);
 }
 
 /* ==========================================================================
@@ -1034,6 +1228,15 @@ body {
   font-weight: 500;
 }
 
+.camera-control-btn:disabled,
+.camera-control-btn.disabled,
+.camera-control-btn.loading {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
 .camera-shutter-btn {
   width: 72px;
   height: 72px;
@@ -1064,6 +1267,15 @@ body {
 .camera-shutter-btn:active .shutter-inner {
   transform: scale(0.94);
   background: #dddddd;
+}
+
+.camera-shutter-btn:disabled,
+.camera-shutter-btn.disabled,
+.camera-shutter-btn.loading {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
 }
 
 .sync-dot.offline {
@@ -2992,6 +3204,14 @@ input[type="time"]::-webkit-date-and-time-value {
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
+}
+
+.btn-ios-primary:disabled,
+.btn-ios-primary.disabled,
+.btn-ios-primary.loading {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .btn-ios-secondary {

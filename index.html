@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.2">
+  <link rel="stylesheet" href="style.css?v=1.9.4">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -791,27 +791,413 @@ body {
   box-shadow: 0 2px 8px rgba(255, 214, 10, 0.4);
 }
 
-/* 辨識遮罩 (Recognition Overlay) */
+/* 辨識遮罩與純文字載入動畫 (Recognition Overlay & Text Animation v1.9.4) */
 .camera-recognition-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   opacity: 0;
+  padding: 20px;
+  box-sizing: border-box;
   pointer-events: none;
-  transition: opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .camera-recognition-overlay.active {
   display: flex !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+
+.ai-scan-loading-card {
+  width: 100%;
+  max-width: 320px;
+  max-height: 85vh;
+  margin: 0 auto;
+  padding: 20px 20px;
+  background: rgba(28, 28, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: scanCardFadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scanCardFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 預覽照片尺寸約束 - 修正辨識中畫面過大問題 */
+.ai-scan-preview-container {
+  width: 100%;
+  height: 110px;
+  max-height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ai-scan-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ai-scan-status-wrap {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.ai-scan-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 純文字光影動畫 (Shimmer Wave Effect - 無任何圖示符號) */
+.ai-scan-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, rgba(255,255,255,0.55) 0%, #ffffff 50%, rgba(255,255,255,0.55) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 2.2s infinite linear;
+}
+
+@keyframes textShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.ai-scan-desc {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* 純文字省略號動畫 */
+.ai-scan-anim-dots::after {
+  content: '';
+  animation: ellipsisDots 1.8s infinite steps(4, jump-none);
+  display: inline-block;
+  width: 18px;
+  text-align: left;
+}
+
+@keyframes ellipsisDots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: '...'; }
+}
+
+/* 純文字進度步驟 - 無圖示、無符號 */
+.ai-scan-steps {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-scan-step-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.28s ease;
+}
+
+.ai-scan-step-item.active {
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.12);
+  font-weight: 600;
+  animation: activeStepPulse 1.8s infinite ease-in-out;
+}
+
+.ai-scan-step-item.done {
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+}
+
+@keyframes activeStepPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* 相機拍攝頂部導航與額度膠囊 */
+.camera-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-quota-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.16);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.35);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.camera-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.18);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.38);
+}
+
+/* 設定頁面額度膠囊 */
+.settings-quota-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.settings-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.35);
+}
+
+.ai-scan-loading-card {
+  width: 100%;
+  max-width: 320px;
+  max-height: 85vh;
+  margin: 0 auto;
+  padding: 20px 20px;
+  background: rgba(28, 28, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: scanCardFadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scanCardFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 預覽照片尺寸約束 - 修正辨識中畫面過大問題 */
+.ai-scan-preview-container {
+  width: 100%;
+  height: 110px;
+  max-height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ai-scan-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ai-scan-status-wrap {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.ai-scan-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 純文字光影動畫 (Shimmer Wave Effect - 無任何圖示符號) */
+.ai-scan-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, rgba(255,255,255,0.55) 0%, #ffffff 50%, rgba(255,255,255,0.55) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 2.2s infinite linear;
+}
+
+@keyframes textShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.ai-scan-desc {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* 純文字省略號動畫 */
+.ai-scan-anim-dots::after {
+  content: '';
+  animation: ellipsisDots 1.8s infinite steps(4, jump-none);
+  display: inline-block;
+  width: 18px;
+  text-align: left;
+}
+
+@keyframes ellipsisDots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: '...'; }
+}
+
+/* 純文字進度步驟 - 無圖示、無符號 */
+.ai-scan-steps {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-scan-step-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.28s ease;
+}
+
+.ai-scan-step-item.active {
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.12);
+  font-weight: 600;
+  animation: activeStepPulse 1.8s infinite ease-in-out;
+}
+
+.ai-scan-step-item.done {
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+}
+
+@keyframes activeStepPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* 相機拍攝頂部導航與額度膠囊 */
+.camera-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-quota-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.16);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.35);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.camera-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.18);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.38);
+}
+
+/* 設定頁面額度膠囊 */
+.settings-quota-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.settings-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.35);
 }
 
 /* ==========================================================================
@@ -1051,6 +1437,15 @@ body {
   font-weight: 500;
 }
 
+.camera-control-btn:disabled,
+.camera-control-btn.disabled,
+.camera-control-btn.loading {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
 .camera-shutter-btn {
   width: 72px;
   height: 72px;
@@ -1081,6 +1476,15 @@ body {
 .camera-shutter-btn:active .shutter-inner {
   transform: scale(0.94);
   background: #dddddd;
+}
+
+.camera-shutter-btn:disabled,
+.camera-shutter-btn.disabled,
+.camera-shutter-btn.loading {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
 }
 
 .sync-dot.offline {
@@ -3009,6 +3413,14 @@ input[type="time"]::-webkit-date-and-time-value {
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
+}
+
+.btn-ios-primary:disabled,
+.btn-ios-primary.disabled,
+.btn-ios-primary.loading {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .btn-ios-secondary {
@@ -7378,6 +7790,14 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
             <div class="settings-info"><span class="settings-title">雲端照片辨識</span>
               <span class="settings-desc">連線辨識商品與日期，無需下載模型。照片經同意後送至雲端。</span></div>
           </div>
+          <div class="settings-row" id="rowSmartCameraQuota">
+            <div class="settings-icon">📷</div>
+            <div class="settings-info">
+              <span class="settings-title">今日辨識剩餘次數</span>
+              <span class="settings-desc">每日智慧鏡頭辨識上限 200 次，每日零點自動重置</span>
+            </div>
+            <span class="settings-quota-pill" id="settingsSmartCameraQuota">剩餘 200 次</span>
+          </div>
           <button type="button" class="settings-row-btn" onclick="window.revokeCloudPhotoConsent && window.revokeCloudPhotoConsent()">撤回照片上傳同意</button>
         </div>
 
@@ -7434,7 +7854,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.2</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.4</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -7449,8 +7869,11 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
       <!-- Camera Top Navigation Bar -->
       <div class="camera-modal-header">
         <div class="camera-header-title">
-          <span class="camera-title-text">📷 掃描辨識</span>
-          <span class="camera-subtitle-text">本機離線條碼與效期辨識</span>
+          <div class="camera-title-row">
+            <span class="camera-title-text">📷 掃描辨識</span>
+            <span class="camera-quota-pill" id="cameraShootingQuotaBadge">今日剩餘 200 次</span>
+          </div>
+          <span class="camera-subtitle-text">智慧鏡頭商品與效期辨識</span>
         </div>
         <button type="button" id="btnCloseCameraModal" class="camera-btn-close" aria-label="關閉相機">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -7529,42 +7952,27 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
     <div class="ai-scan-loading-card" id="cameraRecognitionOverlay">
       <div class="ai-scan-preview-container">
         <img id="aiScanPreviewImg" src="" alt="拍攝影像預覽" class="ai-scan-preview-img">
-        <div class="ai-scan-laser-line"></div>
-        <div class="ai-scan-corner corner-tl"></div>
-        <div class="ai-scan-corner corner-tr"></div>
-        <div class="ai-scan-corner corner-bl"></div>
-        <div class="ai-scan-corner corner-br"></div>
       </div>
 
       <div class="ai-scan-status-wrap">
-        <div class="ai-scan-spinner-ring">
-          <div class="ai-scan-spinner-core"></div>
-        </div>
         <div class="ai-scan-title-group">
-          <div class="ai-scan-title-row">
-            <span class="ai-scan-title">AI 智慧分析辨識中</span>
-            <span class="ai-scan-tag" id="aiScanEngineTag">雲端辨識</span>
-          </div>
-          <p id="aiScanStatusText" class="ai-scan-desc">正在上傳並辨識照片...</p>
+          <span class="ai-scan-title">AI 智慧分析辨識中</span>
+          <p id="aiScanStatusText" class="ai-scan-desc">正在上傳並辨識照片<span class="ai-scan-anim-dots"></span></p>
         </div>
       </div>
 
       <div class="ai-scan-steps">
         <div class="ai-scan-step-item active" id="scanStepVlm">
-          <span class="step-dot"></span>
           <span class="step-text">上傳照片至雲端</span>
         </div>
-        <div class="ai-scan-step-item active" id="scanStepVisual">
-          <span class="step-dot"></span>
+        <div class="ai-scan-step-item" id="scanStepVisual">
           <span class="step-text">辨識商品名稱與分類</span>
         </div>
-        <div class="ai-scan-step-item active" id="scanStepOcr">
-          <span class="step-dot"></span>
+        <div class="ai-scan-step-item" id="scanStepOcr">
           <span class="step-text">讀取包裝上的有效日期</span>
         </div>
         <div class="ai-scan-step-item" id="scanStepFuse">
-          <span class="step-dot"></span>
-          <span class="step-text">整理結果，等待你確認</span>
+          <span class="step-text">整理結果，等待確認</span>
         </div>
       </div>
     </div>
@@ -8741,6 +9149,8 @@ var CapacitorBridgeBundle = (() => {
         async getAll(options) {
           const scheduled = [...this.pending];
           const delivered = this.deliveredNotifications.map((n) => this.deliveredToSchema(n));
+          // ==========================================
+          // AI Scan Loading HUD 控制函式 (純文字流光與動態推進動畫 v1.9.4)
           if ((options === null || options === void 0 ? void 0 : options.state) === "SCHEDULED") {
             return { notifications: scheduled };
           }
@@ -8957,7 +9367,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.2';
+  const APP_VERSION = '1.9.4';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -13160,6 +13570,7 @@ var CapacitorBridgeBundle = (() => {
       });
     }
     updateTrashBadge();
+    updateSmartLensQuotaDisplays();
     if (typeof window !== 'undefined' && typeof window.updateAiModelSettingsUI === 'function') {
       window.updateAiModelSettingsUI();
     }
@@ -16969,6 +17380,7 @@ function extractCleanName(rawText) {
   async function openCameraScanModal() {
     const modal = document.getElementById('cameraScanModal');
     if (!modal) return;
+    updateSmartLensQuotaDisplays();
     modal.style.display = 'flex';
     lockBodyScroll();
     setCameraZoom(1);
@@ -17038,6 +17450,7 @@ function extractCleanName(rawText) {
   }
 
   function handleCameraShutter() {
+    if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
     const video = document.getElementById('cameraVideo');
     const flashOverlay = document.getElementById('cameraFlashOverlay');
     if (flashOverlay) {
@@ -17053,6 +17466,7 @@ function extractCleanName(rawText) {
   }
 
   function handleAlbumFileSelect(e) {
+    if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -17067,7 +17481,85 @@ function extractCleanName(rawText) {
     e.target.value = '';
   }
 
-  // AI Scan Loading HUD 控制函式 (智慧鏡頭拍攝後載入動畫)
+  // ==========================================
+  // 智慧鏡頭每日額度管理 (每日上限 200 次 v1.9.4)
+  // ==========================================
+  const SMART_LENS_DAILY_LIMIT = 200;
+  const SMART_LENS_QUOTA_KEY = 'expiry_smart_lens_quota_v1';
+
+  function getSmartLensTodayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function getSmartLensQuotaInfo() {
+    const today = getSmartLensTodayKey();
+    let used = 0;
+    try {
+      const raw = localStorage.getItem(SMART_LENS_QUOTA_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.date === today && typeof data.used === 'number') {
+          used = Math.max(0, data.used);
+        }
+      }
+    } catch {}
+    const remaining = Math.max(0, SMART_LENS_DAILY_LIMIT - used);
+    return { limit: SMART_LENS_DAILY_LIMIT, used, remaining, date: today };
+  }
+
+  function consumeSmartLensQuota() {
+    const info = getSmartLensQuotaInfo();
+    const newUsed = info.used + 1;
+    try {
+      localStorage.setItem(SMART_LENS_QUOTA_KEY, JSON.stringify({ date: info.date, used: newUsed }));
+    } catch {}
+    updateSmartLensQuotaDisplays();
+    return Math.max(0, SMART_LENS_DAILY_LIMIT - newUsed);
+  }
+
+  function markSmartLensQuotaExhausted() {
+    const today = getSmartLensTodayKey();
+    try {
+      localStorage.setItem(SMART_LENS_QUOTA_KEY, JSON.stringify({ date: today, used: SMART_LENS_DAILY_LIMIT }));
+    } catch {}
+    updateSmartLensQuotaDisplays();
+  }
+
+  function updateSmartLensQuotaDisplays() {
+    const info = getSmartLensQuotaInfo();
+    // 1. 設定頁面顯示
+    const settingsBadge = document.getElementById('settingsSmartCameraQuota');
+    if (settingsBadge) {
+      settingsBadge.textContent = info.remaining > 0 ? `剩餘 ${info.remaining} 次` : '今日額度已用完';
+      if (info.remaining === 0) {
+        settingsBadge.classList.add('quota-depleted');
+      } else {
+        settingsBadge.classList.remove('quota-depleted');
+      }
+    }
+    // 2. 拍攝中頁面顯示
+    const cameraBadge = document.getElementById('cameraShootingQuotaBadge');
+    if (cameraBadge) {
+      cameraBadge.textContent = info.remaining > 0 ? `今日剩餘 ${info.remaining} 次` : '今日剩餘 0 次';
+      if (info.remaining === 0) {
+        cameraBadge.classList.add('quota-depleted');
+      } else {
+        cameraBadge.classList.remove('quota-depleted');
+      }
+    }
+  }
+
+  window.getSmartLensQuotaInfo = getSmartLensQuotaInfo;
+  window.consumeSmartLensQuota = consumeSmartLensQuota;
+  window.markSmartLensQuotaExhausted = markSmartLensQuotaExhausted;
+  window.updateSmartLensQuotaDisplays = updateSmartLensQuotaDisplays;
+
+  // AI Scan Loading HUD 控制函式 (純文字流光與動態推進動畫 v1.9.4)
+  let aiScanStepTimer = null;
   function showAiScanLoading(photoDataUrl) {
     const hud = document.getElementById('aiScanLoadingModal');
     const img = document.getElementById('aiScanPreviewImg');
@@ -17078,13 +17570,33 @@ function extractCleanName(rawText) {
     const stepFuse = document.getElementById('scanStepFuse');
 
     if (img && photoDataUrl) img.src = photoDataUrl;
-    if (desc) {
-      desc.textContent = '正在辨識商品與日期，請稍候...';
-    }
-    if (stepVlm) { stepVlm.className = 'ai-scan-step-item active'; }
-    if (stepVisual) { stepVisual.className = 'ai-scan-step-item active'; }
-    if (stepOcr) { stepOcr.className = 'ai-scan-step-item active'; }
-    if (stepFuse) { stepFuse.className = 'ai-scan-step-item'; }
+    if (desc) desc.innerHTML = '正在上傳照片至雲端<span class="ai-scan-anim-dots"></span>';
+
+    const setStepState = (vlm, visual, ocr, fuse) => {
+      if (stepVlm) stepVlm.className = 'ai-scan-step-item ' + vlm;
+      if (stepVisual) stepVisual.className = 'ai-scan-step-item ' + visual;
+      if (stepOcr) stepOcr.className = 'ai-scan-step-item ' + ocr;
+      if (stepFuse) stepFuse.className = 'ai-scan-step-item ' + fuse;
+    };
+
+    setStepState('active', '', '', '');
+
+    if (aiScanStepTimer) clearInterval(aiScanStepTimer);
+    let stepIndex = 0;
+    aiScanStepTimer = setInterval(() => {
+      stepIndex++;
+      if (stepIndex === 1) {
+        if (desc) desc.innerHTML = '正在辨識商品名稱與分類<span class="ai-scan-anim-dots"></span>';
+        setStepState('done', 'active', '', '');
+      } else if (stepIndex === 2) {
+        if (desc) desc.innerHTML = '正在讀取包裝上的有效日期<span class="ai-scan-anim-dots"></span>';
+        setStepState('done', 'done', 'active', '');
+      } else if (stepIndex >= 3) {
+        if (desc) desc.innerHTML = '正在整理結果，即將完成<span class="ai-scan-anim-dots"></span>';
+        setStepState('done', 'done', 'done', 'active');
+        clearInterval(aiScanStepTimer);
+      }
+    }, 1100);
 
     if (hud) {
       hud.style.display = 'flex';
@@ -17105,6 +17617,10 @@ function extractCleanName(rawText) {
   }
 
   function hideAiScanLoading() {
+    if (aiScanStepTimer) {
+      clearInterval(aiScanStepTimer);
+      aiScanStepTimer = null;
+    }
     const hud = document.getElementById('aiScanLoadingModal');
     if (hud) {
       hud.classList.remove('active');
@@ -17119,8 +17635,15 @@ function extractCleanName(rawText) {
    */
   let isCameraProcessing = false;
   async function processCapturedImage(source) {
-    if (isCameraProcessing) return;
+    if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
+    const quotaInfo = getSmartLensQuotaInfo();
+    if (quotaInfo.remaining <= 0) {
+      showToast('今日智慧鏡頭辨識額度已達上限（200次），請明天再試或手動填寫。');
+      closeCameraScanModal();
+      return;
+    }
     isCameraProcessing = true;
+    if (window.setCloudCameraBusy) window.setCloudCameraBusy(true);
     let photoDataUrl = null, parsed = null, notice = '';
     try {
       const canvas = document.getElementById('cameraCanvas');
@@ -17142,6 +17665,7 @@ function extractCleanName(rawText) {
       thumbnail.getContext('2d').drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
       photoDataUrl = thumbnail.toDataURL('image/jpeg',0.75);
       thumbnail.width = thumbnail.height = 1;
+      consumeSmartLensQuota();
       closeCameraScanModal();
       showAiScanLoading(photoDataUrl);
       if (typeof window.recognizeCloudCamera !== 'function') throw new Error(location.protocol === 'file:' ? '目前是直接開啟 HTML 檔案，無法載入辨識功能。請關閉此頁，雙擊「啟動期效管家.bat」，從 http://localhost:8080/ 使用 APP。' : '辨識程式未載入。請重新整理；若仍失敗，請確認網站包含 cloud-camera.js。');
@@ -17152,6 +17676,7 @@ function extractCleanName(rawText) {
       closeCameraScanModal();
       hideAiScanLoading();
       isCameraProcessing = false;
+      if (window.setCloudCameraBusy) window.setCloudCameraBusy(false);
     }
     if (!parsed) parsed = {success:false, name:'', category:'other', subCategory:'', emoji:'📦', expiryDate:null, hasEndDate:false, remindDaysBefore:3, remindTime:'09:00', image:photoDataUrl, recognitionNotice:notice};
     openNlpConfirmModal(parsed);
@@ -17178,6 +17703,7 @@ function extractCleanName(rawText) {
   loadArchivedItems();
   updateTrashBadge();
   updateArchiveBadge();
+  updateSmartLensQuotaDisplays();
   loadCustomCategories();
   currentCategoryChip = getFirstPageCategory();
 
@@ -17427,7 +17953,7 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <script type="module" src="app.js?v=1.9.2"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.2"></script>
+  <script type="module" src="app.js?v=1.9.4"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.4"></script>
 </body>
 </html>
