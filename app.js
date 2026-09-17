@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.8.22
+ * Smart Quick Add & On-Device NER Parser v1.8.23
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -3192,15 +3192,18 @@ function setupAiModelSettingsHandler() {
   const btn = document.getElementById('btnDownloadAiModel');
   if (btn && !btn.dataset.bound) {
     btn.dataset.bound = 'true';
+    console.log('[AI MODEL BUTTON] handler bound');
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
+      console.log('[AI MODEL BUTTON] clicked');
       const isDownloaded = isMobileClip2Downloaded();
       if (isDownloaded) {
         const reDownload = confirm('MobileCLIP2-S0 視覺模型已在本地 IndexedDB 快取就緒（離線秒速辨識）。\n\n是否需要重新檢查並重新下載？');
         if (!reDownload) return;
       }
       try {
+        console.log('[MOBILECLIP2] init requested by download button');
         await initMobileClip2(null, { forceShowOverlay: true });
       } catch (err) {
         alert('下載模型失敗：' + (err?.message || err));
@@ -4250,15 +4253,6 @@ const MOBILECLIP_CANDIDATES = MOBILECLIP2_CANDIDATES;
 const MOBILECLIP_CANDIDATE_MAP = {};
 function getMobileClipCandidate(id) {
   return MOBILECLIP2_CANDIDATES.find(c => c.id === id) || null;
-}
-function initMobileClipTest() {
-  return initMobileClip2();
-}
-function isMobileClipTestMode() {
-  if (typeof window !== 'undefined' && window.location) {
-    return new URLSearchParams(window.location.search).get('mobilecliptest') === '1';
-  }
-  return false;
 }
 const initMobileClipModel = initMobileClip2;
 const classifyImageWithMobileClip = classifyWithMobileClip2;
