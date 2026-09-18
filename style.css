@@ -1853,6 +1853,12 @@ body {
   touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-item-card * {
+  pointer-events: none;
 }
 
 .ios-item-card:active {

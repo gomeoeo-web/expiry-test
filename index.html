@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.13">
+  <link rel="stylesheet" href="style.css?v=1.9.14">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -2033,6 +2033,12 @@ body {
   touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ios-item-card * {
+  pointer-events: none;
 }
 
 .ios-item-card:active {
@@ -7439,7 +7445,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 </style>
-<script src="icons.js?v=1.9.13"></script>
+<script src="icons.js?v=1.9.14"></script>
 <style>
 /* Flat icon system: consistent silhouettes, no gradients, highlights or shadows. */
 .flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);width:24px;height:24px;flex-shrink:0;vertical-align:middle;filter:none!important;}
@@ -8266,7 +8272,7 @@ button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linec
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.13</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.14</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9783,7 +9789,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.13';
+  const APP_VERSION = '1.9.14';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -10690,6 +10696,8 @@ var CapacitorBridgeBundle = (() => {
   let searchQuery = '';
   let activeSheetItemId = null;
   let hasSwipedHorizontally = false;
+  let lastCardTapTimestamp = 0;
+  let lastActionSheetOpenedAt = 0;
   let lastCreatedItem = null; // 最近一筆新增或編輯之物品快取 (Context Continuity)
   const GEMINI_API_KEY_STORAGE = 'lifespan_gemini_api_key';
 
@@ -11766,12 +11774,14 @@ var CapacitorBridgeBundle = (() => {
 
       let cardTouchStartX = 0;
       let cardTouchStartY = 0;
+      let cardTouchStartTime = 0;
       let cardMoved = false;
 
       card.addEventListener('touchstart', function (e) {
         if (e.touches && e.touches.length === 1) {
           cardTouchStartX = e.touches[0].clientX;
           cardTouchStartY = e.touches[0].clientY;
+          cardTouchStartTime = Date.now();
           cardMoved = false;
         }
       }, { passive: true });
@@ -11780,13 +11790,35 @@ var CapacitorBridgeBundle = (() => {
         if (e.touches && e.touches.length === 1) {
           const dx = Math.abs(e.touches[0].clientX - cardTouchStartX);
           const dy = Math.abs(e.touches[0].clientY - cardTouchStartY);
-          if (dx > 8 || dy > 8) {
+          if (Math.hypot(dx, dy) > 18 || (dx > 20 && dx > dy * 1.5)) {
             cardMoved = true;
           }
         }
       }, { passive: true });
 
+      card.addEventListener('touchend', function (e) {
+        if (cardMoved || hasSwipedHorizontally) {
+          cardMoved = false;
+          return;
+        }
+        const touchDuration = Date.now() - cardTouchStartTime;
+        if (touchDuration < 500 && e.changedTouches && e.changedTouches.length === 1) {
+          const touch = e.changedTouches[0];
+          const dx = Math.abs(touch.clientX - cardTouchStartX);
+          const dy = Math.abs(touch.clientY - cardTouchStartY);
+          if (Math.hypot(dx, dy) < 18) {
+            lastCardTapTimestamp = Date.now();
+            openActionSheet(item.id);
+          }
+        }
+        cardMoved = false;
+      }, { passive: true });
+
       card.addEventListener('click', function (e) {
+        if (Date.now() - lastCardTapTimestamp < 450) {
+          e.stopPropagation();
+          return;
+        }
         if (hasSwipedHorizontally || cardMoved) {
           cardMoved = false;
           return;
@@ -12283,14 +12315,26 @@ var CapacitorBridgeBundle = (() => {
       metricSubEl.style.setProperty('color', metricTextColor, 'important');
     }
 
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', '管理物品 ' + (item.name || '未命名物品'));
+    card.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openActionSheet(item.id);
+      }
+    });
+
     let cardTouchStartX = 0;
     let cardTouchStartY = 0;
+    let cardTouchStartTime = 0;
     let cardMoved = false;
 
     card.addEventListener('touchstart', function (e) {
       if (e.touches && e.touches.length === 1) {
         cardTouchStartX = e.touches[0].clientX;
         cardTouchStartY = e.touches[0].clientY;
+        cardTouchStartTime = Date.now();
         cardMoved = false;
       }
     }, { passive: true });
@@ -12299,13 +12343,35 @@ var CapacitorBridgeBundle = (() => {
       if (e.touches && e.touches.length === 1) {
         const dx = Math.abs(e.touches[0].clientX - cardTouchStartX);
         const dy = Math.abs(e.touches[0].clientY - cardTouchStartY);
-        if (dx > 8 || dy > 8) {
+        if (Math.hypot(dx, dy) > 18 || (dx > 20 && dx > dy * 1.5)) {
           cardMoved = true;
         }
       }
     }, { passive: true });
 
+    card.addEventListener('touchend', function (e) {
+      if (cardMoved || hasSwipedHorizontally) {
+        cardMoved = false;
+        return;
+      }
+      const touchDuration = Date.now() - cardTouchStartTime;
+      if (touchDuration < 500 && e.changedTouches && e.changedTouches.length === 1) {
+        const touch = e.changedTouches[0];
+        const dx = Math.abs(touch.clientX - cardTouchStartX);
+        const dy = Math.abs(touch.clientY - cardTouchStartY);
+        if (Math.hypot(dx, dy) < 18) {
+          lastCardTapTimestamp = Date.now();
+          openActionSheet(item.id);
+        }
+      }
+      cardMoved = false;
+    }, { passive: true });
+
     card.addEventListener('click', function (e) {
+      if (Date.now() - lastCardTapTimestamp < 450) {
+        e.stopPropagation();
+        return;
+      }
       if (hasSwipedHorizontally || cardMoved) {
         cardMoved = false;
         return;
@@ -12554,6 +12620,7 @@ var CapacitorBridgeBundle = (() => {
     const item = items.find(it => it.id === id);
     if (!item) return;
 
+    lastActionSheetOpenedAt = Date.now();
     activeSheetItemId = id;
     clearResetConfirmation();
     clearDeleteConfirmation();
@@ -12943,7 +13010,10 @@ var CapacitorBridgeBundle = (() => {
 
   btnCloseSheet.addEventListener('click', closeActionSheet);
   actionSheet.addEventListener('click', function (e) {
-    if (e.target === actionSheet) closeActionSheet();
+    if (e.target === actionSheet) {
+      if (Date.now() - lastActionSheetOpenedAt < 400) return;
+      closeActionSheet();
+    }
   });
 
   if (btnToggleHistoryCollapse && sheetHistoryList) {
@@ -16199,6 +16269,9 @@ var CapacitorBridgeBundle = (() => {
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
       touchActive = true;
+      if (!navigationInProgress) {
+        hasSwipedHorizontally = false;
+      }
       cancelAnimationFrame(navigationAnimationFrame);
       navigationAnimationFrame = 0;
       viewsSliderViewport.style.scrollSnapType = '';
@@ -16212,7 +16285,7 @@ var CapacitorBridgeBundle = (() => {
       const touch = event.touches[0];
       const dx = Math.abs(touch.clientX - touchStartX);
       const dy = Math.abs(touch.clientY - touchStartY);
-      if (dx > 6 && dx > dy) {
+      if (dx > 20 && dx > dy * 1.5) {
         hasSwipedHorizontally = true;
       }
     }, { passive: true });
@@ -16227,7 +16300,9 @@ var CapacitorBridgeBundle = (() => {
       if (!navigationInProgress) {
         prepareIncomingPanelForSwipe();
       }
-      hasSwipedHorizontally = true;
+      if (touchActive || isMouseDragging || navigationInProgress) {
+        hasSwipedHorizontally = true;
+      }
       scheduleCheckSettled();
     }, { passive: true });
 
@@ -18812,8 +18887,8 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.13"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.13"></script>
+  <script type="module" src="app.js?v=1.9.14"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.14"></script>
 
 <script>
 // Native selects retain mobile accessibility; a shared SVG identifies the selection.
