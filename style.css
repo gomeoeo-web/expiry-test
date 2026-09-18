@@ -5500,8 +5500,9 @@ input[type="time"]::-webkit-date-and-time-value {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   touch-action: pan-x pan-y;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   contain: paint;
+  overscroll-behavior-x: contain;
 }
 
 .views-slider-viewport::-webkit-scrollbar {
@@ -5511,6 +5512,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .views-slider-track {
   display: flex;
   width: 100%;
+  align-items: flex-start;
   transform: none !important;
   transition: none !important;
   will-change: auto;
@@ -5527,14 +5529,15 @@ input[type="time"]::-webkit-date-and-time-value {
   max-width: 100%;
   box-sizing: border-box;
   min-width: 0;
+  min-height: calc(100vh - 140px);
   scroll-snap-align: start;
   scroll-snap-stop: always;
   overflow-x: hidden;
   overflow-x: clip;
   /* 杜絕跨頁陰影溢出滲透至相鄰頁面 */
   touch-action: pan-x pan-y;
-  contain: paint;
-  transition: opacity 0.15s ease;
+  contain: layout paint;
+  transition: none !important;
 }
 
 /* 非當前活動面板在靜止時徹底隱藏, 杜絕次像素邊界殘留與邊緣漏光 */
