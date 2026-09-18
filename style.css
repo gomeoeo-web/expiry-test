@@ -7358,3 +7358,53 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   background: #0062cc !important;
 }
 
+/* ==========================================================================
+   iOS & Mobile Touch Optimization: Buttons, Tabs, Chips, Action Sheets
+   Ensures reliable tap targets and eliminates WebKit child-target drop bugs
+   ========================================================================== */
+button,
+[role="button"],
+.dock-tab,
+.category-chip,
+.home-filter-btn,
+.btn-sheet-action,
+.sheet-action-btn,
+.btn-circle-dark,
+.btn-modal-close,
+.ios-fab-btn,
+.fab-add-btn,
+.floating-btn,
+.history-header-toggle,
+.settings-row-btn,
+.tag-chip,
+.quick-tag-chip,
+.mode-pill,
+.custom-cat-row-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button *,
+[role="button"] *,
+.dock-tab *,
+.category-chip *,
+.home-filter-btn *,
+.btn-sheet-action *,
+.sheet-action-btn *,
+.btn-circle-dark *,
+.btn-modal-close *,
+.ios-fab-btn *,
+.fab-add-btn *,
+.floating-btn *,
+.history-header-toggle *,
+.settings-row-btn *,
+.tag-chip *,
+.quick-tag-chip *,
+.mode-pill *,
+.custom-cat-row-btn * {
+  pointer-events: none;
+}
+
