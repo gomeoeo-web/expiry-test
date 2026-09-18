@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.8.27">
+  <link rel="stylesheet" href="style.css?v=1.9.8">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -288,7 +288,6 @@ body {
 /* ==========================================================================
    Header Smart Quick Add / Update Input (頂部自然語言速記與修改輸入框)
    ========================================================================== */
-
 .header-smart-input-form {
   flex: 1;
   width: 100%;
@@ -458,8 +457,14 @@ body {
 }
 
 /* 強制最高權重校準 (防止三星/Android 瀏覽器深色模式強制反轉或繼承成深灰色/黑色) */
-.fab-add-btn, #fabAddBtn, .floating-btn, .ios-fab-btn,
-.tab-btn.active, .filter-pill.active, [data-filter="all"].active, .home-filter-btn[data-filter="all"].active {
+.fab-add-btn,
+#fabAddBtn,
+.floating-btn,
+.ios-fab-btn,
+.tab-btn.active,
+.filter-pill.active,
+[data-filter="all"].active,
+.home-filter-btn[data-filter="all"].active {
   background: linear-gradient(#FFFFFF, #FFFFFF) !important;
   background-image: linear-gradient(#FFFFFF, #FFFFFF) !important;
   background-color: rgba(255, 255, 255, 0.99) !important;
@@ -468,18 +473,30 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
 }
 
-.fab-add-btn, #fabAddBtn, .floating-btn, .ios-fab-btn,
-.tab-btn.active, .filter-pill.active,
+.fab-add-btn,
+#fabAddBtn,
+.floating-btn,
+.ios-fab-btn,
+.tab-btn.active,
+.filter-pill.active,
 .home-filter-btn[data-filter="all"].active .filter-btn-text,
 [data-filter="all"].active .filter-btn-text {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
 }
 
-.fab-add-btn svg, .fab-add-btn i, .fab-add-btn span,
-#fabAddBtn svg, #fabAddBtn i, #fabAddBtn span,
-.floating-btn svg, .floating-btn i, .floating-btn span,
-.ios-fab-btn svg, .ios-fab-btn i, .ios-fab-btn span {
+.fab-add-btn svg,
+.fab-add-btn i,
+.fab-add-btn span,
+#fabAddBtn svg,
+#fabAddBtn i,
+#fabAddBtn span,
+.floating-btn svg,
+.floating-btn i,
+.floating-btn span,
+.ios-fab-btn svg,
+.ios-fab-btn i,
+.ios-fab-btn span {
   fill: #000000 !important;
   stroke: #000000 !important;
   color: #000000 !important;
@@ -503,47 +520,340 @@ body {
 }
 
 /* ==========================================================================
-   AI Camera Scanning & Recognition Loading HUD (智慧鏡頭拍攝後雙軌分析載入動畫)
+   Camera Scan & Offline Recognition Modal (相機取景與本地離線辨識視窗)
    ========================================================================== */
-.ai-scan-loading-backdrop {
-  z-index: 10000;
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  background: rgba(0, 0, 0, 0.78);
+.camera-scan-card {
+  max-width: 480px;
+  width: 95%;
+  height: 85vh;
+  max-height: 720px;
+  background: #000000;
+  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.camera-modal-header {
+  padding: 16px 20px 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.camera-header-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.camera-title-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.camera-subtitle-text {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+.camera-btn-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.camera-btn-close:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.camera-viewport-wrap {
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.ai-scan-loading-card {
-  width: 90%;
-  max-width: 360px;
-  background: rgba(28, 28, 30, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 28px;
-  padding: 1.5rem 1.25rem 1.35rem;
+.camera-viewport-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-viewfinder-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 30px rgba(10, 132, 255, 0.15);
-  animation: aiCardPopIn 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  justify-content: center;
+  pointer-events: none;
 }
 
-@keyframes aiCardPopIn {
-  from { opacity: 0; transform: scale(0.88); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.ai-scan-preview-container {
-  width: 140px;
-  height: 140px;
-  border-radius: 20px;
+.camera-viewfinder-frame {
+  width: 75%;
+  aspect-ratio: 4 / 3;
+  max-width: 320px;
   position: relative;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  border-radius: 18px;
+}
+
+.viewfinder-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: #34c759;
+  border-style: solid;
+}
+
+.viewfinder-corner.top-left {
+  top: 0;
+  left: 0;
+  border-width: 3.5px 0 0 3.5px;
+  border-top-left-radius: 12px;
+}
+
+.viewfinder-corner.top-right {
+  top: 0;
+  right: 0;
+  border-width: 3.5px 3.5px 0 0;
+  border-top-right-radius: 12px;
+}
+
+.viewfinder-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 3.5px 3.5px;
+  border-bottom-left-radius: 12px;
+}
+
+.viewfinder-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  border-width: 0 3.5px 3.5px 0;
+  border-bottom-right-radius: 12px;
+}
+
+.camera-scan-laser {
+  position: absolute;
+  top: 0;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #34c759, #30d158, transparent);
+  box-shadow: 0 0 10px #34c759;
+  border-radius: 2px;
+  animation: scanLaserMove 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes scanLaserMove {
+  0% {
+    top: 8%;
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 92%;
+    opacity: 0.3;
+  }
+}
+
+.camera-viewfinder-hint {
+  margin-top: 18px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ==========================================================================
+   Camera Focus Reticle & Zoom Controls (v1.8.9)
+   ========================================================================== */
+.camera-focus-reticle {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border: 2px solid #ffd60a;
+  border-radius: 8px;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.2);
+  opacity: 0;
+  z-index: 12;
+  box-shadow: 0 0 10px rgba(255, 214, 10, 0.45);
+  transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.camera-focus-reticle.pulsing {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  animation: reticlePulse 1.2s ease-out forwards;
+}
+
+@keyframes reticlePulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.9;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+.camera-zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 4px 6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  z-index: 15;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.camera-zoom-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.camera-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.camera-zoom-btn:active {
+  transform: scale(0.9);
+}
+
+.camera-zoom-btn.active {
+  background: #ffd60a;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(255, 214, 10, 0.4);
+}
+
+/* 辨識遮罩與純文字載入動畫 (Recognition Overlay & Text Animation v1.9.4) */
+.camera-recognition-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.camera-recognition-overlay.active {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.ai-scan-loading-card {
+  width: 100%;
+  max-width: 320px;
+  max-height: 85vh;
+  margin: 0 auto;
+  padding: 20px 20px;
+  background: rgba(28, 28, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
   overflow: hidden;
-  background: #121214;
-  border: 1.5px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  margin-bottom: 1.25rem;
+  animation: scanCardFadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scanCardFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 預覽照片尺寸約束 - 修正辨識中畫面過大問題 */
+.ai-scan-preview-container {
+  width: 100%;
+  height: 110px;
+  max-height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  position: relative;
+  flex-shrink: 0;
 }
 
 .ai-scan-preview-img {
@@ -553,145 +863,341 @@ body {
   display: block;
 }
 
-.ai-scan-laser-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #0a84ff, #30d158, #0a84ff, transparent);
-  box-shadow: 0 0 12px #0a84ff, 0 0 6px #30d158;
-  animation: aiScanLaserMove 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-  z-index: 5;
-}
-
-@keyframes aiScanLaserMove {
-  0% { top: 4%; opacity: 0.6; }
-  50% { opacity: 1; height: 3.5px; }
-  100% { top: 94%; opacity: 0.6; }
-}
-
-.ai-scan-corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: #0a84ff;
-  border-style: solid;
-  z-index: 6;
-  pointer-events: none;
-}
-.ai-scan-corner.corner-tl { top: 4px; left: 4px; border-width: 2.5px 0 0 2.5px; border-top-left-radius: 6px; }
-.ai-scan-corner.corner-tr { top: 4px; right: 4px; border-width: 2.5px 2.5px 0 0; border-top-right-radius: 6px; }
-.ai-scan-corner.corner-bl { bottom: 4px; left: 4px; border-width: 0 0 2.5px 2.5px; border-bottom-left-radius: 6px; }
-.ai-scan-corner.corner-br { bottom: 4px; right: 4px; border-width: 0 2.5px 2.5px 0; border-bottom-right-radius: 6px; }
-
 .ai-scan-status-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
   width: 100%;
-  margin-bottom: 1rem;
-}
-
-.ai-scan-spinner-ring {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 3px solid rgba(10, 132, 255, 0.2);
-  border-top-color: #0a84ff;
-  border-right-color: #30d158;
-  animation: aiSpinRing 0.9s linear infinite;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-@keyframes aiSpinRing {
-  to { transform: rotate(360deg); }
+  text-align: center;
+  margin-bottom: 14px;
 }
 
 .ai-scan-title-group {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-}
-
-.ai-scan-title-row {
-  display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 6px;
 }
 
+/* 純文字光影動畫 (Shimmer Wave Effect - 無任何圖示符號) */
 .ai-scan-title {
-  font-size: 1.02rem;
+  font-size: 1.12rem;
   font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, rgba(255,255,255,0.55) 0%, #ffffff 50%, rgba(255,255,255,0.55) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 2.2s infinite linear;
 }
 
-.ai-scan-tag {
-  font-size: 0.66rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(10, 132, 255, 0.25), rgba(48, 209, 88, 0.25));
-  color: #64d2ff;
-  border: 1px solid rgba(100, 210, 255, 0.3);
+@keyframes textShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 
 .ai-scan-desc {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.65);
-  margin: 0.2rem 0 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
 }
 
+/* 純文字省略號動畫 */
+.ai-scan-anim-dots::after {
+  content: '';
+  animation: ellipsisDots 1.8s infinite steps(4, jump-none);
+  display: inline-block;
+  width: 18px;
+  text-align: left;
+}
+
+@keyframes ellipsisDots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: '...'; }
+}
+
+/* 純文字進度步驟 - 無圖示、無符號 */
 .ai-scan-steps {
   width: 100%;
-  background: rgba(0, 0, 0, 0.32);
-  border-radius: 14px;
-  padding: 0.65rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ai-scan-step-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.45);
-  transition: all 0.2s ease;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.28s ease;
 }
 
 .ai-scan-step-item.active {
-  color: rgba(255, 255, 255, 0.95);
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.12);
   font-weight: 600;
+  animation: activeStepPulse 1.8s infinite ease-in-out;
 }
 
 .ai-scan-step-item.done {
-  color: #30d158;
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
 }
 
-.ai-scan-step-item .step-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+@keyframes activeStepPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
 }
 
-.ai-scan-step-item.active .step-dot {
-  background: #0a84ff;
-  box-shadow: 0 0 6px #0a84ff;
+/* 相機拍攝頂部導航與額度膠囊 */
+.camera-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.ai-scan-step-item.done .step-dot {
-  background: #30d158;
-  box-shadow: 0 0 6px #30d158;
+.camera-quota-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.16);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.35);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.camera-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.18);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.38);
+}
+
+/* 設定頁面額度膠囊 */
+.settings-quota-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.settings-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.35);
+}
+
+.ai-scan-loading-card {
+  width: 100%;
+  max-width: 320px;
+  max-height: 85vh;
+  margin: 0 auto;
+  padding: 20px 20px;
+  background: rgba(28, 28, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: scanCardFadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scanCardFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 預覽照片尺寸約束 - 修正辨識中畫面過大問題 */
+.ai-scan-preview-container {
+  width: 100%;
+  height: 110px;
+  max-height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ai-scan-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ai-scan-status-wrap {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.ai-scan-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 純文字光影動畫 (Shimmer Wave Effect - 無任何圖示符號) */
+.ai-scan-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, rgba(255,255,255,0.55) 0%, #ffffff 50%, rgba(255,255,255,0.55) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 2.2s infinite linear;
+}
+
+@keyframes textShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.ai-scan-desc {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* 純文字省略號動畫 */
+.ai-scan-anim-dots::after {
+  content: '';
+  animation: ellipsisDots 1.8s infinite steps(4, jump-none);
+  display: inline-block;
+  width: 18px;
+  text-align: left;
+}
+
+@keyframes ellipsisDots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: '...'; }
+}
+
+/* 純文字進度步驟 - 無圖示、無符號 */
+.ai-scan-steps {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-scan-step-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.28s ease;
+}
+
+.ai-scan-step-item.active {
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.12);
+  font-weight: 600;
+  animation: activeStepPulse 1.8s infinite ease-in-out;
+}
+
+.ai-scan-step-item.done {
+  color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+}
+
+@keyframes activeStepPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* 相機拍攝頂部導航與額度膠囊 */
+.camera-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-quota-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.16);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.35);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.camera-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.18);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.38);
+}
+
+/* 設定頁面額度膠囊 */
+.settings-quota-pill {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.settings-quota-pill.quota-depleted {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border-color: rgba(255, 69, 58, 0.35);
 }
 
 /* ==========================================================================
@@ -880,348 +1386,6 @@ body {
   color: rgba(0, 0, 0, 0.55);
 }
 
-/* 提醒通知排程與提醒時間橫向排列樣式 (v1.8.14) */
-.nlp-reminder-time-grid {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.nlp-reminder-time-grid .nlp-confirm-field-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-#nlpConfirmReminderWrap {
-  flex: 1.15;
-}
-
-#nlpConfirmTimeRow {
-  flex: 1;
-}
-
-/* 提醒通知時間格式下拉選單與上午/下午選擇器 */
-.nlp-time-format-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.nlp-time-mode-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 3px;
-  border-radius: 12px;
-  margin-bottom: 0;
-}
-
-.nlp-time-mode-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.38rem 0.25rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #a1a1a6;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  font-family: inherit;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.nlp-time-mode-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.nlp-time-mode-btn.active {
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  border-color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-}
-
-[data-theme="light"] .nlp-time-mode-selector {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="light"] .nlp-time-mode-btn {
-  color: #636366;
-}
-
-[data-theme="light"] .nlp-time-mode-btn:hover {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.04);
-}
-
-[data-theme="light"] .nlp-time-mode-btn.active {
-  background: #007aff !important;
-  color: #ffffff !important;
-  border-color: #007aff !important;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
-}
-
-[data-theme="amoled"] .nlp-time-mode-selector {
-  background: #121216;
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* 物品複製按鈕樣式 */
-.btn-modal-duplicate {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.32rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  padding: 0.32rem 0.65rem;
-  border-radius: var(--radius-pill, 9999px);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  font-family: inherit;
-}
-
-.btn-modal-duplicate:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.btn-modal-duplicate:active {
-  transform: scale(0.96);
-}
-
-[data-theme="light"] .btn-modal-duplicate {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #000000;
-}
-
-.nlp-quick-time-pills {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-.nlp-time-pill {
-  padding: 4px 10px;
-  border-radius: var(--radius-pill, 9999px);
-  border: 1px solid var(--ios-border-strong);
-  background: var(--ios-surface-secondary);
-  color: var(--ios-text-secondary);
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.16s ease;
-  font-variant-numeric: tabular-nums;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.nlp-time-pill:hover {
-  background: var(--ios-surface-tertiary);
-  color: var(--ios-text-primary);
-  border-color: #0a84ff;
-}
-
-.nlp-time-pill.active {
-  background: rgba(10, 132, 255, 0.18);
-  color: #0a84ff;
-  border-color: rgba(10, 132, 255, 0.45);
-}
-
-[data-theme="light"] .nlp-time-pill.active {
-  background: rgba(0, 122, 255, 0.12);
-  color: #007aff;
-  border-color: rgba(0, 122, 255, 0.4);
-}
-
-.nlp-time-input-24h {
-  font-variant-numeric: tabular-nums;
-  font-size: 1.05rem !important;
-  font-weight: 600 !important;
-  text-align: center !important;
-}
-
-/* ==========================================================================
-   Camera Scan & Offline Recognition Modal (相機取景與本地離線辨識視窗)
-   ========================================================================== */
-.camera-scan-card {
-  max-width: 480px;
-  width: 95%;
-  height: 85vh;
-  max-height: 720px;
-  background: #000000;
-  border-radius: 28px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.camera-modal-header {
-  padding: 16px 20px 12px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 10;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.camera-header-title {
-  display: flex;
-  flex-direction: column;
-}
-
-.camera-title-text {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.camera-subtitle-text {
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 2px;
-}
-
-.camera-btn-close {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
-}
-
-.camera-btn-close:active {
-  transform: scale(0.92);
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.camera-viewport-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: #000000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.camera-viewport-wrap video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.camera-viewfinder-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.camera-viewfinder-frame {
-  width: 75%;
-  aspect-ratio: 4 / 3;
-  max-width: 320px;
-  position: relative;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-  border-radius: 18px;
-}
-
-.viewfinder-corner {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-color: #34c759;
-  border-style: solid;
-}
-
-.viewfinder-corner.top-left {
-  top: 0;
-  left: 0;
-  border-width: 3.5px 0 0 3.5px;
-  border-top-left-radius: 12px;
-}
-
-.viewfinder-corner.top-right {
-  top: 0;
-  right: 0;
-  border-width: 3.5px 3.5px 0 0;
-  border-top-right-radius: 12px;
-}
-
-.viewfinder-corner.bottom-left {
-  bottom: 0;
-  left: 0;
-  border-width: 0 0 3.5px 3.5px;
-  border-bottom-left-radius: 12px;
-}
-
-.viewfinder-corner.bottom-right {
-  bottom: 0;
-  right: 0;
-  border-width: 0 3.5px 3.5px 0;
-  border-bottom-right-radius: 12px;
-}
-
-.camera-scan-laser {
-  position: absolute;
-  top: 0;
-  left: 6px;
-  right: 6px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #34c759, #30d158, transparent);
-  box-shadow: 0 0 10px #34c759;
-  border-radius: 2px;
-  animation: scanLaserMove 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-}
-
-@keyframes scanLaserMove {
-  0% { top: 8%; opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { top: 92%; opacity: 0.3; }
-}
-
-.camera-viewfinder-hint {
-  margin-top: 18px;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
 .camera-flash-overlay {
   position: absolute;
   inset: 0;
@@ -1273,6 +1437,15 @@ body {
   font-weight: 500;
 }
 
+.camera-control-btn:disabled,
+.camera-control-btn.disabled,
+.camera-control-btn.loading {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
 .camera-shutter-btn {
   width: 72px;
   height: 72px;
@@ -1303,6 +1476,15 @@ body {
 .camera-shutter-btn:active .shutter-inner {
   transform: scale(0.94);
   background: #dddddd;
+}
+
+.camera-shutter-btn:disabled,
+.camera-shutter-btn.disabled,
+.camera-shutter-btn.loading {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
 }
 
 .sync-dot.offline {
@@ -1731,13 +1913,13 @@ body {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.52rem 0.98rem;
+  gap: 0.35rem;
+  padding: 0.36rem 0.72rem;
   border-radius: var(--radius-pill);
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-ios);
@@ -1872,14 +2054,14 @@ body {
 }
 
 .card-icon-box {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-subcard);
   background: #2a2a2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.65rem;
+  font-size: 1.95rem;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -1966,6 +2148,49 @@ body {
 
 [data-theme="light"] .card-metric-sub.status-normal {
   color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Card Note Preview on Home Page */
+.card-note-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--ios-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  margin-top: 0.32rem;
+  margin-bottom: 0.36rem;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-ios);
+}
+
+[data-theme="light"] .card-note-preview {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #636366;
+}
+
+[data-theme="amoled"] .card-note-preview {
+  background: #141416;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.card-note-icon {
+  font-size: 0.78rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.card-note-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  flex: 1;
 }
 
 /* Minimalist Progress Bar */
@@ -3233,6 +3458,14 @@ input[type="time"]::-webkit-date-and-time-value {
   font-family: inherit;
 }
 
+.btn-ios-primary:disabled,
+.btn-ios-primary.disabled,
+.btn-ios-primary.loading {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .btn-ios-secondary {
   background: var(--ios-surface-elevated);
   color: var(--ios-text-primary);
@@ -3315,15 +3548,16 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .sheet-emoji {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-subcard);
   background: #2a2a2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 2.1rem;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .sheet-title {
@@ -4022,8 +4256,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-create-card {
   background: var(--ios-surface-secondary);
   border: 1.5px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  padding: 1.15rem;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -4035,7 +4269,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .category-create-title,
 .category-list-title {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   margin: 0;
@@ -4044,20 +4278,20 @@ input[type="time"]::-webkit-date-and-time-value {
 .emoji-select-row {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-top: 0.35rem;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
   width: 100%;
 }
 
 .emoji-select-row input.emoji-input-box {
-  width: 52px !important;
-  min-width: 52px !important;
-  max-width: 52px !important;
-  height: 44px !important;
-  min-height: 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   padding: 0 !important;
   text-align: center;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
@@ -4100,11 +4334,11 @@ input[type="time"]::-webkit-date-and-time-value {
 .cat-manage-item {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.4rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
   transition: background 0.15s ease;
   box-sizing: border-box;
   width: 100%;
@@ -4141,7 +4375,7 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .cat-manage-label {
-  font-size: 0.98rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   white-space: nowrap;
@@ -4161,9 +4395,9 @@ input[type="time"]::-webkit-date-and-time-value {
   background: var(--ios-surface-elevated);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-primary);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
-  padding: 0.35rem 0.65rem;
+  padding: 0.28rem 0.55rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -4864,12 +5098,13 @@ input[type="time"]::-webkit-date-and-time-value {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.65rem;
-  padding: 0.75rem 0.95rem;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: var(--radius-card);
-  margin-top: 0.65rem;
+  border-radius: 14px;
+  margin-top: 0;
+  margin-bottom: 0;
   box-shadow: none;
 }
 
@@ -4882,8 +5117,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-info-badge {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.95rem;
+  gap: 0.35rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--ios-text-primary);
   width: 100%;
@@ -4892,14 +5127,23 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .cat-active-emoji {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cat-active-emoji svg {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 
 .cat-active-name {
-  font-weight: 800;
-  font-size: 1.02rem;
+  font-weight: 700;
+  font-size: 0.88rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4917,7 +5161,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .cat-active-count {
   color: var(--ios-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
@@ -4926,7 +5170,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-action-buttons-group {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
   width: 100%;
 }
 
@@ -4939,9 +5183,9 @@ input[type="time"]::-webkit-date-and-time-value {
   background: #363646;
   border: 1px solid rgba(255, 255, 255, 0.28);
   color: #ffffff;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  padding: 0.34rem 0.62rem;
   border-radius: var(--radius-pill);
   cursor: pointer;
   white-space: nowrap;
@@ -4978,12 +5222,12 @@ input[type="time"]::-webkit-date-and-time-value {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   background: #ffffff;
   color: #000000;
-  font-size: 0.86rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 0.5rem 0.8rem;
+  padding: 0.34rem 0.62rem;
   border-radius: var(--radius-pill);
   border: none;
   cursor: pointer;
@@ -6169,6 +6413,7 @@ body.modal-open .view-panel {
 .btn-unarchive:active {
   transform: scale(0.96);
 }
+
 /* ==========================================================================
    Settings Bottom Version Badge (設置裡的左下角版本號碼)
    ========================================================================== */
@@ -6208,7 +6453,7 @@ body.modal-open .view-panel {
    NLP Confirmation Modal (自然語言解析確認彈窗 - 防止阻擋文字與自訂時間支援)
    ========================================================================== */
 .nlp-confirm-card {
-  max-width: 440px;
+  max-width: 420px;
   width: 92%;
   max-height: 90vh;
   display: flex;
@@ -6222,7 +6467,7 @@ body.modal-open .view-panel {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.75rem 1.25rem 1.5rem 1.25rem;
+  padding: 0.65rem 0.95rem 1.25rem 0.95rem;
 }
 
 .nlp-confirm-header-wrap {
@@ -6335,22 +6580,22 @@ body.modal-open .view-panel {
 }
 
 .nlp-confirm-field {
-  margin-bottom: 0.95rem;
+  margin-bottom: 0.65rem;
 }
 
 .nlp-elapsed-hint-box {
   background: rgba(10, 132, 255, 0.12);
   border: 1px solid rgba(10, 132, 255, 0.28);
   color: #0a84ff;
-  border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.86rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.25rem;
-  margin-bottom: 0.85rem;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.65rem;
 }
 
 [data-theme="light"] .nlp-elapsed-hint-box {
@@ -6361,32 +6606,32 @@ body.modal-open .view-panel {
 
 .nlp-confirm-label {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--ios-text-secondary);
-  margin-bottom: 0.42rem;
-  line-height: 1.3;
+  margin-bottom: 0.26rem;
+  line-height: 1.25;
 }
 
 .nlp-confirm-input,
 .nlp-confirm-select {
   width: 100%;
-  height: 44px;
+  height: 38px;
   box-sizing: border-box;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border-strong);
-  border-radius: var(--radius-subcard);
-  padding: 0 0.95rem;
+  border-radius: 10px;
+  padding: 0 0.75rem;
   color: var(--ios-text-primary);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 500;
   outline: none;
   transition: border-color var(--transition-ios), box-shadow var(--transition-ios);
 }
 
 .nlp-confirm-select {
-  padding-right: 2.5rem;
+  padding-right: 2.2rem;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -6404,6 +6649,7 @@ body.modal-open .view-panel {
 
 .nlp-select-wrap {
   width: 100%;
+  height: 38px;
   position: relative;
   display: flex;
   align-items: center;
@@ -6411,10 +6657,10 @@ body.modal-open .view-panel {
 
 .nlp-select-wrap .select-arrow {
   position: absolute;
-  right: 0.95rem;
+  right: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--ios-text-secondary);
   pointer-events: none;
 }
@@ -6468,12 +6714,15 @@ body.modal-open .view-panel {
   border: none !important;
 }
 
-/* 原生 date 與 datetime-local 的 WebKit 預設樣式重設與垂直置中排版 */
+/* 原生 date, time 與 datetime-local 的 WebKit 預設樣式重設與嚴格垂直置中 */
 input[type="date"],
+input[type="time"],
 input[type="datetime-local"],
 .date-picker-input,
 .custom-time-input,
 #nlpConfirmCustomTime,
+#nlpConfirmReminderTime,
+.nlp-time-input-24h,
 input[type="datetime-local"].nlp-confirm-input {
   -webkit-appearance: none !important;
   appearance: none !important;
@@ -6482,30 +6731,45 @@ input[type="datetime-local"].nlp-confirm-input {
   justify-content: center !important;
   text-align: center !important;
   width: 100% !important;
-  min-height: 46px !important;
-  padding: 10px 16px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  line-height: 38px !important;
+  padding: 0 10px !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   color: #FFFFFF !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   box-sizing: border-box !important;
   outline: none !important;
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   max-width: 100%;
+  margin: 0 !important;
 }
 
-/* 清除 iOS WebKit 內部偽元素的預設外距與位移 */
+/* 清除 iOS WebKit 內部偽元素的預設外距與位移，修正提醒時間與日期文字偏上問題 */
 input[type="date"]::-webkit-date-and-time-value,
-input[type="datetime-local"]::-webkit-date-and-time-value {
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value,
+#nlpConfirmReminderTime::-webkit-date-and-time-value,
+.nlp-time-input-24h::-webkit-date-and-time-value {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
+  line-height: normal !important;
+  box-sizing: border-box !important;
 }
 
 input[type="date"]::-webkit-inner-spin-button,
+input[type="time"]::-webkit-inner-spin-button,
 input[type="datetime-local"]::-webkit-inner-spin-button {
   display: none !important;
 }
@@ -6522,12 +6786,13 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .nlp-confirm-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.35rem;
+  gap: 0.6rem;
+  margin-top: 0.95rem;
 }
 
 .nlp-confirm-actions button {
-  height: 44px;
+  height: 38px;
+  font-size: 0.88rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6584,7 +6849,542 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   color: #000000;
 }
 
-  </style>
+/* 提醒通知排程與提醒時間橫向排列樣式 (v1.8.9) */
+.nlp-reminder-time-grid {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.nlp-reminder-time-grid .nlp-confirm-field-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#nlpConfirmReminderWrap {
+  flex: 1.15;
+}
+
+#nlpConfirmTimeRow {
+  flex: 1;
+}
+
+.nlp-time-input-container {
+  width: 100%;
+  height: 38px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* 提醒通知時間格式下拉選單與上午/下午選擇器 */
+.nlp-time-format-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.nlp-time-mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 3px;
+  border-radius: 12px;
+  margin-bottom: 0;
+}
+
+.nlp-time-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.38rem 0.25rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a1a1a6;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  font-family: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nlp-time-mode-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nlp-time-mode-btn.active {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="light"] .nlp-time-mode-selector {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .nlp-time-mode-btn {
+  color: #636366;
+}
+
+[data-theme="light"] .nlp-time-mode-btn:hover {
+  color: #000000;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .nlp-time-mode-btn.active {
+  background: #007aff !important;
+  color: #ffffff !important;
+  border-color: #007aff !important;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
+}
+
+[data-theme="amoled"] .nlp-time-mode-selector {
+  background: #121216;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* 物品複製按鈕樣式 */
+.btn-modal-duplicate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  padding: 0.32rem 0.65rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  font-family: inherit;
+}
+
+.btn-modal-duplicate:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.btn-modal-duplicate:active {
+  transform: scale(0.96);
+}
+
+[data-theme="light"] .btn-modal-duplicate {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #000000;
+}
+
+.nlp-quick-time-pills {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.nlp-time-pill {
+  padding: 3px 8px;
+  border-radius: var(--radius-pill, 9999px);
+  border: 1px solid var(--ios-border-strong);
+  background: var(--ios-surface-secondary);
+  color: var(--ios-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nlp-time-pill:hover {
+  background: var(--ios-surface-tertiary);
+  color: var(--ios-text-primary);
+  border-color: #0a84ff;
+}
+
+.nlp-time-pill.active {
+  background: rgba(10, 132, 255, 0.18);
+  color: #0a84ff;
+  border-color: rgba(10, 132, 255, 0.45);
+}
+
+[data-theme="light"] .nlp-time-pill.active {
+  background: rgba(0, 122, 255, 0.12);
+  color: #007aff;
+  border-color: rgba(0, 122, 255, 0.4);
+}
+
+.nlp-time-input-24h {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+}
+
+.btn-download-ai-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
+}
+
+.btn-download-ai-model:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.btn-download-ai-model.downloading {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  cursor: wait;
+}
+
+.btn-download-ai-model.downloaded {
+  background: rgba(48, 209, 88, 0.16);
+  border-color: rgba(48, 209, 88, 0.45);
+  color: #30d158;
+  box-shadow: none;
+}
+
+.settings-download-progress-track {
+  height: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.settings-download-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0a84ff, #30d158);
+  border-radius: 2px;
+  transition: width 0.22s ease;
+}
+
+/* ==========================================================================
+   Model Loading Overlay (v1.8.21 Moondream2 1.8B VLM 首次下載動畫優化)
+   ========================================================================== */
+.model-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  z-index: 999;
+  padding: 1.25rem;
+  box-sizing: border-box;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.model-loading-overlay.fade-out {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.model-loading-card {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(180deg, rgba(30, 32, 44, 0.96) 0%, rgba(18, 20, 28, 0.98) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 22px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(99, 102, 241, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  box-sizing: border-box;
+  animation: modelOverlayPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modelOverlayPop {
+  0% { transform: scale(0.9) translateY(12px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.model-loading-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.model-loading-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.model-icon {
+  font-size: 1.3rem;
+  animation: modelIconPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes modelIconPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.85)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4)); }
+}
+
+.model-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.model-cache-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.model-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.model-status-text {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.model-progress-percent {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #60a5fa;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.model-progress-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.model-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #6366f1 0%, #3b82f6 50%, #10b981 100%);
+  border-radius: 999px;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+}
+
+.model-progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: modelShimmer 1.4s infinite;
+}
+
+@keyframes modelShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.model-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.model-progress-detail {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.model-subhint {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+
+
+/* Modern Soft Flat Vector SVG Icons Rules */
+.card-icon-box {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-icon-box svg {
+  width: 38px;
+  height: 38px;
+  display: block;
+  flex-shrink: 0;
+}
+.sheet-emoji {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.sheet-emoji svg {
+  width: 42px;
+  height: 42px;
+  display: block;
+  flex-shrink: 0;
+}
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.category-chip svg {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.category-chip .chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.category-chip .chip-label {
+  display: inline-block;
+  vertical-align: middle;
+}
+.picker-item-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.picker-item-thumb svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex-shrink: 0;
+}
+.avatar-preview-box svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+  flex-shrink: 0;
+}
+.nlp-confirm-icon-preview {
+  width: 88px;
+  height: 88px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2d;
+  border: 1.5px solid var(--ios-border-strong);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.nlp-confirm-icon-preview svg {
+  width: 64px;
+  height: 64px;
+  display: block;
+  flex-shrink: 0;
+}
+.cat-manage-emoji {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cat-manage-emoji svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex-shrink: 0;
+}
+.icon-bg-mask {
+  fill: #2a2a2d;
+  transition: fill var(--transition-ios);
+}
+[data-theme="light"] .icon-bg-mask {
+  fill: #f2f2f7;
+}
+[data-theme="amoled"] .icon-bg-mask {
+  fill: #2e2e38;
+}
+[data-theme="light"] .card-icon-box {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .sheet-emoji {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .avatar-preview-box {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .nlp-confirm-icon-preview {
+  background: #f2f2f7 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+[data-theme="amoled"] .nlp-confirm-icon-preview {
+  background: #2e2e38 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+</style>
 </head>
 <body>
   <div class="ios-app-container">
@@ -6706,19 +7506,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                 <button id="btnClearInventorySearch" class="btn-clear-search" style="display:none;">✕</button>
               </div>
 
-              <!-- Category Chips Row (全寬橫向滑動) -->
-              <div class="category-chip-row" id="categoryChipRow">
-                <!-- Populated dynamically with Groups -->
-              </div>
-
-              <!-- Group Action Bar (顯示當前群組、單一常駐群組設定與加入物品) -->
+              <!-- Group Action Bar (只保留群組設定、加入物品按鈕，改至物品分類選項滑動菜單上方) -->
               <div class="category-action-bar" id="categoryActionBar">
-                <div class="category-info-badge">
-                  <span class="cat-active-emoji" id="catActiveEmoji">🚗</span>
-                  <span class="cat-active-name" id="catActiveName">車輛群組</span>
-                  <span class="cat-active-dot">·</span>
-                  <span class="cat-active-count" id="catActiveCount">1 項物品</span>
-                </div>
                 <div class="category-action-buttons-group">
                   <button type="button" class="btn-group-settings-main" id="btnOpenGroupSettings" title="群組設定與分頁管理">
                     <span>群組設定</span>
@@ -6728,6 +7517,11 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                     <span>加入物品</span>
                   </button>
                 </div>
+              </div>
+
+              <!-- Category Chips Row (全寬橫向滑動) -->
+              <div class="category-chip-row" id="categoryChipRow">
+                <!-- Populated dynamically with Groups -->
               </div>
             </section>
 
@@ -6977,9 +7771,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                     <input type="time" id="itemReminderCustomTime" value="09:00">
                   </div>
                 </div>
-                <div class="reminder-hint">
-                  💡 系統將於指定之日期與時間發送推播通知。
-                </div>
               </div>
             </div>
           </div>
@@ -7013,6 +7804,18 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
             <input type="text" id="itemNotes" placeholder="例如：下次 5,000 公里換油、自動扣款信用卡...">
           </div>
 
+          <!-- 是否在主頁顯示備註開關 (預設為否，每樣物品獨立選擇) -->
+          <div class="reminder-switch-container" id="showNotesHomeContainer" style="margin-top: 0.65rem;">
+            <div class="reminder-switch-text">
+              <span class="reminder-switch-label">在主頁顯示備註</span>
+              <span class="reminder-switch-status" id="showNotesHomeStatus">已關閉</span>
+            </div>
+            <label class="ios-switch" for="itemShowNotesHome" aria-label="是否在主頁顯示備註開關">
+              <input type="checkbox" id="itemShowNotesHome">
+              <span class="ios-switch-slider"></span>
+            </label>
+          </div>
+
           <!-- Auto-saved in real-time, no buttons required -->
           <div style="height: 1.25rem; flex-shrink: 0;"></div>
         </form>
@@ -7026,7 +7829,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
       <div class="sheet-drag-handle"></div>
       <div class="sheet-header">
         <div class="sheet-item-info">
-          <div class="sheet-emoji" id="sheetEmoji">🪑</div>
+          <div class="sheet-emoji" id="sheetEmoji"></div>
           <div>
             <h3 class="sheet-title" id="sheetTitle">我的椅子</h3>
             <span class="sheet-tag" id="sheetTag">保固 • 還有 1,085 天</span>
@@ -7170,22 +7973,21 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         </div>
 
-        <!-- Group: AI 視覺辨識模型 (MobileCLIP2-S0 端側輕量 Vision Encoder) -->
-        <div class="settings-group" id="groupAiModelSettings">
-          <div class="settings-row" id="rowAiModelDownload" onclick="window.triggerAiModelDownload ? window.triggerAiModelDownload(event) : (window.setupAiModelSettingsHandler && window.setupAiModelSettingsHandler(), window.triggerAiModelDownload && window.triggerAiModelDownload(event))">
-            <div class="settings-icon">🤖</div>
+        <div class="settings-group" id="groupCloudRecognition">
+          <div class="settings-row">
+            <div class="settings-icon">☁️</div>
+            <div class="settings-info"><span class="settings-title">雲端照片辨識</span>
+              <span class="settings-desc">連線辨識商品與日期，無需下載模型。照片經同意後送至雲端。</span></div>
+          </div>
+          <div class="settings-row" id="rowSmartCameraQuota">
+            <div class="settings-icon">📷</div>
             <div class="settings-info">
-              <span class="settings-title">AI 辨識模型 (MobileCLIP2-S0)</span>
-              <span class="settings-desc" id="settingsAiModelStatusText">端側輕量 Vision Encoder (~43MB)，點擊立即下載至本機快取</span>
+              <span class="settings-title">今日辨識剩餘次數</span>
+              <span class="settings-desc">每日智慧鏡頭辨識上限 200 次，每日零點自動重置</span>
             </div>
-            <button type="button" id="btnDownloadAiModel" class="btn-download-ai-model" title="下載 AI 辨識模型" onclick="window.triggerAiModelDownload ? window.triggerAiModelDownload(event) : (window.setupAiModelSettingsHandler && window.setupAiModelSettingsHandler(), window.triggerAiModelDownload && window.triggerAiModelDownload(event))">
-              <span class="btn-download-icon">📥</span>
-              <span id="btnDownloadAiModelText">下載模型</span>
-            </button>
+            <span class="settings-quota-pill" id="settingsSmartCameraQuota">剩餘 200 次</span>
           </div>
-          <div class="settings-download-progress-track" id="settingsDownloadProgressTrack" style="display:none;">
-            <div class="settings-download-progress-bar" id="settingsDownloadProgressBar" style="width:0%;"></div>
-          </div>
+          <button type="button" class="settings-row-btn" onclick="window.revokeCloudPhotoConsent && window.revokeCloudPhotoConsent()">撤回照片上傳同意</button>
         </div>
 
         <!-- Group 2: Archive & Recently Deleted Trash -->
@@ -7241,7 +8043,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.8.27</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.8</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -7256,8 +8058,11 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
       <!-- Camera Top Navigation Bar -->
       <div class="camera-modal-header">
         <div class="camera-header-title">
-          <span class="camera-title-text">📷 掃描辨識</span>
-          <span class="camera-subtitle-text">本機離線條碼與效期辨識</span>
+          <div class="camera-title-row">
+            <span class="camera-title-text">📷 掃描辨識</span>
+            <span class="camera-quota-pill" id="cameraShootingQuotaBadge">今日剩餘 200 次</span>
+          </div>
+          <span class="camera-subtitle-text">智慧鏡頭商品與效期辨識</span>
         </div>
         <button type="button" id="btnCloseCameraModal" class="camera-btn-close" aria-label="關閉相機">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -7293,31 +8098,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
         </div>
         <!-- Flash animation overlay on shutter -->
         <div id="cameraFlashOverlay" class="camera-flash-overlay"></div>
-        <!-- AI 模型載入 / 快取進度浮層 (v1.8.27 MobileCLIP2-S0 首次載入優化) -->
-        <div id="modelLoadingOverlay" class="model-loading-overlay" style="display: none;">
-          <div class="model-loading-card">
-            <div class="model-loading-header">
-              <div class="model-loading-badge">
-                <span class="model-icon">🤖</span>
-                <span class="model-name" id="modelLoadingTitle">MobileCLIP2-S0 (端側輕量 Vision Encoder)</span>
-              </div>
-              <span class="model-cache-tag" id="modelCacheTag">端側離線</span>
-            </div>
-            <div class="model-status-row">
-              <p id="modelStatusText" class="model-status-text">首次下載 MobileCLIP2 0%... 之後離線免下載</p>
-              <span id="modelProgressPercent" class="model-progress-percent">0%</span>
-            </div>
-            <div class="model-progress-track">
-              <div id="modelProgressBar" class="model-progress-bar" style="width: 0%;">
-                <div class="model-progress-shimmer"></div>
-              </div>
-            </div>
-            <div class="model-detail-row">
-              <span id="modelProgressDetail" class="model-progress-detail">正在下載模型權重至本機快取...</span>
-              <span class="model-subhint">首次下載後永久離線可用</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Camera Bottom Controls Bar -->
@@ -7361,72 +8141,27 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
     <div class="ai-scan-loading-card" id="cameraRecognitionOverlay">
       <div class="ai-scan-preview-container">
         <img id="aiScanPreviewImg" src="" alt="拍攝影像預覽" class="ai-scan-preview-img">
-        <div class="ai-scan-laser-line"></div>
-        <div class="ai-scan-corner corner-tl"></div>
-        <div class="ai-scan-corner corner-tr"></div>
-        <div class="ai-scan-corner corner-bl"></div>
-        <div class="ai-scan-corner corner-br"></div>
       </div>
 
       <div class="ai-scan-status-wrap">
-        <div class="ai-scan-spinner-ring">
-          <div class="ai-scan-spinner-core"></div>
-        </div>
         <div class="ai-scan-title-group">
-          <div class="ai-scan-title-row">
-            <span class="ai-scan-title">AI 智慧分析辨識中</span>
-            <span class="ai-scan-tag" id="aiScanEngineTag">MobileCLIP2 / 雙軌</span>
-          </div>
-          <p id="aiScanStatusText" class="ai-scan-desc">正在啟動端側視覺特徵模型...</p>
-        </div>
-      </div>
-
-      <!-- VLM 首次載入 / 下載進度提示卡片 -->
-      <div id="vlmModelLoadingCard" class="vlm-loading-card" style="display: none;">
-        <div class="vlm-loading-header">
-          <div class="vlm-header-title">
-            <span class="vlm-badge-icon">⚡</span>
-            <span class="vlm-title-text">端側 MobileCLIP2 視覺模型</span>
-            <span class="vlm-badge-webgpu">WebGPU / FP32</span>
-          </div>
-          <span class="vlm-offline-tag">永久離線</span>
-        </div>
-        
-        <p id="vlmStatusText" class="vlm-status-text">首次載入 AI 視覺模型 0%... 之後離線免下載</p>
-        
-        <div class="vlm-progress-track">
-          <div id="vlmProgressBar" class="vlm-progress-bar" style="width: 0%;">
-            <div class="vlm-progress-shimmer"></div>
-          </div>
-        </div>
-        
-        <div class="vlm-progress-footer">
-          <span id="vlmProgressPercent" class="vlm-progress-percent">0%</span>
-          <span id="vlmProgressDetail" class="vlm-progress-detail">正在自 IndexedDB 快取加載...</span>
-        </div>
-
-        <div class="vlm-hint-note">
-          <span class="vlm-hint-icon">💡</span>
-          <span>模型僅需首次下載一次，日後完全離線免連網秒速辨識！</span>
+          <span class="ai-scan-title">AI 智慧分析辨識中</span>
+          <p id="aiScanStatusText" class="ai-scan-desc">正在上傳並辨識照片<span class="ai-scan-anim-dots"></span></p>
         </div>
       </div>
 
       <div class="ai-scan-steps">
         <div class="ai-scan-step-item active" id="scanStepVlm">
-          <span class="step-dot"></span>
-          <span class="step-text">MobileCLIP2 端側輕量視覺特徵比對</span>
+          <span class="step-text">上傳照片至雲端</span>
         </div>
-        <div class="ai-scan-step-item active" id="scanStepVisual">
-          <span class="step-dot"></span>
-          <span class="step-text">物品特徵分類與結構化屬性提取</span>
+        <div class="ai-scan-step-item" id="scanStepVisual">
+          <span class="step-text">辨識商品名稱與分類</span>
         </div>
-        <div class="ai-scan-step-item active" id="scanStepOcr">
-          <span class="step-dot"></span>
-          <span class="step-text">效期文字提取與到期日推算</span>
+        <div class="ai-scan-step-item" id="scanStepOcr">
+          <span class="step-text">讀取包裝上的有效日期</span>
         </div>
         <div class="ai-scan-step-item" id="scanStepFuse">
-          <span class="step-dot"></span>
-          <span class="step-text">特徵交叉校對與提醒排程</span>
+          <span class="step-text">整理結果，等待確認</span>
         </div>
       </div>
     </div>
@@ -7457,11 +8192,12 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
           </div>
         </div>
 
-        <!-- Photo Thumbnail Preview (拍照或選取相片縮圖) -->
-        <div id="nlpConfirmImageWrap" class="nlp-confirm-image-wrap" style="display: none; margin-bottom: 0.85rem; text-align: center;">
-          <div style="position: relative; display: inline-block;">
-            <img id="nlpConfirmImagePreview" src="" alt="物品相片縮圖" style="width: 84px; height: 84px; object-fit: cover; border-radius: 16px; border: 1.5px solid var(--ios-border-strong); box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-            <button type="button" id="btnRemoveNlpImage" title="移除相片" aria-label="移除相片" style="position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #ff453a; color: #ffffff; border: 2px solid var(--ios-surface, #222); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1;">✕</button>
+        <!-- Photo / Vector Icon Thumbnail Preview (相片縮圖或向量圖標預覽) -->
+        <div id="nlpConfirmImageWrap" class="nlp-confirm-image-wrap" style="margin-bottom: 0.85rem; text-align: center;">
+          <div style="position: relative; display: inline-flex; align-items: center; justify-content: center;">
+            <img id="nlpConfirmImagePreview" src="" alt="物品相片縮圖" style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: 16px; border: 1.5px solid var(--ios-border-strong); box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+            <div id="nlpConfirmIconPreview" class="nlp-confirm-icon-preview" style="display: none;"></div>
+            <button type="button" id="btnRemoveNlpImage" title="移除相片" aria-label="移除相片" style="display: none; position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #ff453a; color: #ffffff; border: 2px solid var(--ios-surface, #222); font-size: 11px; font-weight: 700; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1;">✕</button>
           </div>
         </div>
 
@@ -7575,21 +8311,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
             <input type="date" id="nlpConfirmCustomDate" class="nlp-confirm-input date-picker-input">
           </div>
 
-          <!-- Field 5.2: Time Format Dropdown & AM/PM Selector -->
-          <div class="nlp-time-adjust-wrap" id="nlpTimeAdjustWrap" style="margin-top: 8px;">
-            <div class="nlp-time-format-row" id="nlpTimeFormatRow" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <div class="ios-select-wrapper" style="flex: 1; max-width: 140px;">
-                <select id="nlpTimeFormatSelect" class="ios-select" style="font-size: 0.82rem; height: 34px; padding: 0 26px 0 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #ffffff;">
-                  <option value="24h" selected>24小時制</option>
-                  <option value="12h">12小時制</option>
-                </select>
-                <span class="select-chevron" style="right: 8px; font-size: 10px; pointer-events: none;">▾</span>
-              </div>
-              <div class="nlp-time-mode-selector" id="nlpTimeModeSelector" style="display: none; flex: 1; margin: 0;">
-                <button type="button" class="nlp-time-mode-btn active" data-mode="am">上午</button>
-                <button type="button" class="nlp-time-mode-btn" data-mode="pm">下午</button>
-              </div>
-            </div>
+          <!-- Field 5.2: 24小時制快捷時間膠囊 (統一為24小時制，取消12/24切換按鈕) -->
+          <div class="nlp-time-adjust-wrap" id="nlpTimeAdjustWrap" style="margin-top: 6px;">
             <!-- Quick Time Pills (快捷時間膠囊) -->
             <div class="nlp-quick-time-pills" id="nlpQuickTimePills">
               <button type="button" class="nlp-time-pill active" data-time="09:00">09:00 上午</button>
@@ -8616,6 +9339,8 @@ var CapacitorBridgeBundle = (() => {
         async getAll(options) {
           const scheduled = [...this.pending];
           const delivered = this.deliveredNotifications.map((n) => this.deliveredToSchema(n));
+          // ==========================================
+          // AI Scan Loading HUD 控制函式 (純文字流光與動態推進動畫 v1.9.4)
           if ((options === null || options === void 0 ? void 0 : options.state) === "SCHEDULED") {
             return { notifications: scheduled };
           }
@@ -8832,7 +9557,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.8.27';
+  const APP_VERSION = '1.9.8';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -9352,6 +10077,145 @@ var CapacitorBridgeBundle = (() => {
         { name: '精品皮鞋鞋靴', subCat: '精品鞋靴', emoji: '👠', duration: 180, hasEndDate: true, warnDays: 14, location: '玄關通風鞋櫃', notes: '換季鞋靴放置除濕包與鞋撐防變形' }
       ]
     },
+    drinks: {
+      label: '飲品',
+      emoji: '🧃',
+      items: [
+        { name: '精品咖啡豆', subCat: '咖啡豆', emoji: '☕', duration: 30, hasEndDate: true, warnDays: 5, location: '吧台密封罐', notes: '拆封後最佳香氣賞味期 1 個月' },
+        { name: '濾掛咖啡包', subCat: '濾掛咖啡', emoji: '☕', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公桌抽屜', notes: '充氮防氧化，建議半年內沖泡完畢' },
+        { name: '高山茶葉茶包', subCat: '茶葉茶包', emoji: '🍵', duration: 180, hasEndDate: true, warnDays: 14, location: '茶水櫃', notes: '密封防潮，保持高雅香氣' },
+        { name: '現調手搖飲品', subCat: '手搖飲品', emoji: '🧋', duration: 1, hasEndDate: true, warnDays: 1, location: '冷藏/隨身', notes: '建議當日內飲用完畢' },
+        { name: '鮮榨蔬果汁', subCat: '果汁蔬果汁', emoji: '🍹', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏', notes: '低溫冷藏，3 天內飲畢' },
+        { name: '包裝礦泉水', subCat: '包裝水', emoji: '💧', duration: 365, hasEndDate: true, warnDays: 30, location: '常備物資區', notes: '常溫避光保存' },
+        { name: '微礦氣泡水', subCat: '氣泡水', emoji: '🫧', duration: 180, hasEndDate: true, warnDays: 14, location: '冷藏儲物櫃', notes: '開封後請旋緊瓶蓋避免氣泡散逸' },
+        { name: '碳酸清涼飲料', subCat: '碳酸飲料', emoji: '🥤', duration: 180, hasEndDate: true, warnDays: 14, location: '冰箱層板', notes: '留意瓶身賞味期限' },
+        { name: '精釀啤酒烈酒', subCat: '啤酒烈酒', emoji: '🍺', duration: 180, hasEndDate: true, warnDays: 14, location: '酒櫃/冷藏', notes: '避光保存，留意最佳風味期' },
+        { name: '紅白葡萄酒', subCat: '紅白酒', emoji: '🍷', duration: 365, hasEndDate: true, warnDays: 30, location: '恆溫紅酒櫃', notes: '開瓶後請冷藏並於一週內享用' },
+        { name: '沖泡飲品燕麥奶', subCat: '沖泡飲品', emoji: '🥛', duration: 90, hasEndDate: true, warnDays: 7, location: '早餐櫃', notes: '開封後密封防潮' },
+        { name: '運動乳清飲品', subCat: '乳清飲品', emoji: '🥤', duration: 60, hasEndDate: true, warnDays: 7, location: '健身包旁', notes: '即飲蛋白補充品' }
+      ]
+    },
+    snack: {
+      label: '零食',
+      emoji: '🍪',
+      items: [
+        { name: '酥脆餅乾米果', subCat: '餅乾米果', emoji: '🍘', duration: 60, hasEndDate: true, warnDays: 7, location: '零食抽屜', notes: '開封後儘速享用防受潮' },
+        { name: '洋芋片脆片', subCat: '洋芋片脆片', emoji: '🥔', duration: 45, hasEndDate: true, warnDays: 7, location: '零食籃', notes: '保持密封乾燥' },
+        { name: '黑巧克力可可', subCat: '巧克力可可', emoji: '🍫', duration: 180, hasEndDate: true, warnDays: 14, location: '陰涼零食櫃', notes: '高溫易融化，室溫20度以下或冷藏' },
+        { name: '烘焙堅果果乾', subCat: '堅果果乾', emoji: '🥜', duration: 60, hasEndDate: true, warnDays: 7, location: '茶几密封罐', notes: '堅果富含油脂，拆封後儘早食用防止氧化' },
+        { name: '軟糖硬糖', subCat: '糖果軟糖', emoji: '🍬', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公抽屜', notes: '防潮密封避免黏手' },
+        { name: '蜜汁肉乾肉條', subCat: '肉乾肉條', emoji: '🥩', duration: 30, hasEndDate: true, warnDays: 5, location: '零食櫃', notes: '開封後請冷藏保鮮' },
+        { name: '即食杯麵泡麵', subCat: '即食泡麵', emoji: '🍜', duration: 180, hasEndDate: true, warnDays: 14, location: '廚房儲物櫃', notes: '常備乾糧，定期檢視效期' },
+        { name: '香脆海苔點心', subCat: '海苔點心', emoji: '🍙', duration: 60, hasEndDate: true, warnDays: 7, location: '零食籃', notes: '極易受潮，建議儘快食用完畢' },
+        { name: '果汁果凍布丁', subCat: '果凍布丁', emoji: '🍮', duration: 60, hasEndDate: true, warnDays: 7, location: '冷藏蔬果層', notes: '冷藏後風味更佳' },
+        { name: '傳統糕點月餅', subCat: '傳統糕餅', emoji: '🥮', duration: 14, hasEndDate: true, warnDays: 3, location: '餐桌點心盤', notes: '無防腐劑糕餅保鮮期短' }
+      ]
+    },
+    fresh: {
+      label: '生鮮',
+      emoji: '🥩',
+      items: [
+        { name: '冷藏牛肉羊肉', subCat: '牛肉羊肉', emoji: '🥩', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '冷藏 3 天內料理或及時分裝冷凍' },
+        { name: '生鮮豬肉片', subCat: '生鮮豬肉', emoji: '🥓', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '儘速熟食烹飪' },
+        { name: '生鮮雞肉禽肉', subCat: '雞肉禽肉', emoji: '🍗', duration: 2, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '生鮮雞肉保鮮期短，請儘早食用' },
+        { name: '海鮮鮮魚切片', subCat: '海鮮魚類', emoji: '🐟', duration: 2, hasEndDate: true, warnDays: 1, location: '冰箱魚肉專用層', notes: '極鮮魚肉，建議當天或隔天享用' },
+        { name: '活凍蝦蟹貝類', subCat: '蝦蟹貝類', emoji: '🦐', duration: 60, hasEndDate: true, warnDays: 7, location: '冷凍庫', notes: '低溫冷凍，料理前流水解凍' },
+        { name: '火鍋肉片組', subCat: '火鍋肉片', emoji: '🥩', duration: 30, hasEndDate: true, warnDays: 5, location: '冷凍庫', notes: '冷凍保存，封口避免凍傷' },
+        { name: '手工冷凍水餃', subCat: '水餃湯圓', emoji: '🥟', duration: 90, hasEndDate: true, warnDays: 7, location: '冷凍抽屜', notes: '保持密封，避免乾裂' },
+        { name: '生鮮有機時蔬', subCat: '生鮮時蔬', emoji: '🥬', duration: 5, hasEndDate: true, warnDays: 2, location: '蔬果保鮮室', notes: '葉菜類及早烹調' }
+      ]
+    },
+    supplement: {
+      label: '保健',
+      emoji: '🧬',
+      items: [
+        { name: '綜合維他命錠', subCat: '綜合維他命', emoji: '💊', duration: 180, hasEndDate: true, warnDays: 14, location: '餐桌藥盒', notes: '開封後 6 個月內食用完畢' },
+        { name: '高單位活性B群', subCat: 'B群活力', emoji: '⚡', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公桌', notes: '每日晨間活力補充' },
+        { name: '長效維生素C', subCat: '維生素C', emoji: '🍊', duration: 180, hasEndDate: true, warnDays: 14, location: '客廳茶几', notes: '保持乾燥密封' },
+        { name: '高純度深海魚油', subCat: '深海魚油', emoji: '🐟', duration: 180, hasEndDate: true, warnDays: 14, location: '陰涼避光處', notes: 'EPA/DHA 保持密封避免氧化' },
+        { name: '游離型葉黃素', subCat: '葉黃素', emoji: '👁️', duration: 180, hasEndDate: true, warnDays: 14, location: '電腦桌旁', notes: '晶亮保護每日一顆' },
+        { name: '活性複合益生菌', subCat: '活性益生菌', emoji: '🦠', duration: 90, hasEndDate: true, warnDays: 7, location: '冰箱冷藏/陰涼處', notes: '菌種維持活力，定期食用完畢' },
+        { name: '膠原蛋白美妍粉', subCat: '膠原蛋白', emoji: '✨', duration: 90, hasEndDate: true, warnDays: 7, location: '梳妝台', notes: '拆封後保持密封乾燥' },
+        { name: '天然海藻鈣片D3', subCat: '鈣片D3', emoji: '🦴', duration: 180, hasEndDate: true, warnDays: 14, location: '藥品收納盒', notes: '睡前補充鈣質' },
+        { name: '常溫滴雞精禮盒', subCat: '滴雞精', emoji: '🥣', duration: 180, hasEndDate: true, warnDays: 14, location: '常備補品櫃', notes: '隔水加熱即飲' },
+        { name: '高純度乳清蛋白', subCat: '高蛋白粉', emoji: '🥤', duration: 90, hasEndDate: true, warnDays: 7, location: '廚房中島', notes: '大包裝拆封後密封乾燥防受潮' }
+      ]
+    },
+    beauty: {
+      label: '美妝',
+      emoji: '💄',
+      items: [
+        { name: '保濕修護精華液', subCat: '精華液', emoji: '💧', duration: 180, hasEndDate: true, warnDays: 14, location: '化妝台', notes: '滴管避免直接觸碰皮膚，6個月內用畢' },
+        { name: '滋潤保濕乳霜', subCat: '乳液面霜', emoji: '🧴', duration: 180, hasEndDate: true, warnDays: 14, location: '臥室梳妝台', notes: '面霜開封後旋緊瓶蓋' },
+        { name: '深層補水面膜', subCat: '保濕面膜', emoji: '🧖‍♀️', duration: 180, hasEndDate: true, warnDays: 14, location: '面膜收納盒', notes: '每週定期保養敷臉' },
+        { name: '溫和卸妝潔顏露', subCat: '卸妝潔顏', emoji: '🧼', duration: 180, hasEndDate: true, warnDays: 14, location: '洗臉台', notes: '每日清潔殘妝' },
+        { name: '舒緩化妝水噴霧', subCat: '化妝水噴霧', emoji: '💦', duration: 180, hasEndDate: true, warnDays: 14, location: '梳妝台', notes: '妝前補水滋潤' },
+        { name: '緊緻眼部修護霜', subCat: '緊緻眼霜', emoji: '👁️', duration: 180, hasEndDate: true, warnDays: 14, location: '化妝台抽屜', notes: '眼霜開封後請儘速用畢' },
+        { name: '臉部防曬隔離乳', subCat: '防曬隔離', emoji: '☀️', duration: 365, hasEndDate: true, warnDays: 30, location: '隨身包/化妝台', notes: '防曬成分開封後防護力逐月衰減，建議一年內換新' },
+        { name: '潤唇膏口紅唇彩', subCat: '唇膏口紅', emoji: '💄', duration: 365, hasEndDate: true, warnDays: 30, location: '隨身化妝包', notes: '唇膏開封建議一年內用畢' },
+        { name: '持久粉底彩妝品', subCat: '粉底彩妝', emoji: '🎨', duration: 365, hasEndDate: true, warnDays: 30, location: '彩妝抽屜', notes: '粉底液開封後定期檢視質地與氣味' },
+        { name: '經典淡香水香氛', subCat: '香水香氛', emoji: '🌸', duration: 730, hasEndDate: true, warnDays: 60, location: '香水展示盤', notes: '香水避免陽光高溫直射，建議 2~3 年內使用' }
+      ]
+    },
+    digital: {
+      label: '數位',
+      emoji: '📱',
+      items: [
+        { name: '氮化鎵多口快充頭', subCat: '充電器快充', emoji: '🔌', duration: 730, hasEndDate: true, warnDays: 30, location: '工作桌', notes: '原廠 2 年保固與充放電狀態檢視' },
+        { name: '編織快充傳輸線', subCat: '傳輸充電線', emoji: '⚡', duration: 365, hasEndDate: true, warnDays: 30, location: '床頭櫃/隨身包', notes: '線頭金屬觸點與線材磨損檢查' },
+        { name: '磁吸無線行動電源', subCat: '行動電源', emoji: '🔋', duration: 540, hasEndDate: true, warnDays: 30, location: '隨身背包', notes: '鋰電池壽命監測，約 1.5 年後檢測電池健康度' },
+        { name: '真無線降噪耳機', subCat: '耳機周邊', emoji: '🎧', duration: 365, hasEndDate: true, warnDays: 30, location: '電腦桌', notes: '1 年原廠保固與耳塞矽膠定期換新' },
+        { name: '鋼化保護貼與防摔殼', subCat: '保護貼保護殼', emoji: '🛡️', duration: 180, hasEndDate: true, warnDays: 14, location: '手機隨身', notes: '玻璃貼裂痕或防摔殼發黃時定期換新' },
+        { name: '高速記憶卡隨身碟', subCat: '記憶卡隨身碟', emoji: '💾', duration: 1095, hasEndDate: true, warnDays: 60, location: '數位配件盒', notes: '重要資料定時備份至雲端或冷儲存' },
+        { name: '人體工學鍵盤滑鼠', subCat: '鍵盤滑鼠', emoji: '⌨️', duration: 730, hasEndDate: true, warnDays: 30, location: '書房電腦桌', notes: '原廠 2 年硬體保固' },
+        { name: '智慧穿戴手環手錶', subCat: '智慧穿戴', emoji: '⌚', duration: 365, hasEndDate: true, warnDays: 30, location: '手腕佩戴', notes: '1 年原廠保固與感測器清潔' },
+        { name: '多功能擴充轉接HUB', subCat: '擴充轉接HUB', emoji: '🎛️', duration: 730, hasEndDate: true, warnDays: 30, location: '辦公室筆電旁', notes: '原廠保固與接口穩定性' }
+      ]
+    },
+    stationery: {
+      label: '文具',
+      emoji: '📚',
+      items: [
+        { name: '年度手帳筆記本', subCat: '手帳筆記', emoji: '📓', duration: 365, hasEndDate: false, location: '辦公桌', notes: '記錄陪伴與工作生活筆記使用天數' },
+        { name: '閱讀書籍與工具書', subCat: '書籍雜誌', emoji: '📖', duration: 180, hasEndDate: false, location: '書房書架', notes: '記錄藏書閱讀與陪伴天數' },
+        { name: '鋼筆精品簽字筆', subCat: '簽字鋼筆', emoji: '✒️', duration: 365, hasEndDate: false, location: '筆盒/隨身', notes: '定期清洗筆尖與保養氣密' },
+        { name: '原子筆替芯鋼筆墨水', subCat: '墨水替芯', emoji: '🖋️', duration: 180, hasEndDate: true, warnDays: 14, location: '文具抽屜', notes: '避免墨水乾涸堵塞，常備替芯' },
+        { name: '無痕膠帶與接著工具', subCat: '膠帶黏著', emoji: '🩹', duration: 180, hasEndDate: true, warnDays: 14, location: '工具盒', notes: '膠帶防曬防高溫融膠' },
+        { name: '資料夾檔案收納盒', subCat: '檔案夾收納', emoji: '📂', duration: 365, hasEndDate: false, location: '書房文件櫃', notes: '重要紙本合約分類歸檔' },
+        { name: '專業美術繪畫用品', subCat: '繪畫美術', emoji: '🎨', duration: 180, hasEndDate: true, warnDays: 14, location: '畫具箱', notes: '顏料保持密封防止乾裂' },
+        { name: '裁紙機美工刀剪刀', subCat: '裁切工具', emoji: '✂️', duration: 365, hasEndDate: false, location: '筆筒', notes: '刀片生鏽或鈍化及時折斷更換' },
+        { name: '日常辦公事務文具', subCat: '辦公文具', emoji: '📎', duration: 365, hasEndDate: false, location: '辦公桌抽屜', notes: '釘書針、迴紋針常備' }
+      ]
+    },
+    sports: {
+      label: '運動',
+      emoji: '🏃',
+      items: [
+        { name: '避震慢跑跑鞋', subCat: '跑鞋運動鞋', emoji: '👟', duration: 365, hasEndDate: false, location: '鞋櫃', notes: 'PU/EVA中底避震壽命約 500~800 公里，記錄使用天數' },
+        { name: '專業防滑瑜珈墊', subCat: '瑜珈墊', emoji: '🧘', duration: 365, hasEndDate: false, location: '客廳運動角', notes: '定期使用酒精濕巾清潔除菌' },
+        { name: '運動護膝護腕護具', subCat: '運動護具', emoji: '🛡️', duration: 180, hasEndDate: true, warnDays: 14, location: '運動裝備包', notes: '彈性纖維疲勞鬆弛即應換新' },
+        { name: '重訓阻力彈力帶', subCat: '彈力帶拉力繩', emoji: '🎗️', duration: 180, hasEndDate: true, warnDays: 14, location: '臥室健身角', notes: '定期檢查乳膠表面是否有微小裂紋防斷裂' },
+        { name: '包膠啞鈴壺鈴重量', subCat: '啞鈴重訓', emoji: '🏋️', duration: 730, hasEndDate: false, location: '地墊區', notes: '居家自主力量訓練耐用器材' },
+        { name: '運動保溫機能水壺', subCat: '機能水壺', emoji: '🧊', duration: 365, hasEndDate: true, warnDays: 14, location: '隨身背包', notes: '瓶蓋矽膠防漏墊圈每年定期換新' },
+        { name: '能量果膠電解質補給', subCat: '運動補給', emoji: '⚡', duration: 180, hasEndDate: true, warnDays: 14, location: '運動補給小袋', notes: '馬拉松與單車賽前確認賞味效期' },
+        { name: '多功能運動健身包', subCat: '運動包袋', emoji: '🎒', duration: 365, hasEndDate: false, location: '玄關掛勾', notes: '防潑水耐用訓練包' },
+        { name: '羽毛球網球拍穿線', subCat: '球拍線路', emoji: '🏸', duration: 60, hasEndDate: true, warnDays: 7, location: '球拍袋', notes: '磅數自然衰減，建議每 2 個月重新穿線' }
+      ]
+    },
+    tools: {
+      label: '五金',
+      emoji: '🔧',
+      items: [
+        { name: '精密螺絲起子工具組', subCat: '螺絲工具組', emoji: '🪛', duration: 730, hasEndDate: false, location: '工具箱', notes: '修繕3C與家具常備精密批頭' },
+        { name: 'LED高流明手電筒', subCat: '手電筒照明', emoji: '🔦', duration: 365, hasEndDate: true, warnDays: 30, location: '緊急避難包', notes: '每半年定期檢查電量與充飽備用' },
+        { name: '電工防水絕緣膠帶', subCat: '防水絕緣膠帶', emoji: '🩹', duration: 365, hasEndDate: true, warnDays: 30, location: '水電工具盒', notes: '電線包裹與修復防漏' },
+        { name: '萬能接著快乾膠', subCat: '接著快乾膠', emoji: '🧪', duration: 90, hasEndDate: true, warnDays: 7, location: '抽屜工具袋', notes: '開封接觸空氣易硬化，用畢栓緊冷藏延長壽命' },
+        { name: '家庭修繕五金螺絲', subCat: '修繕五金', emoji: '🔩', duration: 730, hasEndDate: false, location: '五金收納格', notes: '膨脹螺栓、自攻螺絲常備' },
+        { name: '不鏽鋼量尺測量工具', subCat: '量尺測量', emoji: '📏', duration: 730, hasEndDate: false, location: '工具箱上層', notes: '木工裝修與網購空間測量' },
+        { name: 'WD-40多功能防鏽油', subCat: '潤滑防鏽油', emoji: '🧴', duration: 730, hasEndDate: true, warnDays: 30, location: '工作陽台', notes: '門鉸鏈異音消弭與機械防鏽保養' },
+        { name: '家庭水電耗材五金', subCat: '五金耗材', emoji: '🔧', duration: 365, hasEndDate: false, location: '維修工具箱', notes: '水路止水閥墊圈與接頭耗材' }
+      ]
+    },
     other: {
       label: '其他',
       emoji: '📌',
@@ -9482,25 +10346,33 @@ var CapacitorBridgeBundle = (() => {
 
   // 細項配置字典 (SUB_CATEGORY_CONFIG)
   const SUB_CATEGORY_CONFIG = {
-    vehicle: ['機油', '齒輪油', '輪胎', '電瓶', '雨刷', '煞車', '驗車', '車險'],
-    subscription: ['影音', '音樂', '雲端', '軟體', '健身', '電信', '租約', '訂閱服務'],
-    medicine: ['眼藥水', '維他命', '魚油', '藥膏', '成藥', '醫療', '保養液'],
-    cleaning: ['菜瓜布', '洗衣精', '洗碗精', '抹布', '潔廁劑', '酒精', '除蟎'],
-    warranty: ['家具', '電腦', '手機', '耳機', '家電', '手錶', '遊戲機'],
-    filter: ['濾網', '濾芯', '牙刷', '除濕盒', '掃地耗材', '咖啡保養'],
-    food: ['青菜', '水果', '鮮乳', '咖啡', '雞蛋', '茶包', '調味料', '零食', '生鮮肉品', '麵包烘焙'],
-    pao: ['洗沐', '防曬', '保養', '護手霜', '牙膏', '刮鬍刀', '香水', '彩妝'],
-    pet: ['乾糧', '罐頭', '驅蟲藥', '疫苗健檢', '貓砂尿墊', '零食凍乾', '寵物保健'],
-    baby: ['配方奶', '尿布', '濕紙巾', '副食品', '奶嘴用品', '幼兒疫苗'],
-    office: ['耗材墨水', '碳粉匣', '電池', '筆記文具', '證件合約', '專業證照'],
-    outdoor: ['高蛋白', '露營裝備', '登山裝備', '水壺配件', '補給品', '球拍線路'],
-    home: ['植栽綠化', '花草肥料', '燈具照明', '寢具家飾', '居家安全', '修繕保養'],
-    fashion: ['換季送洗', '皮革保養', '珠寶飾品', '衣物防護', '精品鞋靴'],
-    animation: ['漫畫/單行本', '輕小說', 'BD/影音', '畫冊/設定集', '周邊特典'],
-    game: ['Switch 卡帶', 'PS/Xbox 光碟', '主機/手把周邊', '點數卡/序號', '特典周邊'],
-    otaku: ['徽章/吧唧', '壓克力立牌/磚', '色紙/相卡', '模型/黏土人/景品', '棉花娃/玩偶', '一番賞'],
-    ticket: ['電影票', '演唱會/音樂會', '動漫展覽門票', '活動兌換券'],
-    other: ['一般雜項', '配件小物', '未分類', '球鞋', '包袋', '會議', '備忘']
+    food: ['青菜', '水果', '鮮乳', '雞蛋', '豆製品', '起司乳酪', '生鮮肉品', '水產海鮮', '麵包烘焙', '調味料', '食用油', '米麵穀物', '南北乾貨', '熟食料理'],
+    drinks: ['咖啡豆', '濾掛咖啡', '茶葉茶包', '手搖飲品', '果汁蔬果汁', '包裝水', '氣泡水', '碳酸飲料', '啤酒烈酒', '紅白酒', '沖泡飲品', '乳清飲品'],
+    snack: ['餅乾米果', '洋芋片脆片', '巧克力可可', '堅果果乾', '糖果軟糖', '肉乾肉條', '即食泡麵', '海苔點心', '果凍布丁', '傳統糕餅'],
+    fresh: ['牛肉羊肉', '生鮮豬肉', '雞肉禽肉', '海鮮魚類', '蝦蟹貝類', '火鍋肉片', '冷凍調理包', '微波熟食', '水餃湯圓', '生鮮時蔬'],
+    medicine: ['眼藥水', '人工淚液', '外用藥膏', '感冒退燒', '消炎止痛', '腸胃整腸', '處方藥', '醫療敷料', '隱眼保養液', '防蚊止癢', '常備成藥'],
+    supplement: ['綜合維他命', 'B群活力', '維生素C', '深海魚油', '葉黃素', '活性益生菌', '膠原蛋白', '鈣片D3', '滴雞精', '高蛋白粉', '機能保健'],
+    beauty: ['精華液', '乳液面霜', '保濕面膜', '卸妝潔顏', '化妝水噴霧', '緊緻眼霜', '防曬隔離', '唇膏口紅', '粉底彩妝', '美甲護理', '香水香氛'],
+    pao: ['洗髮沐浴', '潤髮護髮', '牙膏口腔', '洗手香皂', '身體乳液', '護手滋潤', '刮鬍刀具', '女性護理', '毛巾面巾', '日常消耗'],
+    cleaning: ['菜瓜布海綿', '洗碗精洗劑', '洗衣精洗衣球', '抹布抹巾', '潔廁去垢', '水垢油垢清', '消毒酒精', '除塵防塵', '除濕防潮', '除蟎噴霧', '地板清潔', '疏通清潔'],
+    filter: ['清淨機濾網', '淨水器濾芯', '音波牙刷頭', '集水除濕盒', '掃地機主刷邊刷', '吸塵器耗材', '咖啡機除鈣', '冷氣濾網', '通風濾材'],
+    warranty: ['智慧手機', '筆記型電腦', '平板電腦', '藍牙耳機', '家用電器', '電視螢幕', '人體工學家具', '智慧手錶', '遊戲主機', '攝影器材', '保固維修'],
+    digital: ['充電器快充', '傳輸充電線', '行動電源', '耳機周邊', '保護貼保護殼', '記憶卡隨身碟', '鍵盤滑鼠', '智慧穿戴', '擴充轉接HUB'],
+    stationery: ['手帳筆記', '書籍雜誌', '簽字鋼筆', '墨水替芯', '膠帶黏著', '檔案夾收納', '繪畫美術', '裁切工具', '辦公文具'],
+    sports: ['運動護具', '瑜珈墊', '彈力帶拉力繩', '啞鈴重訓', '機能水壺', '跑鞋運動鞋', '運動補給', '運動包袋', '球拍線路'],
+    tools: ['螺絲工具組', '手電筒照明', '防水絕緣膠帶', '接著快乾膠', '修繕五金', '量尺測量', '潤滑防鏽油', '五金耗材'],
+    pet: ['乾糧飼料', '主食罐頭', '副食肉泥', '原肉凍乾', '體內外驅蟲', '核心疫苗', '貓砂尿墊', '寵物潔牙', '洗毛護理', '寵物保健品'],
+    baby: ['配方奶粉', '成長奶粉', '透氣尿布', '純水濕紙巾', '副食品常溫粥', '奶瓶奶嘴', '米餅副食', '幼兒常規疫苗', '兒童餐具'],
+    vehicle: ['機油', '機油芯', '齒輪油', '輪胎對調', '電瓶', '雨刷', '煞車油皮', '火星塞', '空氣濾清器', '定檢驗車', '車險強制險'],
+    subscription: ['影音串流', '音樂串流', '雲端空間', '專業軟體', '健身會籍', '寬頻電信', '房屋租約', '訂閱服務', '年約保險'],
+    outdoor: ['露營天幕', '登山裝備', '戶外炊具', '機能水壺', '防潮地墊', '登山手杖', '能量果膠', '防寒睡袋'],
+    home: ['室內植栽', '花草肥料', 'LED照明', '防蟎寢具', '住警消防', '香氛擴香', '水電修繕', '收納整理'],
+    fashion: ['換季送洗', '真皮皮革保養', '珠寶首飾', '衣物防護防蛀', '精品鞋靴', '名牌包袋', '飾品小物', '太陽眼鏡'],
+    animation: ['漫畫單行本', '輕小說', 'BD藍光影音', '畫冊設定集', '周邊特典', '海報掛軸', '同人周邊'],
+    game: ['Switch卡帶', 'PSXbox光碟', '主機手把', '點數卡序號', '特典周邊', '典藏套裝', 'Amiibo'],
+    otaku: ['徽章吧唧', '壓克力立牌磚', '色紙相卡', '手辦模型景品', '棉花娃玩偶', '一番賞獎品', '痛包配件'],
+    ticket: ['電影票', '演唱會門票', '動漫展覽票', '活動兌換券', '餐券住宿券', '高鐵車票', '商品禮券'],
+    other: ['一般雜項', '配件小物', '未分類', '球鞋', '包袋', '工作會議', '各類備忘']
   };
   window.SUB_CATEGORY_CONFIG = SUB_CATEGORY_CONFIG;
   window.DEFAULT_CATEGORIES = DEFAULT_CATEGORIES;
@@ -10562,6 +11434,7 @@ var CapacitorBridgeBundle = (() => {
 
   function renderApp() {
     updateNoticeCardAndPillCounts();
+    renderCategoryChips();
     renderCards();
   }
 
@@ -10920,12 +11793,13 @@ var CapacitorBridgeBundle = (() => {
       card.className = 'ios-item-card';
       card.dataset.id = item.id || '';
 
-    // 縮圖：優先顯示相片，無相片則顯示 emoji
+    // 縮圖：優先顯示相片，無相片則調用現代向量 SVG 圖標
     let iconContent = '';
     if (item.image) {
       iconContent = `<img src="${item.image}" class="card-thumb-img" alt="${escapeHtml(item.name)}">`;
     } else {
-      iconContent = `<span>${escapeHtml(item.emoji || '🪑')}</span>`;
+      const svgIcon = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : '';
+      iconContent = svgIcon || `<span>${escapeHtml(item.emoji || '📦')}</span>`;
     }
 
     const expDateStr = item.expiryDate || item.endDate;
@@ -11008,6 +11882,14 @@ var CapacitorBridgeBundle = (() => {
 
         <!-- Sub Metric: 還有 1,085 天 或 持續使用中 -->
         <div class="card-metric-sub ${subMetricClass}">${subMetricText}</div>
+
+        <!-- Card Note Preview on Home Page (主頁專屬備註標籤) -->
+        ${(!isInventory && item.showNotesHome && item.notes && item.notes.trim()) ? `
+          <div class="card-note-preview" title="${escapeHtml(item.notes)}">
+            <span class="card-note-icon">📝</span>
+            <span class="card-note-text">${escapeHtml(item.notes)}</span>
+          </div>
+        ` : ''}
       </div>
 
       <!-- Progress Bar at bottom of card -->
@@ -11311,7 +12193,8 @@ var CapacitorBridgeBundle = (() => {
     if (item.image) {
       sheetEmoji.innerHTML = `<img src="${item.image}" class="sheet-thumb-img" alt="${escapeHtml(item.name)}">`;
     } else {
-      sheetEmoji.textContent = item.emoji || '🪑';
+      const svgIcon = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : '';
+      sheetEmoji.innerHTML = svgIcon || escapeHtml(item.emoji || '📦');
     }
 
     sheetTitle.textContent = item.name;
@@ -11653,6 +12536,8 @@ var CapacitorBridgeBundle = (() => {
   const itemLocationInput = document.getElementById('itemLocation');
   const itemBrandInput = document.getElementById('itemBrand');
   const itemNotesInput = document.getElementById('itemNotes');
+  const itemShowNotesHome = document.getElementById('itemShowNotesHome');
+  const showNotesHomeStatus = document.getElementById('showNotesHomeStatus');
   const previewEndDateText = document.getElementById('previewEndDateText');
   const previewDaysText = document.getElementById('previewDaysText');
   const itemCategorySelect = document.getElementById('itemCategorySelect');
@@ -11718,8 +12603,14 @@ var CapacitorBridgeBundle = (() => {
       avatarHintText.textContent = '已套用相片，可點選「✨ 智慧去背」去背';
     } else {
       previewImageEl.style.display = 'none';
-      previewEmojiChar.style.display = 'block';
-      previewEmojiChar.textContent = itemEmojiInput.value || '🪑';
+      previewEmojiChar.style.display = 'flex';
+      const curCat = (itemCategorySelect && itemCategorySelect.value) ? itemCategorySelect.value : 'other';
+      const catSvg = (typeof getCategoryIcon === 'function') ? getCategoryIcon(curCat) : '';
+      if (catSvg && (!itemEmojiInput.value || itemEmojiInput.value === '🪑' || itemEmojiInput.value === '📦')) {
+        previewEmojiChar.innerHTML = catSvg;
+      } else {
+        previewEmojiChar.textContent = itemEmojiInput.value || '📦';
+      }
       btnRemoveImage.style.display = 'none';
       if (btnOpenBgRemoval) btnOpenBgRemoval.style.display = 'none';
       avatarHintText.textContent = '輸入名稱自動配圖，或自行上傳相片';
@@ -12438,6 +13329,9 @@ var CapacitorBridgeBundle = (() => {
     populateCategorySelect('warranty');
     populateSubCategoryDropdown('warranty');
 
+    if (itemShowNotesHome) itemShowNotesHome.checked = false;
+    if (showNotesHomeStatus) showNotesHomeStatus.textContent = '已關閉';
+
     setModalMode('expiry');
     updateAvatarPreview();
 
@@ -12496,6 +13390,8 @@ var CapacitorBridgeBundle = (() => {
     itemLocationInput.value = item.location || '';
     itemBrandInput.value = item.brand || '';
     itemNotesInput.value = item.notes || '';
+    if (itemShowNotesHome) itemShowNotesHome.checked = !!item.showNotesHome;
+    if (showNotesHomeStatus) showNotesHomeStatus.textContent = (item && item.showNotesHome) ? '已開啟' : '已關閉';
 
     populateCategorySelect(item.category || 'warranty');
     populateSubCategoryDropdown(item.category || 'warranty', item.subCategory || '');
@@ -12587,6 +13483,7 @@ var CapacitorBridgeBundle = (() => {
     const location = itemLocationInput.value.trim();
     const brand = itemBrandInput.value.trim();
     const notes = itemNotesInput.value.trim();
+    const showNotesHome = itemShowNotesHome ? !!itemShowNotesHome.checked : false;
 
     if (id) {
       const item = items.find(it => it.id === id);
@@ -12607,6 +13504,7 @@ var CapacitorBridgeBundle = (() => {
         item.location = location;
         item.brand = brand;
         item.notes = notes;
+        item.showNotesHome = showNotesHome;
         scheduleItemNotification(item);
       }
     } else {
@@ -12631,6 +13529,7 @@ var CapacitorBridgeBundle = (() => {
         location,
         brand,
         notes,
+        showNotesHome,
         history: [],
         createdAt: Date.now()
       };
@@ -12735,6 +13634,15 @@ var CapacitorBridgeBundle = (() => {
     });
   }
   itemDurationInput.addEventListener('input', syncFromDuration);
+
+  if (itemShowNotesHome) {
+    itemShowNotesHome.addEventListener('change', function () {
+      if (showNotesHomeStatus) {
+        showNotesHomeStatus.textContent = itemShowNotesHome.checked ? '已開啟' : '已關閉';
+      }
+      autoSaveCurrentItem();
+    });
+  }
 
   // 表單各欄位即時自動儲存 (無需儲存按鈕，即刻記憶改動)
   itemForm.addEventListener('input', autoSaveCurrentItem);
@@ -12887,6 +13795,7 @@ var CapacitorBridgeBundle = (() => {
       });
     }
     updateTrashBadge();
+    updateSmartLensQuotaDisplays();
     if (typeof window !== 'undefined' && typeof window.updateAiModelSettingsUI === 'function') {
       window.updateAiModelSettingsUI();
     }
@@ -13587,7 +14496,7 @@ var CapacitorBridgeBundle = (() => {
     switchViewTab('inventory', true, true);
   });
 
-  // 動態渲染分類膠囊標籤, 第一個群組預設在最左側, 支援群組狀態記憶與平滑對齊
+  // 動態渲染分類膠囊標籤, 僅顯示主頁物品庫中實際已有物品的分類, 第一個群組預設在最左側, 支援群組狀態記憶與平滑對齊
   function renderCategoryChips() {
     const categoryChipRow = document.getElementById('categoryChipRow');
     const chipRow = categoryChipRow;
@@ -13597,6 +14506,13 @@ var CapacitorBridgeBundle = (() => {
     const allCats = getAllCategories();
     const catKeys = Object.keys(allCats);
     const firstPageCat = getFirstPageCategory();
+
+    // 取得主頁物品庫中實際存在的分類（僅顯示在庫中有物品的分類）
+    const existingCatKeys = new Set(
+      items
+        .map(it => it.category)
+        .filter(Boolean)
+    );
 
     // 優先採用自訂分類排序
     let orderedKeys = getCustomCategoryOrder();
@@ -13609,11 +14525,25 @@ var CapacitorBridgeBundle = (() => {
       });
     }
 
+    // 過濾：未在主頁物品庫裡的分類不顯示，只呈現已有物品的分類
+    orderedKeys = orderedKeys.filter(k => allCats[k] && existingCatKeys.has(k));
+
+    if (orderedKeys.length === 0) {
+      const emptyNote = document.createElement('div');
+      emptyNote.className = 'category-chip-empty-hint';
+      emptyNote.style.cssText = 'padding: 0.35rem 0.75rem; font-size: 0.8rem; color: var(--ios-text-secondary); white-space: nowrap;';
+      emptyNote.textContent = '物品庫尚無分類物品';
+      categoryChipRow.appendChild(emptyNote);
+      currentCategoryChip = '';
+      updateCategoryActionBar();
+      return;
+    }
+
     const rememberedCat = getRememberedCategoryState();
-    if (rememberedCat && allCats[rememberedCat]) {
+    if (rememberedCat && allCats[rememberedCat] && existingCatKeys.has(rememberedCat)) {
       currentCategoryChip = rememberedCat;
-    } else if (currentCategoryChip === 'all' || !allCats[currentCategoryChip]) {
-      currentCategoryChip = orderedKeys[0] || firstPageCat;
+    } else if (currentCategoryChip === 'all' || !allCats[currentCategoryChip] || !existingCatKeys.has(currentCategoryChip)) {
+      currentCategoryChip = orderedKeys[0];
     }
 
     orderedKeys.forEach((catKey, chipIdx) => {
@@ -13621,7 +14551,12 @@ var CapacitorBridgeBundle = (() => {
       const btn = document.createElement('button');
       btn.className = `category-chip ${catKey === currentCategoryChip ? 'active' : ''}`;
       btn.dataset.cat = catKey;
-      btn.textContent = `${cat.emoji} ${cat.label}`;
+      const chipSvg = (typeof getCategoryIcon === 'function') ? getCategoryIcon(catKey) : '';
+      if (chipSvg) {
+        btn.innerHTML = `<span class="chip-icon">${chipSvg}</span><span class="chip-label">${escapeHtml(cat.label)}</span>`;
+      } else {
+        btn.textContent = `${cat.emoji || '📦'} ${cat.label}`;
+      }
       btn.addEventListener('click', function () {
         document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
         this.classList.add('active');
@@ -13759,7 +14694,13 @@ var CapacitorBridgeBundle = (() => {
     const allCats = getAllCategories();
     const catObj = allCats[currentCategoryChip] || { emoji: '📦', label: '其他' };
     const countInCat = items.filter(it => it.category === currentCategoryChip).length;
-    if (catActiveEmoji) catActiveEmoji.textContent = catObj.emoji;
+    if (catActiveEmoji) {
+      if (typeof getCategoryIcon === 'function' && !catObj.isCustom) {
+        catActiveEmoji.innerHTML = getCategoryIcon(currentCategoryChip);
+      } else {
+        catActiveEmoji.textContent = catObj.emoji || '📦';
+      }
+    }
     if (catActiveName) catActiveName.textContent = `${catObj.label}群組`;
     if (catActiveCount) catActiveCount.textContent = `${countInCat} 項物品`;
   }
@@ -13784,7 +14725,7 @@ var CapacitorBridgeBundle = (() => {
       if (item.image) {
         thumbHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}">`;
       } else {
-        thumbHtml = item.emoji || '🪑';
+        thumbHtml = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : (item.emoji || '📦');
       }
 
       const catObj = allCats[item.category] || { label: '其他' };
@@ -14124,7 +15065,7 @@ var CapacitorBridgeBundle = (() => {
       itemEl.innerHTML = `
         <div class="cat-manage-info">
           <div class="cat-manage-title-wrap">
-            <span class="cat-manage-emoji">${cat.emoji}</span>
+            <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function' && !cat.isCustom) ? getCategoryIcon(key) : cat.emoji}</span>
             <span class="group-page-badge">${pageName}</span>
             <span class="cat-manage-label" title="${escapeHtml(cat.label)}">${escapeHtml(cat.label)}</span>
             ${isPreset ? `<span class="cat-badge-default" style="font-size:0.7rem;padding:0.15rem 0.4rem;">預設</span>` : ''}
@@ -15578,6 +16519,7 @@ function extractCleanName(rawText) {
       if (elapsedStartDateWrap) elapsedStartDateWrap.style.display = 'block';
       if (reminderWrap) reminderWrap.style.display = 'none';
       const reminderSection = document.getElementById('nlpReminderScheduleTimeSection');
+    const timeAdjustWrap = document.getElementById('nlpTimeAdjustWrap');
       if (reminderSection) reminderSection.style.display = 'none';
       if (customRow) customRow.style.display = 'none';
       if (elapsedHint) elapsedHint.style.display = 'flex';
@@ -15700,6 +16642,14 @@ function extractCleanName(rawText) {
 
   function openNlpConfirmModal(parsed) {
     currentNlpParsed = parsed;
+    let cloudNotice = document.getElementById('cloudRecognitionNotice');
+    if (!cloudNotice) {
+      cloudNotice = document.createElement('p'); cloudNotice.id = 'cloudRecognitionNotice';
+      cloudNotice.style.cssText = 'margin:12px 20px;padding:12px;border-radius:12px;background:rgba(128,128,128,.12);white-space:pre-wrap;line-height:1.6;';
+      document.querySelector('#nlpConfirmModal .ios-modal-header')?.after(cloudNotice);
+    }
+    cloudNotice.textContent = parsed.recognitionNotice || '';
+    cloudNotice.hidden = !parsed.recognitionNotice;
     const modal = document.getElementById('nlpConfirmModal');
     const titleEl = document.getElementById('nlpConfirmModalTitle');
     const badgeEl = document.getElementById('nlpConfirmBadge');
@@ -15800,42 +16750,20 @@ function extractCleanName(rawText) {
       updateNlpStartDateHint(startDateInput.value);
     }
 
-    // 常駐提醒時間與自訂日期判定 (v1.8.14 下拉式選單選擇12小時制/24小時制)
+    // 常駐提醒時間與自訂日期判定 (統一為 24 小時制，取消 12/24 切換按鈕)
     const timeRow = document.getElementById('nlpConfirmTimeRow');
     const timeInput = document.getElementById('nlpConfirmReminderTime');
     const customDateRow = document.getElementById('nlpCustomDateRow');
     const customDateInput = document.getElementById('nlpConfirmCustomDate');
     const pillsContainer = document.getElementById('nlpQuickTimePills');
-    const timeFormatSelect = document.getElementById('nlpTimeFormatSelect');
-    const timeModeSelector = document.getElementById('nlpTimeModeSelector');
-    const timeAdjustWrap = document.getElementById('nlpTimeAdjustWrap');
     const reminderSection = document.getElementById('nlpReminderScheduleTimeSection');
 
-    const TIME_MODE_PRESETS = {
-      am: [
-        { time: '07:00', label: '07:00 上午' },
-        { time: '08:30', label: '08:30 上午' },
-        { time: '09:00', label: '09:00 上午' },
-        { time: '10:30', label: '10:30 上午' },
-        { time: '11:45', label: '11:45 上午' }
-      ],
-      pm: [
-        { time: '12:00', label: '12:00 中午' },
-        { time: '13:30', label: '13:30 下午' },
-        { time: '15:00', label: '15:00 下午' },
-        { time: '18:00', label: '18:00 傍晚' },
-        { time: '20:00', label: '20:00 晚間' }
-      ],
-      '24h': [
-        { time: '09:00', label: '09:00 上午' },
-        { time: '12:00', label: '12:00 中午' },
-        { time: '15:00', label: '15:00 下午' },
-        { time: '20:00', label: '20:00 晚間' }
-      ]
-    };
-
-    let currentTimeFormat = '24h';
-    let currentTimeMode = 'am';
+    const TIME_PRESETS_24H = [
+      { time: '09:00', label: '09:00 上午' },
+      { time: '12:00', label: '12:00 中午' },
+      { time: '15:00', label: '15:00 下午' },
+      { time: '20:00', label: '20:00 晚間' }
+    ];
 
     // 格式化為 24 小時制 HH:mm (00:00 ~ 23:59)
     let initial24hTime = '09:00';
@@ -15850,29 +16778,13 @@ function extractCleanName(rawText) {
       timeInput.value = initial24hTime;
     }
 
-    const initHour = parseInt(initial24hTime.split(':')[0], 10);
-    currentTimeMode = (initHour >= 12) ? 'pm' : 'am';
-
-    // 渲染對應模式的快捷時間膠囊
-    function renderTimePills(mode, activeTime) {
+    // 渲染 24 小時制快捷時間膠囊
+    function renderTimePills(activeTime) {
       if (!pillsContainer) return;
-      const presets = TIME_MODE_PRESETS[mode] || TIME_MODE_PRESETS['24h'];
-      pillsContainer.innerHTML = presets.map(p => {
+      pillsContainer.innerHTML = TIME_PRESETS_24H.map(p => {
         const isActive = (p.time === activeTime) ? ' active' : '';
         return `<button type="button" class="nlp-time-pill${isActive}" data-time="${p.time}">${p.label}</button>`;
       }).join('');
-    }
-
-    // 更新上午/下午按鈕 active 樣式
-    function updateTimeModeButtons(mode) {
-      if (!timeModeSelector) return;
-      timeModeSelector.querySelectorAll('.nlp-time-mode-btn').forEach(btn => {
-        if (btn.dataset.mode === mode) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
     }
 
     // 更新膠囊按鈕 active 樣式
@@ -15887,80 +16799,8 @@ function extractCleanName(rawText) {
       });
     }
 
-    // 設定時段模式 (am / pm / 24h)
-    function setTimeMode(mode, adjustTime = true) {
-      currentTimeMode = mode;
-      updateTimeModeButtons(mode);
-
-      if (adjustTime && timeInput && timeInput.value) {
-        const parts = timeInput.value.split(':');
-        let h = parseInt(parts[0], 10) || 0;
-        const m = parts[1] || '00';
-
-        if (mode === 'am') {
-          if (h >= 12) {
-            h = (h - 12 >= 6 && h - 12 <= 11) ? (h - 12) : 9;
-            timeInput.value = `${String(h).padStart(2, '0')}:${m}`;
-          }
-        } else if (mode === 'pm') {
-          if (h < 12) {
-            h = (h + 12 >= 12 && h + 12 <= 21) ? (h + 12) : 15;
-            timeInput.value = `${String(h).padStart(2, '0')}:${m}`;
-          }
-        }
-      }
-
-      const activeTime = timeInput ? timeInput.value : initial24hTime;
-      const pillsMode = (currentTimeFormat === '12h') ? currentTimeMode : '24h';
-      renderTimePills(pillsMode, activeTime);
-    }
-
-    // 切換時間格式 (24h vs 12h)
-    function setTimeFormat(format) {
-      currentTimeFormat = format;
-      if (timeFormatSelect) {
-        timeFormatSelect.value = format;
-      }
-
-      if (format === '12h') {
-        // 選擇 12 小時制：跳出顯示上午/下午切換按鈕
-        if (timeModeSelector) {
-          timeModeSelector.style.display = 'grid';
-        }
-        const curH = timeInput ? (parseInt(timeInput.value.split(':')[0], 10) || 9) : initHour;
-        currentTimeMode = (curH >= 12) ? 'pm' : 'am';
-        updateTimeModeButtons(currentTimeMode);
-        renderTimePills(currentTimeMode, timeInput ? timeInput.value : initial24hTime);
-      } else {
-        // 選擇 24 小時制：隱藏上午/下午按鈕
-        if (timeModeSelector) {
-          timeModeSelector.style.display = 'none';
-        }
-        renderTimePills('24h', timeInput ? timeInput.value : initial24hTime);
-      }
-    }
-
-    // 初始化時間格式：預設 24 小時制
-    setTimeFormat('24h');
-
-    // 時間格式下拉選單事件綁定
-    if (timeFormatSelect && !timeFormatSelect.dataset.bound) {
-      timeFormatSelect.dataset.bound = 'true';
-      timeFormatSelect.addEventListener('change', (e) => {
-        setTimeFormat(e.target.value);
-      });
-    }
-
-    // 上午/下午時段選擇器事件綁定
-    if (timeModeSelector && !timeModeSelector.dataset.bound) {
-      timeModeSelector.dataset.bound = 'true';
-      timeModeSelector.addEventListener('click', (e) => {
-        const btn = e.target.closest('.nlp-time-mode-btn');
-        if (btn && btn.dataset.mode) {
-          setTimeMode(btn.dataset.mode, true);
-        }
-      });
-    }
+    // 初始化渲染 24 小時制快捷時間膠囊
+    renderTimePills(timeInput ? timeInput.value : initial24hTime);
 
     // 快捷膠囊委派點擊事件綁定
     if (pillsContainer && !pillsContainer.dataset.bound) {
@@ -15974,19 +16814,11 @@ function extractCleanName(rawText) {
       });
     }
 
-    // 時間手動輸入監聽
+    // 時間手動輸入監聽 (嚴格統一 24 小時制)
     if (timeInput && !timeInput.dataset.bound) {
       timeInput.dataset.bound = 'true';
       timeInput.addEventListener('input', () => {
         const curVal = timeInput.value;
-        if (curVal && curVal.includes(':') && currentTimeFormat === '12h') {
-          const curH = parseInt(curVal.split(':')[0], 10);
-          if (currentTimeMode === 'am' && curH >= 12) {
-            setTimeMode('pm', false);
-          } else if (currentTimeMode === 'pm' && curH < 12) {
-            setTimeMode('am', false);
-          }
-        }
         updateActiveTimePill(curVal);
       });
     }
@@ -15998,6 +16830,7 @@ function extractCleanName(rawText) {
 
     // 依據追蹤模式與提醒天數，控制常駐提醒時間與自訂日期的顯示
     function updateNlpReminderDisplay() {
+      const timeAdjustWrap = document.getElementById('nlpTimeAdjustWrap');
       const isElapsedMode = (document.getElementById('btnNlpTrackElapsed') && document.getElementById('btnNlpTrackElapsed').classList.contains('active'));
       const val = remindSelect ? remindSelect.value : '3';
       if (isElapsedMode) {
@@ -16035,26 +16868,54 @@ function extractCleanName(rawText) {
       updateNlpReminderDisplay();
     }
 
-    // 縮圖照片預覽設定
+    // 縮圖與彩色向量圖標預覽設定
     const imgWrap = document.getElementById('nlpConfirmImageWrap');
     const imgPreview = document.getElementById('nlpConfirmImagePreview');
+    const iconPreview = document.getElementById('nlpConfirmIconPreview');
     const btnRemoveImg = document.getElementById('btnRemoveNlpImage');
-    if (imgWrap && imgPreview) {
+
+    function updateNlpModalPreview() {
+      if (!imgWrap) return;
+      imgWrap.style.display = 'block';
       if (parsed.image) {
-        imgPreview.src = parsed.image;
-        imgWrap.style.display = 'block';
+        if (imgPreview) {
+          imgPreview.src = parsed.image;
+          imgPreview.style.display = 'block';
+        }
+        if (iconPreview) iconPreview.style.display = 'none';
+        if (btnRemoveImg) btnRemoveImg.style.display = 'flex';
       } else {
-        imgWrap.style.display = 'none';
-        imgPreview.src = '';
-      }
-      if (btnRemoveImg) {
-        btnRemoveImg.onclick = function () {
-          if (currentNlpParsed) currentNlpParsed.image = null;
-          imgWrap.style.display = 'none';
+        if (imgPreview) {
           imgPreview.src = '';
-        };
+          imgPreview.style.display = 'none';
+        }
+        if (iconPreview) {
+          iconPreview.style.display = 'flex';
+          const curCat = catSelect ? catSelect.value : (parsed.category || 'other');
+          iconPreview.innerHTML = (typeof getCategoryIcon === 'function') ? getCategoryIcon(curCat) : '📦';
+        }
+        if (btnRemoveImg) btnRemoveImg.style.display = 'none';
       }
     }
+
+    if (btnRemoveImg) {
+      btnRemoveImg.onclick = function () {
+        if (currentNlpParsed) currentNlpParsed.image = null;
+        parsed.image = null;
+        updateNlpModalPreview();
+      };
+    }
+
+    if (catSelect) {
+      catSelect.onchange = function () {
+        populateNlpSubCategoryDropdown(this.value);
+        if (!parsed.image && iconPreview && typeof getCategoryIcon === 'function') {
+          iconPreview.innerHTML = getCategoryIcon(this.value);
+        }
+      };
+    }
+
+    updateNlpModalPreview();
 
     modal.style.display = 'flex';
     lockBodyScroll();
@@ -16062,6 +16923,9 @@ function extractCleanName(rawText) {
   }
 
   function closeNlpConfirmModal() {
+    if (typeof window.cancelCurrentRecognition === 'function') {
+      window.cancelCurrentRecognition();
+    }
     const modal = document.getElementById('nlpConfirmModal');
     if (modal) {
       closeModalWithAnimation(modal, () => {
@@ -16366,13 +17230,22 @@ function extractCleanName(rawText) {
       });
     }
 
-    if (closeBtn) closeBtn.addEventListener('click', closeNlpConfirmModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeNlpConfirmModal);
+    if (closeBtn) closeBtn.addEventListener('click', () => {
+      if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+      closeNlpConfirmModal();
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => {
+      if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+      closeNlpConfirmModal();
+    });
     if (applyBtn) applyBtn.addEventListener('click', handleNlpConfirmApply);
 
     if (modal) {
       modal.addEventListener('click', function(e) {
-        if (e.target === modal) closeNlpConfirmModal();
+        if (e.target === modal) {
+          if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+          closeNlpConfirmModal();
+        }
       });
     }
 
@@ -16629,16 +17502,57 @@ function extractCleanName(rawText) {
     }
   }
 
+  async function triggerCameraFocus(track, normX = 0.5, normY = 0.5) {
+    if (!track || typeof track.getCapabilities !== 'function') return;
+    try {
+      const caps = track.getCapabilities() || {};
+      const focusModes = Array.isArray(caps.focusMode) ? caps.focusMode : [];
+      const hasSingleShot = focusModes.includes('single-shot');
+      const hasContinuous = focusModes.includes('continuous');
+      const hasPOI = !!caps.pointsOfInterest;
+
+      const advanced = {};
+      if (hasPOI) {
+        advanced.pointsOfInterest = [{ x: normX, y: normY }];
+      }
+
+      // 若支援 single-shot，切換為 single-shot 觸發硬體鏡頭實體對焦步進
+      if (hasSingleShot) {
+        advanced.focusMode = 'single-shot';
+        await track.applyConstraints({ advanced: [advanced] });
+        // 對焦掃描完成後，2.5 秒平滑恢復 continuous 連續自動對焦
+        if (hasContinuous) {
+          clearTimeout(track._focusRestoreTimer);
+          track._focusRestoreTimer = setTimeout(() => {
+            track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+          }, 2500);
+        }
+      } else if (hasContinuous) {
+        advanced.focusMode = 'continuous';
+        await track.applyConstraints({ advanced: [advanced] });
+      }
+    } catch (err) {
+      console.warn('[Camera] Tap-to-focus constraints error:', err);
+    }
+  }
+
+  let lastFocusTapTime = 0;
   function handleCameraTapToFocus(e) {
     if (e.target.closest('.camera-zoom-controls') || e.target.closest('button')) return;
+
+    const now = Date.now();
+    if (now - lastFocusTapTime < 250) return;
+    lastFocusTapTime = now;
 
     const wrap = document.getElementById('cameraViewportWrap');
     const reticle = document.getElementById('cameraFocusReticle');
     if (!wrap || !reticle) return;
 
     const rect = wrap.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : 0));
+    const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : 0));
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     reticle.style.left = `${x}px`;
     reticle.style.top = `${y}px`;
@@ -16647,14 +17561,16 @@ function extractCleanName(rawText) {
     void reticle.offsetWidth;
     reticle.classList.add('pulsing');
 
+    if (navigator.vibrate) {
+      try { navigator.vibrate(25); } catch (_) {}
+    }
+
     if (cameraStream) {
       const track = cameraStream.getVideoTracks()[0];
-      if (track && typeof track.getCapabilities === 'function') {
-        const caps = track.getCapabilities();
-        if (caps.focusMode && (caps.focusMode.includes('continuous') || caps.focusMode.includes('single-shot'))) {
-          const mode = caps.focusMode.includes('continuous') ? 'continuous' : 'single-shot';
-          track.applyConstraints({ advanced: [{ focusMode: mode }] }).catch(() => {});
-        }
+      if (track) {
+        const normX = Math.max(0, Math.min(1, x / (rect.width || 1)));
+        const normY = Math.max(0, Math.min(1, y / (rect.height || 1)));
+        triggerCameraFocus(track, normX, normY);
       }
     }
 
@@ -16666,6 +17582,9 @@ function extractCleanName(rawText) {
   }
 
   function initCameraScanner() {
+    const scannerButton = document.getElementById('btnCameraScan');
+    if (scannerButton?.dataset.scannerBound) return;
+    if (scannerButton) scannerButton.dataset.scannerBound = 'true';
     const btnCameraScan = document.getElementById('btnCameraScan');
     const btnClose = document.getElementById('btnCloseCameraModal');
     const btnShutter = document.getElementById('btnCameraShutter');
@@ -16678,16 +17597,35 @@ function extractCleanName(rawText) {
       btnCameraScan.addEventListener('click', openCameraScanModal);
     }
     if (btnClose) {
-      btnClose.addEventListener('click', closeCameraScanModal);
+      btnClose.addEventListener('click', () => {
+        if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+        closeCameraScanModal();
+      });
+    }
+
+    const cameraModal = document.getElementById('cameraScanModal');
+    if (cameraModal) {
+      cameraModal.addEventListener('click', (e) => {
+        if (e.target === cameraModal) {
+          if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+          closeCameraScanModal();
+        }
+      });
+    }
+
+    const loadingModal = document.getElementById('aiScanLoadingModal');
+    if (loadingModal) {
+      loadingModal.addEventListener('click', (e) => {
+        if (e.target === loadingModal) {
+          if (typeof window.cancelCurrentRecognition === 'function') window.cancelCurrentRecognition();
+        }
+      });
     }
     if (btnFlip) {
       btnFlip.addEventListener('click', flipCamera);
     }
     if (btnAlbum && fileInput) {
       btnAlbum.addEventListener('click', () => {
-        if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
-          window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
-        }
         fileInput.click();
       });
       fileInput.addEventListener('change', handleAlbumFileSelect);
@@ -16740,29 +17678,27 @@ function extractCleanName(rawText) {
   async function openCameraScanModal() {
     const modal = document.getElementById('cameraScanModal');
     if (!modal) return;
+    updateSmartLensQuotaDisplays();
     modal.style.display = 'flex';
     lockBodyScroll();
     setCameraZoom(1);
-    // 自動預先觸發下載（無感快取）：
-    // 使用者一「點擊開啟相機」或進入辨識畫面時，立即於背景靜默或以進度條觸發 initVisionModel()，不要等到拍照按下的瞬間才卡住下載。
-    if (typeof window !== 'undefined' && typeof window.initVisionModel === 'function') {
-      window.initVisionModel().catch(err => console.warn('[AutoDownload] 預載視覺模型通知:', err));
-    }
     await startCameraStream(currentCameraFacing);
   }
 
   function closeCameraScanModal() {
+    if (typeof window.cancelCurrentRecognition === 'function') {
+      window.cancelCurrentRecognition();
+    }
     stopCameraStream();
     const modal = document.getElementById('cameraScanModal');
     if (modal) modal.style.display = 'none';
-    if (typeof hideModelLoadingOverlay === 'function') {
-      hideModelLoadingOverlay(false);
-    }
     unlockBodyScroll();
   }
 
+  let cameraRequestVersion = 0;
   async function startCameraStream(facingMode = 'environment') {
     stopCameraStream();
+    const requestVersion = cameraRequestVersion;
     currentCameraFacing = facingMode;
     const video = document.getElementById('cameraVideo');
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -16770,7 +17706,7 @@ function extractCleanName(rawText) {
       return;
     }
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({
+      const nextStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
@@ -16778,6 +17714,11 @@ function extractCleanName(rawText) {
         },
         audio: false
       });
+      if (requestVersion !== cameraRequestVersion) {
+        nextStream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      cameraStream = nextStream;
       if (video) {
         video.srcObject = cameraStream;
         await video.play().catch(e => console.warn('Camera video play caught:', e));
@@ -16790,6 +17731,7 @@ function extractCleanName(rawText) {
   }
 
   function stopCameraStream() {
+    cameraRequestVersion++;
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => {
         try { track.stop(); } catch(e){}
@@ -16809,6 +17751,7 @@ function extractCleanName(rawText) {
   }
 
   function handleCameraShutter() {
+    if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
     const video = document.getElementById('cameraVideo');
     const flashOverlay = document.getElementById('cameraFlashOverlay');
     if (flashOverlay) {
@@ -16824,6 +17767,7 @@ function extractCleanName(rawText) {
   }
 
   function handleAlbumFileSelect(e) {
+    if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -16838,7 +17782,85 @@ function extractCleanName(rawText) {
     e.target.value = '';
   }
 
-  // AI Scan Loading HUD 控制函式 (智慧鏡頭拍攝後載入動畫)
+  // ==========================================
+  // 智慧鏡頭每日額度管理 (每日上限 200 次 v1.9.4)
+  // ==========================================
+  const SMART_LENS_DAILY_LIMIT = 200;
+  const SMART_LENS_QUOTA_KEY = 'expiry_smart_lens_quota_v1';
+
+  function getSmartLensTodayKey() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function getSmartLensQuotaInfo() {
+    const today = getSmartLensTodayKey();
+    let used = 0;
+    try {
+      const raw = localStorage.getItem(SMART_LENS_QUOTA_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.date === today && typeof data.used === 'number') {
+          used = Math.max(0, data.used);
+        }
+      }
+    } catch {}
+    const remaining = Math.max(0, SMART_LENS_DAILY_LIMIT - used);
+    return { limit: SMART_LENS_DAILY_LIMIT, used, remaining, date: today };
+  }
+
+  function consumeSmartLensQuota() {
+    const info = getSmartLensQuotaInfo();
+    const newUsed = info.used + 1;
+    try {
+      localStorage.setItem(SMART_LENS_QUOTA_KEY, JSON.stringify({ date: info.date, used: newUsed }));
+    } catch {}
+    updateSmartLensQuotaDisplays();
+    return Math.max(0, SMART_LENS_DAILY_LIMIT - newUsed);
+  }
+
+  function markSmartLensQuotaExhausted() {
+    const today = getSmartLensTodayKey();
+    try {
+      localStorage.setItem(SMART_LENS_QUOTA_KEY, JSON.stringify({ date: today, used: SMART_LENS_DAILY_LIMIT }));
+    } catch {}
+    updateSmartLensQuotaDisplays();
+  }
+
+  function updateSmartLensQuotaDisplays() {
+    const info = getSmartLensQuotaInfo();
+    // 1. 設定頁面顯示
+    const settingsBadge = document.getElementById('settingsSmartCameraQuota');
+    if (settingsBadge) {
+      settingsBadge.textContent = info.remaining > 0 ? `剩餘 ${info.remaining} 次` : '今日額度已用完';
+      if (info.remaining === 0) {
+        settingsBadge.classList.add('quota-depleted');
+      } else {
+        settingsBadge.classList.remove('quota-depleted');
+      }
+    }
+    // 2. 拍攝中頁面顯示
+    const cameraBadge = document.getElementById('cameraShootingQuotaBadge');
+    if (cameraBadge) {
+      cameraBadge.textContent = info.remaining > 0 ? `今日剩餘 ${info.remaining} 次` : '今日剩餘 0 次';
+      if (info.remaining === 0) {
+        cameraBadge.classList.add('quota-depleted');
+      } else {
+        cameraBadge.classList.remove('quota-depleted');
+      }
+    }
+  }
+
+  window.getSmartLensQuotaInfo = getSmartLensQuotaInfo;
+  window.consumeSmartLensQuota = consumeSmartLensQuota;
+  window.markSmartLensQuotaExhausted = markSmartLensQuotaExhausted;
+  window.updateSmartLensQuotaDisplays = updateSmartLensQuotaDisplays;
+
+  // AI Scan Loading HUD 控制函式 (純文字流光與動態推進動畫 v1.9.4)
+  let aiScanStepTimer = null;
   function showAiScanLoading(photoDataUrl) {
     const hud = document.getElementById('aiScanLoadingModal');
     const img = document.getElementById('aiScanPreviewImg');
@@ -16849,15 +17871,33 @@ function extractCleanName(rawText) {
     const stepFuse = document.getElementById('scanStepFuse');
 
     if (img && photoDataUrl) img.src = photoDataUrl;
-    if (desc) {
-      desc.textContent = (typeof navigator !== 'undefined' && navigator.gpu)
-        ? '正在啟動端側 MobileCLIP2-S0 視覺特徵比對模型...'
-        : '正在啟動 MobileCLIP2 雙軌相機辨識管線...';
-    }
-    if (stepVlm) { stepVlm.className = 'ai-scan-step-item active'; }
-    if (stepVisual) { stepVisual.className = 'ai-scan-step-item active'; }
-    if (stepOcr) { stepOcr.className = 'ai-scan-step-item active'; }
-    if (stepFuse) { stepFuse.className = 'ai-scan-step-item'; }
+    if (desc) desc.innerHTML = '正在上傳照片至雲端<span class="ai-scan-anim-dots"></span>';
+
+    const setStepState = (vlm, visual, ocr, fuse) => {
+      if (stepVlm) stepVlm.className = 'ai-scan-step-item ' + vlm;
+      if (stepVisual) stepVisual.className = 'ai-scan-step-item ' + visual;
+      if (stepOcr) stepOcr.className = 'ai-scan-step-item ' + ocr;
+      if (stepFuse) stepFuse.className = 'ai-scan-step-item ' + fuse;
+    };
+
+    setStepState('active', '', '', '');
+
+    if (aiScanStepTimer) clearInterval(aiScanStepTimer);
+    let stepIndex = 0;
+    aiScanStepTimer = setInterval(() => {
+      stepIndex++;
+      if (stepIndex === 1) {
+        if (desc) desc.innerHTML = '正在辨識商品名稱與分類<span class="ai-scan-anim-dots"></span>';
+        setStepState('done', 'active', '', '');
+      } else if (stepIndex === 2) {
+        if (desc) desc.innerHTML = '正在讀取包裝上的有效日期<span class="ai-scan-anim-dots"></span>';
+        setStepState('done', 'done', 'active', '');
+      } else if (stepIndex >= 3) {
+        if (desc) desc.innerHTML = '正在整理結果，即將完成<span class="ai-scan-anim-dots"></span>';
+        setStepState('done', 'done', 'done', 'active');
+        clearInterval(aiScanStepTimer);
+      }
+    }, 1100);
 
     if (hud) {
       hud.style.display = 'flex';
@@ -16878,6 +17918,10 @@ function extractCleanName(rawText) {
   }
 
   function hideAiScanLoading() {
+    if (aiScanStepTimer) {
+      clearInterval(aiScanStepTimer);
+      aiScanStepTimer = null;
+    }
     const hud = document.getElementById('aiScanLoadingModal');
     if (hud) {
       hud.classList.remove('active');
@@ -16890,157 +17934,59 @@ function extractCleanName(rawText) {
    * 【四、UI 與錯誤處理】
    * 辨識流程統一包裝在 try...finally 中，開始時開啟 .camera-recognition-overlay.active，無論成功或失敗均確保關閉遮罩並開啟確認彈窗。
    */
+  let isCameraProcessing = false;
   async function processCapturedImage(source) {
-    const canvas = document.getElementById('cameraCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let sw = source.videoWidth || source.naturalWidth || source.width || 800;
-    let sh = source.videoHeight || source.naturalHeight || source.height || 600;
-
-    const maxDim = 1200;
-    let dw = sw;
-    let dh = sh;
-    if (dw > maxDim || dh > maxDim) {
-      if (dw > dh) {
-        dh = Math.round((dh * maxDim) / dw);
-        dw = maxDim;
-      } else {
-        dw = Math.round((dw * maxDim) / dh);
-        dh = maxDim;
-      }
+    if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
+    const quotaInfo = getSmartLensQuotaInfo();
+    if (quotaInfo.remaining <= 0) {
+      showToast('今日智慧鏡頭辨識額度已達上限（200次），請明天再試或手動填寫。');
+      closeCameraScanModal();
+      return;
     }
-    canvas.width = dw;
-    canvas.height = dh;
-
-    // 若鏡頭進行了縮放 (currentCameraZoom > 1)，裁切中央可視區域輸出到畫布
-    let sx = 0, sy = 0, sWidth = sw, sHeight = sh;
-    if (currentCameraZoom > 1 && source.tagName === 'VIDEO') {
-      sWidth = Math.round(sw / currentCameraZoom);
-      sHeight = Math.round(sh / currentCameraZoom);
-      sx = Math.round((sw - sWidth) / 2);
-      sy = Math.round((sh - sHeight) / 2);
-    }
-    ctx.drawImage(source, sx, sy, sWidth, sHeight, 0, 0, dw, dh);
-
-    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.86);
-
-    // 【MobileCLIP 手機測試模式分流】
-    // 只有當網址包含 ?mobilecliptest=1 時才進入測試模式，正常網址完全不受影響
-    const isMobileClipTest = (typeof window !== 'undefined' && (
-      (typeof window.isMobileClipTestMode === 'function' && window.isMobileClipTestMode()) ||
-      new URLSearchParams(window.location.search).get('mobilecliptest') === '1'
-    ));
-
-    if (isMobileClipTest) {
-      console.log('[MOBILECLIP TEST] 拍照完成，進入 MobileCLIP 手機測試模式');
-      if (typeof window.runMobileClipCameraTest === 'function') {
-        await window.runMobileClipCameraTest(photoDataUrl);
-      } else if (typeof window.testMobileClip === 'function') {
-        try {
-          if (typeof window.showModelLoadingOverlay === 'function') {
-            window.showModelLoadingOverlay('MobileCLIP 模型下載中...', 0, '正在連線下載模型...');
-          }
-          const results = await window.testMobileClip(photoDataUrl);
-          if (typeof window.hideModelLoadingOverlay === 'function') {
-            window.hideModelLoadingOverlay(false);
-          }
-          if (typeof closeCameraScanModal === 'function') {
-            closeCameraScanModal();
-          }
-          let msg = 'MobileCLIP 測試結果\n\n';
-          if (Array.isArray(results) && results.length > 0) {
-            results.slice(0, 5).forEach((item, idx) => {
-              const scoreNum = typeof item.score === 'number' ? item.score : parseFloat(item.score);
-              const pct = !isNaN(scoreNum)
-                ? (scoreNum <= 1 ? (scoreNum * 100).toFixed(1) : scoreNum.toFixed(1)) + '%'
-                : item.score;
-              msg += `${idx + 1}. ${item.label} — ${pct}\n`;
-            });
-          } else {
-            msg += '（未取得辨識結果）';
-          }
-          setTimeout(() => alert(msg), 100);
-        } catch (err) {
-          if (typeof window.hideModelLoadingOverlay === 'function') {
-            window.hideModelLoadingOverlay(false);
-          }
-          if (typeof closeCameraScanModal === 'function') {
-            closeCameraScanModal();
-          }
-          setTimeout(() => alert(`MobileCLIP TEST ERROR\n${err && err.message ? err.message : err}`), 100);
-        }
-      }
-      return; // 測試模式在此結束，絕不執行 analyzeSmartCameraWithVlm 或 analyzeSmartCameraDualTrack，亦不寫入表單
-    }
-
-    // 關閉相機取景，立即啟動辨識遮罩與 AI 雙軌載入動畫
-    closeCameraScanModal();
-    const overlay = document.querySelector('.camera-recognition-overlay') || document.getElementById('aiScanLoadingModal');
-    if (overlay) {
-      overlay.classList.add('active');
-      overlay.style.display = 'flex';
-    }
-    showAiScanLoading(photoDataUrl);
-
-    let parsed = null;
+    isCameraProcessing = true;
+    if (window.setCloudCameraBusy) window.setCloudCameraBusy(true);
+    let photoDataUrl = null, parsed = null, notice = '', isAborted = false;
     try {
-      // 最優先呼叫 MobileCLIP2-S0 Vision Encoder + OCR 雙軌辨識引擎 (免生成式 VLM，穩定防 Crash)
-      if (typeof window.analyzeSmartCameraWithMobileClip2 === 'function') {
-        parsed = await window.analyzeSmartCameraWithMobileClip2(canvas, photoDataUrl);
-      } else if (typeof window.analyzeSmartCameraWithMobileClip === 'function') {
-        parsed = await window.analyzeSmartCameraWithMobileClip(canvas, photoDataUrl);
-      } else if (typeof window.analyzeSmartCameraDualTrack === 'function') {
-        parsed = await window.analyzeSmartCameraDualTrack(canvas, photoDataUrl);
-      }
-      updateAiScanStep('scanStepVlm', 'done', 'MobileCLIP2 視覺特徵比對完成');
-      updateAiScanStep('scanStepVisual', 'done', '物品特徵分類與提取完成');
-      updateAiScanStep('scanStepOcr', 'done', '文字效期提取解析完成');
-    } catch (err) {
-      console.warn('[Camera] 辨識流程異常：', err);
-    } finally {
-      // 無論成功或失敗均確保關閉遮罩並開啟確認彈窗
-      if (overlay) {
-        overlay.classList.remove('active');
-      }
-      hideAiScanLoading();
-
-      if (!parsed) {
-        parsed = {
-          success: true,
-          name: '新收錄物品',
-          category: 'other',
-          subCategory: '未分類',
-          emoji: '📦',
-          expiryDate: getOffsetDateString(getTodayString(), 30),
-          hasEndDate: false,
-          remindDaysBefore: 3,
-          remindTime: '09:00'
-        };
+      const canvas = document.getElementById('cameraCanvas');
+      const ctx = canvas?.getContext('2d');
+      const sw = source.videoWidth || source.naturalWidth || source.width;
+      const sh = source.videoHeight || source.naturalHeight || source.height;
+      if (!ctx || !sw || !sh) throw new Error('照片尚未準備好，請重新拍照。');
+      const scale = Math.min(1, 1600 / Math.max(sw, sh));
+      canvas.width = Math.max(1, Math.round(sw * scale));
+      canvas.height = Math.max(1, Math.round(sh * scale));
+      const zoom = source.tagName === 'VIDEO' ? currentCameraZoom : 1;
+      const cw = sw / zoom, ch = sh / zoom;
+      ctx.drawImage(source, (sw-cw)/2, (sh-ch)/2, cw, ch, 0, 0, canvas.width, canvas.height);
+      // Small local thumbnail; the higher resolution canvas is uploaded separately.
+      const thumbnail = document.createElement('canvas');
+      const ratio = Math.min(1, 640/Math.max(canvas.width, canvas.height));
+      thumbnail.width = Math.max(1, Math.round(canvas.width*ratio));
+      thumbnail.height = Math.max(1, Math.round(canvas.height*ratio));
+      thumbnail.getContext('2d').drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
+      photoDataUrl = thumbnail.toDataURL('image/jpeg',0.75);
+      thumbnail.width = thumbnail.height = 1;
+      consumeSmartLensQuota();
+      closeCameraScanModal();
+      showAiScanLoading(photoDataUrl);
+      if (typeof window.recognizeCloudCamera !== 'function') throw new Error(location.protocol === 'file:' ? '目前是直接開啟 HTML 檔案，無法載入辨識功能。請關閉此頁，雙擊「啟動期效管家.bat」，從 http://localhost:8080/ 使用 APP。' : '辨識程式未載入。請重新整理；若仍失敗，請確認網站包含 cloud-camera.js。');
+      parsed = await window.recognizeCloudCamera(canvas, photoDataUrl);
+    } catch (error) {
+      if (error?.name === 'AbortError' || error?.message === '辨識已取消') {
+        isAborted = true;
+        console.log('辨識已主動中斷或取消，靜默處理。');
       } else {
-        if (!parsed.name || parsed.name.trim() === '') {
-          parsed.name = '新收錄物品';
-        }
+        notice = error.message || '辨識未完成，請手動填寫。';
       }
-      if (typeof window.applyVlmDomValues === 'function') {
-        window.applyVlmDomValues(parsed.name, parsed.category, parsed.expiryDate);
-      }
-
-      if (!parsed.remindTime) parsed.remindTime = '09:00';
-      if (photoDataUrl && !parsed.image) parsed.image = photoDataUrl;
-
-      updateAiScanStep('scanStepFuse', 'done', '特徵校驗與排程計算完成！');
-
-      const input = document.getElementById('smartQuickAddInput');
-      const clearBtn = document.getElementById('smartQuickAddClear');
-      if (input && parsed.name) {
-        input.value = `${parsed.name} ${parsed.expiryDate ? parsed.expiryDate + '到期' : ''}`.trim();
-        input.classList.add('has-clear');
-        if (clearBtn) clearBtn.style.display = 'flex';
-      }
-
-      // 開啟確認彈窗
-      openNlpConfirmModal(parsed);
+    } finally {
+      closeCameraScanModal();
+      hideAiScanLoading();
+      isCameraProcessing = false;
+      if (window.setCloudCameraBusy) window.setCloudCameraBusy(false);
     }
+    if (isAborted) return;
+    if (!parsed) parsed = {success:false, name:'', category:'other', subCategory:'', emoji:'📦', expiryDate:null, hasEndDate:false, remindDaysBefore:3, remindTime:'09:00', image:photoDataUrl, recognitionNotice:notice};
+    openNlpConfirmModal(parsed);
   }
 
   window.addItem = addItem;
@@ -17053,6 +17999,18 @@ function extractCleanName(rawText) {
   window.getLastCreatedItem = () => lastCreatedItem;
   window.setLastCreatedItem = (item) => { lastCreatedItem = item; };
 
+  // 強化全域中斷函式，同步重設 isCameraProcessing 並隱藏遮罩
+  const origCancelRecognition = window.cancelCurrentRecognition;
+  window.cancelCurrentRecognition = function() {
+    isCameraProcessing = false;
+    hideAiScanLoading();
+    if (typeof origCancelRecognition === 'function') {
+      origCancelRecognition();
+    } else if (typeof window.setCloudCameraBusy === 'function') {
+      window.setCloudCameraBusy(false);
+    }
+  };
+
   // ==========================================
   // 9. 初始化啟動
   // ==========================================
@@ -17064,6 +18022,7 @@ function extractCleanName(rawText) {
   loadArchivedItems();
   updateTrashBadge();
   updateArchiveBadge();
+  updateSmartLensQuotaDisplays();
   loadCustomCategories();
   currentCategoryChip = getFirstPageCategory();
 
@@ -17134,14 +18093,6 @@ function extractCleanName(rawText) {
         };
       }
 
-      // 4. 相機按鈕
-      const btnCameraScan = document.getElementById('btnCameraScan');
-      if (btnCameraScan) {
-        btnCameraScan.onclick = function (e) {
-          e.preventDefault();
-          openCameraScanModal();
-        };
-      }
     } catch (btnErr) {
       console.warn('[ensureButtonListeners] error:', btnErr);
     }
@@ -17321,13 +18272,8 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <!-- TensorFlow.js 與 MobileNet 視覺外觀分類模型 (雙軌後備引擎) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
-  <!-- Tesseract.js 本地/離線 OCR 文字辨識引擎 -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <!-- MobileCLIP2 預計算特徵資料庫與主控制器 (v1.8.27) -->
-  <script type="module" src="mobileclip2-labels.js?v=1.8.27"></script>
-  <script type="module" src="app.js?v=1.8.27"></script>
+  <script src="icons.js?v=1.9.8"></script>
+  <script type="module" src="app.js?v=1.9.8"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.8"></script>
 </body>
 </html>
