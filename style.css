@@ -316,17 +316,18 @@ body {
   font-weight: 400;
 }
 
-/* Smart Input Embedded Camera Button (智慧輸入鏡頭按鈕) */
+/* Smart Input Embedded Camera Button (智慧輸入鏡頭按鈕：圓形略小於輸入框) */
 .header-smart-camera {
   position: absolute;
-  right: 12px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: transparent;
-  color: var(--ios-text-secondary);
+  background: #237be8;
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(35, 123, 232, 0.28);
   border: none;
   display: flex;
   align-items: center;
@@ -338,18 +339,25 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+.header-smart-camera svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.2;
+}
+
 .header-smart-camera:hover {
-  color: var(--ios-text-primary);
+  background: #1a6edb;
+  color: #ffffff;
 }
 
 .header-smart-camera:active {
-  transform: translateY(-50%) scale(0.88);
-  opacity: 0.6;
+  transform: translateY(-50%) scale(0.92);
+  opacity: 0.85;
 }
 
 .header-smart-clear {
   position: absolute;
-  right: 48px;
+  right: 52px;
   top: 50%;
   transform: translateY(-50%);
   width: 22px;
@@ -7219,5 +7227,125 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
+/* ==========================================================================
+   v1.9.12 Styles: 3-Mode Tracking Segment with Standby & Modal Delete
+   ========================================================================== */
+.tracking-mode-form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin: 0.5rem 0 0.25rem 0;
+}
+.tracking-mode-form-row .ios-label {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ios-text-secondary);
+  flex-shrink: 0;
+}
+.tracking-mode-form-row .ios-mode-segment {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+  background: var(--ios-surface-secondary);
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  gap: 3px;
+  min-width: 0;
+}
+.tracking-mode-form-row .mode-pill {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ios-text-secondary);
+  transition: all var(--transition-ios);
+  position: relative;
+}
+.tracking-mode-form-row .mode-pill.active {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+[data-theme="light"] .tracking-mode-form-row .mode-pill.active {
+  background: #007aff;
+  color: #ffffff;
+}
+.modal-delete-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ios-border);
+}
+.btn-modal-delete-item {
+  width: 100%;
+  min-height: 44px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 69, 58, 0.35);
+  background: rgba(255, 69, 58, 0.1);
+  color: #ff453a;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-ios);
+}
+.btn-modal-delete-item:active {
+  transform: scale(0.98);
+  background: rgba(255, 69, 58, 0.22);
+}
+[data-theme="light"] .btn-modal-delete-item {
+  background: rgba(255, 59, 48, 0.08);
+  color: #ff3b30;
+  border-color: rgba(255, 59, 48, 0.25);
+}
 
+
+
+
+
+.pending-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.pending-toggle input {
+  width: 22px;
+  height: 22px;
+  accent-color: #237be8;
+  flex-shrink: 0;
+}
+
+.pending-card.ios-item-card {
+  margin-bottom: 0;
+  border-radius: var(--radius-card);
+  padding: 0.92rem 0.82rem;
+}
+.btn-sheet-action.pending-start {
+  background: var(--ios-blue, #007aff) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.btn-sheet-action.pending-start:active {
+  background: #0062cc !important;
+}
 

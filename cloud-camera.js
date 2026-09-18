@@ -1,4 +1,4 @@
-// 1.9.10 — public endpoint only; no API key or developer password in the app.
+// 1.9.12 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
 const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
 
@@ -81,7 +81,7 @@ function dateOrNull(value, evidence) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
 }
 
-export async function resizeCanvasToBlob(canvas, maxDimension = 1024, quality = 0.75) {
+export async function resizeCanvasToBlob(canvas, maxDimension = 1024, quality = 0.7) {
   let targetCanvas = canvas;
   if (typeof document !== 'undefined' && canvas && (canvas.width > maxDimension || canvas.height > maxDimension)) {
     const maxSide = Math.max(canvas.width, canvas.height);
@@ -119,7 +119,7 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     }
     setCloudCameraBusy(true);
     if (!navigator.onLine) throw new Error('目前沒有網路，請手動填寫或連線後重新拍照。');
-    const blob = await resizeCanvasToBlob(canvas, 1024, 0.75);
+    const blob = await resizeCanvasToBlob(canvas, 1024, 0.7);
     if (controller.signal.aborted) {
       const abortErr = new Error('辨識已取消');
       abortErr.name = 'AbortError';
