@@ -1,4 +1,4 @@
-// 1.9.8 — public endpoint only; no API key or developer password in the app.
+// 1.9.10 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
 const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
 
@@ -81,6 +81,25 @@ function dateOrNull(value, evidence) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
 }
 
+export async function resizeCanvasToBlob(canvas, maxDimension = 1024, quality = 0.75) {
+  let targetCanvas = canvas;
+  if (typeof document !== 'undefined' && canvas && (canvas.width > maxDimension || canvas.height > maxDimension)) {
+    const maxSide = Math.max(canvas.width, canvas.height);
+    const scale = maxDimension / maxSide;
+    const targetWidth = Math.round(canvas.width * scale);
+    const targetHeight = Math.round(canvas.height * scale);
+    const resizedCanvas = document.createElement('canvas');
+    resizedCanvas.width = targetWidth;
+    resizedCanvas.height = targetHeight;
+    const ctx = resizedCanvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+      targetCanvas = resizedCanvas;
+    }
+  }
+  return new Promise(resolve => targetCanvas.toBlob(resolve, 'image/jpeg', quality));
+}
+
 export async function recognizeCanvas(canvas, photoDataUrl) {
   if (activeRecognitionController) {
     try { activeRecognitionController.abort(); } catch {}
@@ -100,7 +119,7 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     }
     setCloudCameraBusy(true);
     if (!navigator.onLine) throw new Error('目前沒有網路，請手動填寫或連線後重新拍照。');
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    const blob = await resizeCanvasToBlob(canvas, 1024, 0.75);
     if (controller.signal.aborted) {
       const abortErr = new Error('辨識已取消');
       abortErr.name = 'AbortError';
@@ -151,6 +170,7 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
 
 if (typeof window !== 'undefined') {
   window.recognizeCloudCamera = recognizeCanvas;
+  window.resizeCanvasToBlob = resizeCanvasToBlob;
   window.isCloudCameraBusy = isCloudCameraBusy;
   window.setCloudCameraBusy = setCloudCameraBusy;
   window.cancelCurrentRecognition = cancelCurrentRecognition;

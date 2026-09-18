@@ -4757,29 +4757,83 @@ input[type="time"]::-webkit-date-and-time-value {
   color: #000000;
 }
 
-[data-theme="light"] .home-filter-btn.active,
-[data-theme="light"] .pill-segment.active {
+[data-theme="light"] .home-filter-btn[data-filter="all"].active,
+[data-theme="light"] #pillAll.active {
   background: #000000;
   color: #ffffff;
   border-color: #000000;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-[data-theme="light"] .home-filter-btn.active .filter-btn-badge,
 [data-theme="light"] .home-filter-btn[data-filter="all"].active .filter-btn-badge,
-[data-theme="light"] #pillAll.active #pillCountAll,
-[data-theme="light"] .pill-segment.active .pill-counter {
+[data-theme="light"] #pillAll.active #pillCountAll {
   background: #000000 !important;
   background-image: linear-gradient(#000000, #000000) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 
-[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge,
-[data-theme="light"] .pill-segment:not(.active) .pill-counter {
+/* 將到期按鈕明亮模式樣式 (Urgent Filter Button in Light Theme) */
+[data-theme="light"] .home-filter-btn[data-filter="urgent"].active,
+[data-theme="light"] #pillUrgent.active {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #f97316;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.22);
+}
+
+[data-theme="light"] .home-filter-btn.active .filter-btn-badge.urgent,
+[data-theme="light"] .home-filter-btn[data-filter="urgent"].active .filter-btn-badge,
+[data-theme="light"] #pillUrgent.active .pill-counter {
+  background: #f97316 !important;
+  background-image: linear-gradient(#f97316, #f97316) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: none !important;
+}
+
+/* 已過期按鈕明亮模式樣式 (Expired Filter Button in Light Theme) */
+[data-theme="light"] .home-filter-btn[data-filter="expired"].active,
+[data-theme="light"] #pillExpired.active {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.22);
+}
+
+[data-theme="light"] .home-filter-btn.active .filter-btn-badge.expired,
+[data-theme="light"] .home-filter-btn[data-filter="expired"].active .filter-btn-badge,
+[data-theme="light"] #pillExpired.active .pill-counter {
+  background: #ef4444 !important;
+  background-image: linear-gradient(#ef4444, #ef4444) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: none !important;
+}
+
+/* 未啟用徽章明亮模式顏色 (Inactive Badges in Light Theme) */
+[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge:not(.urgent):not(.expired),
+[data-theme="light"] .pill-segment:not(.active) .pill-counter:not(.urgent):not(.expired) {
   background: rgba(0, 0, 0, 0.08) !important;
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
+}
+
+[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge.urgent {
+  background: #ffedd5 !important;
+  background-image: linear-gradient(#ffedd5, #ffedd5) !important;
+  color: #c2410c !important;
+  -webkit-text-fill-color: #c2410c !important;
+  border: 1px solid rgba(249, 115, 22, 0.35) !important;
+}
+
+[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge.expired {
+  background: #fee2e2 !important;
+  background-image: linear-gradient(#fee2e2, #fee2e2) !important;
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
 }
 
 /* 4. Home Item Cards */

@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.8">
+  <link rel="stylesheet" href="style.css?v=1.9.10">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -4891,29 +4891,83 @@ input[type="time"]::-webkit-date-and-time-value {
   color: #000000;
 }
 
-[data-theme="light"] .home-filter-btn.active,
-[data-theme="light"] .pill-segment.active {
+[data-theme="light"] .home-filter-btn[data-filter="all"].active,
+[data-theme="light"] #pillAll.active {
   background: #000000;
   color: #ffffff;
   border-color: #000000;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-[data-theme="light"] .home-filter-btn.active .filter-btn-badge,
 [data-theme="light"] .home-filter-btn[data-filter="all"].active .filter-btn-badge,
-[data-theme="light"] #pillAll.active #pillCountAll,
-[data-theme="light"] .pill-segment.active .pill-counter {
+[data-theme="light"] #pillAll.active #pillCountAll {
   background: #000000 !important;
   background-image: linear-gradient(#000000, #000000) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 
-[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge,
-[data-theme="light"] .pill-segment:not(.active) .pill-counter {
+/* 將到期按鈕明亮模式樣式 (Urgent Filter Button in Light Theme) */
+[data-theme="light"] .home-filter-btn[data-filter="urgent"].active,
+[data-theme="light"] #pillUrgent.active {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #f97316;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.22);
+}
+
+[data-theme="light"] .home-filter-btn.active .filter-btn-badge.urgent,
+[data-theme="light"] .home-filter-btn[data-filter="urgent"].active .filter-btn-badge,
+[data-theme="light"] #pillUrgent.active .pill-counter {
+  background: #f97316 !important;
+  background-image: linear-gradient(#f97316, #f97316) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: none !important;
+}
+
+/* 已過期按鈕明亮模式樣式 (Expired Filter Button in Light Theme) */
+[data-theme="light"] .home-filter-btn[data-filter="expired"].active,
+[data-theme="light"] #pillExpired.active {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.22);
+}
+
+[data-theme="light"] .home-filter-btn.active .filter-btn-badge.expired,
+[data-theme="light"] .home-filter-btn[data-filter="expired"].active .filter-btn-badge,
+[data-theme="light"] #pillExpired.active .pill-counter {
+  background: #ef4444 !important;
+  background-image: linear-gradient(#ef4444, #ef4444) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: none !important;
+}
+
+/* 未啟用徽章明亮模式顏色 (Inactive Badges in Light Theme) */
+[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge:not(.urgent):not(.expired),
+[data-theme="light"] .pill-segment:not(.active) .pill-counter:not(.urgent):not(.expired) {
   background: rgba(0, 0, 0, 0.08) !important;
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
+}
+
+[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge.urgent {
+  background: #ffedd5 !important;
+  background-image: linear-gradient(#ffedd5, #ffedd5) !important;
+  color: #c2410c !important;
+  -webkit-text-fill-color: #c2410c !important;
+  border: 1px solid rgba(249, 115, 22, 0.35) !important;
+}
+
+[data-theme="light"] .home-filter-btn:not(.active) .filter-btn-badge.expired {
+  background: #fee2e2 !important;
+  background-image: linear-gradient(#fee2e2, #fee2e2) !important;
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
 }
 
 /* 4. Home Item Cards */
@@ -7385,7 +7439,50 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 </style>
-</head>
+<script src="icons.js?v=1.9.10"></script>
+<style>
+/* Flat icon system: consistent silhouettes, no gradients, highlights or shadows. */
+.flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);width:24px;height:24px;flex-shrink:0;vertical-align:middle;filter:none!important;}
+[data-theme="light"] .flat-item-icon {color:var(--icon-color);}
+#itemEmoji{display:none;}
+.flat-item-icon g {fill:color-mix(in srgb, currentColor 12%, transparent);}
+[data-theme="dark"] .flat-item-icon,[data-theme="amoled"] .flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);}
+.trash-item-emoji .flat-item-icon,.sort-card-emoji .flat-item-icon{width:30px;height:30px;}
+.quick-emoji-btn .flat-item-icon{width:24px;height:24px;pointer-events:none;}
+select.flat-icon-select {padding-left:46px!important;background-image:var(--flat-select-icon)!important;background-size:24px 24px!important;background-position:13px center!important;background-repeat:no-repeat!important;}
+.nlp-confirm-icon-preview{box-shadow:none!important;}
+</style>
+<style>
+.icon-picker-native{display:none!important;}
+.icon-picker-trigger{display:flex!important;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;background-image:none!important;padding:14px 16px!important;min-height:52px;font:inherit;color:inherit;}
+.icon-picker-trigger>span:nth-child(2){flex:1;min-width:0;white-space:normal;}
+.icon-picker-trigger .flat-item-icon{width:28px;height:28px;}
+.icon-picker-chevron{opacity:.6;}
+.icon-picker-trigger:focus-visible,.icon-picker-option:focus-visible{outline:2px solid #5bafff;outline-offset:-3px;}
+.icon-picker-dialog{margin:auto;box-sizing:border-box;width:min(440px,calc(100vw - 28px));max-height:min(620px,80dvh);padding:0;border:1px solid #48484b;border-radius:20px;background:#242426;color:#f7f7f9;box-shadow:0 16px 60px #0005;}
+.icon-picker-dialog::backdrop{background:#0008;}
+.icon-picker-dialog header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ffffff20;}
+.icon-picker-dialog h2{font:600 18px/1.4 system-ui;margin:0;}
+.icon-picker-dialog header button{border:0;border-radius:50%;width:34px;height:34px;font-size:24px;background:#ffffff12;color:inherit;cursor:pointer;}
+.icon-picker-options{max-height:min(520px,calc(80dvh - 75px));overflow:auto;overscroll-behavior:contain;padding:8px;}
+.icon-picker-option{display:flex;align-items:center;gap:14px;width:100%;min-height:54px;padding:10px 14px;border:0;border-radius:12px;background:transparent;color:inherit;text-align:left;font:500 16px/1.5 system-ui;cursor:pointer;}
+.icon-picker-option .flat-item-icon{width:30px;height:30px;}
+.icon-picker-option>span:nth-child(2){flex:1;}
+.icon-picker-option[aria-selected=true]{background:#68aef322;}
+.icon-picker-option:hover{background:#ffffff0c;}
+.icon-picker-check{color:#70baff;font-weight:700;}
+[data-theme="light"] .icon-picker-dialog{background:#fff;color:#253241;border-color:#dce2e8;}
+[data-theme="light"] .icon-picker-dialog header{border-color:#e2e8ee;}
+[data-theme="light"] .icon-picker-option:hover{background:#edf3f8;}
+</style>
+<style>
+.app-ui-icon{width:20px;height:20px;display:inline-block;vertical-align:-4px;flex-shrink:0;pointer-events:none;}
+.settings-icon{color:var(--ios-text-secondary,#a9bac6)!important;background:transparent!important;border-radius:10px;}
+.settings-icon .app-ui-icon{width:25px;height:25px;}
+.btn-modal-close .app-ui-icon{width:20px;height:20px;}
+.pill-btn-icon .app-ui-icon{width:20px;height:20px;}
+button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;}
+</style></head>
 <body>
   <div class="ios-app-container">
     <!-- Top Header -->
@@ -7642,8 +7739,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                 </button>
                 <button type="button" id="btnRemoveImage" class="btn-ios-remove-photo" style="display:none;">✕ 移除照片</button>
                 <div class="emoji-direct-input-wrap">
-                  <label for="itemEmoji" class="sr-only">自訂 Emoji</label>
-                  <input type="text" id="itemEmoji" class="emoji-input-box" value="🪑" maxlength="4" title="手動自訂 Emoji">
+                  <label for="itemEmoji" class="sr-only">圖標依分類與細項同步</label>
+                  <input type="text" id="itemEmoji" class="emoji-input-box" value="🪑" maxlength="4" title="手動圖標依分類與細項同步">
                 </div>
               </div>
             </div>
@@ -7666,8 +7763,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                     <option value="vehicle">🚗 車輛</option>
                     <option value="subscription">📅 訂閱</option>
                     <option value="medicine">💊 藥品</option>
-                    <option value="cleaning">🧼 清潔</option>
-                    <option value="filter">🔄 耗材</option>
+                    <option value="cleaning">🧽 清潔</option>
+                    <option value="filter">🌀 耗材</option>
                     <option value="food">🥛 食品</option>
                     <option value="pao">🧴 日用</option>
                     <option value="other">📦 其他</option>
@@ -8043,7 +8140,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.8</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.10</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9557,7 +9654,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.8';
+  const APP_VERSION = '1.9.10';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -9638,7 +9735,7 @@ var CapacitorBridgeBundle = (() => {
   { keywords: ['隱形眼鏡', '保養液', '隱眼', '生理食鹽水'], emoji: '👁️', cat: 'medicine', subCat: '保養液' },
 
   // 清潔 (cleaning)
-  { keywords: ['菜瓜布', '海綿', '科技海綿', '洗碗海綿'], emoji: '🧼', cat: 'cleaning', subCat: '菜瓜布' },
+  { keywords: ['菜瓜布', '海綿', '科技海綿', '洗碗海綿'], emoji: '🧽', cat: 'cleaning', subCat: '菜瓜布' },
   { keywords: ['洗衣精', '洗衣球', '洗衣膠囊', '洗衣粉', '柔軟精', '漂白水'], emoji: '🧺', cat: 'cleaning', subCat: '洗衣精' },
   { keywords: ['洗碗精', '洗潔精', '洗碗機洗碗粉', '光潔劑', '洗碗錠', '洗碗塊'], emoji: '🍽️', cat: 'cleaning', subCat: '洗碗精' },
   { keywords: ['抹布', '拖把', '除塵拖', '除塵紙', '靜電拖'], emoji: '🧽', cat: 'cleaning', subCat: '抹布' },
@@ -9795,14 +9892,16 @@ var CapacitorBridgeBundle = (() => {
   { keywords: ['樟木', '防蛀包', '防蟲包', '除蟲片', '衣櫃防潮'], emoji: '🌿', cat: 'fashion', subCat: '衣物防護' },
   { keywords: ['高跟鞋', '皮鞋', '皮靴', '精品鞋', '靴子'], emoji: '👠', cat: 'fashion', subCat: '精品鞋靴' },
 
+  // 運動 (sports)
+  { keywords: ['球鞋', '運動鞋', '跑鞋', '慢跑鞋', '籃球鞋', '羽球鞋', '登山鞋', '鞋墊'], emoji: '👟', cat: 'sports', subCat: '跑鞋運動鞋', duration: 365 },
+
   // 其他 (other)
   { keywords: ['一般雜項', '雜項', '雜物', '日用品', '生活用品'], emoji: '📦', cat: 'other', subCat: '一般雜項' },
-  { keywords: ['眼鏡', '墨鏡', '太陽眼鏡', '抗藍光', '鏡框', '鏡片', '老花眼鏡', '護目鏡'], emoji: '👓', cat: 'other', subCat: '配件小物', duration: 365 },
-  { keywords: ['配件小物', '飾品小物', '隨身配件', '小物'], emoji: '👓', cat: 'other', subCat: '配件小物' },
+  { keywords: ['眼鏡', '墨鏡', '太陽眼鏡', '抗藍光', '鏡框', '鏡片', '老花眼鏡', '護目鏡'], emoji: '🕶️', cat: 'fashion', subCat: '太陽眼鏡', duration: 365 },
+  { keywords: ['配件小物', '飾品小物', '隨身配件', '小物'], emoji: '💍', cat: 'fashion', subCat: '飾品小物' },
   { keywords: ['未分類', '其他物品', '待整理'], emoji: '📦', cat: 'other', subCat: '未分類' },
-  { keywords: ['球鞋', '慢跑鞋', '運動鞋', '拖鞋'], emoji: '👟', cat: 'other', subCat: '球鞋' },
   { keywords: ['背包', '後背包', '公事包', '手提包'], emoji: '🎒', cat: 'other', subCat: '包袋' },
-  { keywords: ['衣服', '褲子', '襯衫', '外套', '洋裝'], emoji: '🧥', cat: 'other', subCat: '衣物' },
+  { keywords: ['衣服', '褲子', '襯衫', '外套', '洋裝'], emoji: '👕', cat: 'fashion', subCat: '換季送洗' },
   { keywords: ['會議', '開會', '研討會', '週會', '月會', '晨會'], emoji: '📅', cat: 'other', subCat: '會議' },
   { keywords: ['備忘', '筆記', '代辦', '待辦', '個人事項', '隨手記'], emoji: '📌', cat: 'other', subCat: '備忘' }
 ];
@@ -9821,7 +9920,7 @@ var CapacitorBridgeBundle = (() => {
   // 【配件小物判定】：眼鏡與個人配件 (比對包含眼鏡/墨鏡等，排除隱形眼鏡與保養液，絕不可進入食品)
   const GLASSES_REGEX = /(眼鏡|墨鏡|太陽眼鏡|抗藍光|鏡框|鏡片|老花眼鏡|護目鏡)/i;
   if (GLASSES_REGEX.test(text) && !text.includes('隱形眼鏡') && !text.includes('保養液')) {
-    return { category: 'other', subCategory: '配件小物', emoji: '👓' };
+    return { category: 'fashion', subCategory: '太陽眼鏡', emoji: '🕶️' };
   }
 
   const lower = text.toLowerCase();
@@ -9893,9 +9992,9 @@ var CapacitorBridgeBundle = (() => {
     },
     cleaning: {
       label: '清潔',
-      emoji: '🧼',
+      emoji: '🧽',
       items: [
-        { name: '廚房菜瓜布', subCat: '菜瓜布', emoji: '🧼', duration: 30, hasEndDate: true, warnDays: 5, brand: '3M 百利', location: '廚房流理台', notes: '潮濕環境易藏污納垢，每個月定期更換' },
+        { name: '廚房菜瓜布', subCat: '菜瓜布', emoji: '🧽', duration: 30, hasEndDate: true, warnDays: 5, brand: '3M 百利', location: '廚房流理台', notes: '潮濕環境易藏污納垢，每個月定期更換' },
         { name: '濃縮洗衣精', subCat: '洗衣精', emoji: '🧺', duration: 90, hasEndDate: true, warnDays: 7, brand: 'Ariel 洗衣精', location: '工作陽台', notes: '家庭常備清潔用品，定期補貨' },
         { name: '洗碗精', subCat: '洗碗精', emoji: '🍽️', duration: 60, hasEndDate: true, warnDays: 7, location: '廚房洗滌槽', notes: '溫和洗淨碗盤油脂' },
         { name: '擦拭抹布', subCat: '抹布', emoji: '🧽', duration: 30, hasEndDate: true, warnDays: 5, location: '廚房中島', notes: '抹布容易滋生細菌，每月定期換新' },
@@ -9919,7 +10018,7 @@ var CapacitorBridgeBundle = (() => {
     },
     filter: {
       label: '耗材',
-      emoji: '🔄',
+      emoji: '🌀',
       items: [
         { name: '清淨機濾網', subCat: '濾網', emoji: '🌀', duration: 180, hasEndDate: true, warnDays: 14, brand: 'Honeywell', location: '客廳', notes: '每 6 個月定期換新 HEPA 濾網' },
         { name: '淨水器濾芯', subCat: '濾芯', emoji: '💧', duration: 90, hasEndDate: true, warnDays: 7, brand: '3M 淨水', location: '廚房流理台', notes: '建議每季定期更換活性碳濾芯' },
@@ -9975,7 +10074,7 @@ var CapacitorBridgeBundle = (() => {
     },
     food: {
       label: '食品',
-      emoji: '🥦',
+      emoji: '🥛',
       items: [
         { name: '當季新鮮青菜', subCat: '青菜', emoji: '🥬', duration: 5, hasEndDate: true, warnDays: 2, brand: '水耕蔬菜', location: '冰箱蔬果室', notes: '綠葉蔬菜保鮮期約 3~5 天，建議盡早食用' },
         { name: '常備高麗菜', subCat: '青菜', emoji: '🥗', duration: 10, hasEndDate: true, warnDays: 3, location: '冰箱蔬果室', notes: '包葉蔬菜冷藏保存約 7~10 天' },
@@ -10056,7 +10155,7 @@ var CapacitorBridgeBundle = (() => {
     },
     home: {
       label: '居家',
-      emoji: '🪴',
+      emoji: '🏠',
       items: [
         { name: '室內觀葉綠植', subCat: '植栽綠化', emoji: '🌿', duration: 7, hasEndDate: true, warnDays: 1, location: '客廳採光窗台', notes: '室內觀葉植物每週定期澆水與葉面擦拭清潔' },
         { name: '植物長效緩釋肥', subCat: '花草肥料', emoji: '🌱', duration: 90, hasEndDate: true, warnDays: 7, location: '園藝花架', notes: '每季定期於盆土表層追加顆粒緩效肥' },
@@ -10068,7 +10167,7 @@ var CapacitorBridgeBundle = (() => {
     },
     fashion: {
       label: '穿搭',
-      emoji: '👗',
+      emoji: '👕',
       items: [
         { name: '羽絨冬衣專業送洗', subCat: '換季送洗', emoji: '🧥', duration: 180, hasEndDate: true, warnDays: 14, location: '衣帽間', notes: '換季前送專業洗衣店乾洗水洗，套透氣防塵袋收納' },
         { name: '真皮皮包皮夾', subCat: '皮革保養', emoji: '👜', duration: 90, hasEndDate: true, warnDays: 7, location: '防潮更衣室', notes: '真皮材質每季塗抹保養皮革油防止乾燥龜裂' },
@@ -10079,7 +10178,7 @@ var CapacitorBridgeBundle = (() => {
     },
     drinks: {
       label: '飲品',
-      emoji: '🧃',
+      emoji: '🥤',
       items: [
         { name: '精品咖啡豆', subCat: '咖啡豆', emoji: '☕', duration: 30, hasEndDate: true, warnDays: 5, location: '吧台密封罐', notes: '拆封後最佳香氣賞味期 1 個月' },
         { name: '濾掛咖啡包', subCat: '濾掛咖啡', emoji: '☕', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公桌抽屜', notes: '充氮防氧化，建議半年內沖泡完畢' },
@@ -10113,7 +10212,7 @@ var CapacitorBridgeBundle = (() => {
     },
     fresh: {
       label: '生鮮',
-      emoji: '🥩',
+      emoji: '🐟',
       items: [
         { name: '冷藏牛肉羊肉', subCat: '牛肉羊肉', emoji: '🥩', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '冷藏 3 天內料理或及時分裝冷凍' },
         { name: '生鮮豬肉片', subCat: '生鮮豬肉', emoji: '🥓', duration: 3, hasEndDate: true, warnDays: 1, location: '冰箱冷藏室', notes: '儘速熟食烹飪' },
@@ -10127,7 +10226,7 @@ var CapacitorBridgeBundle = (() => {
     },
     supplement: {
       label: '保健',
-      emoji: '🧬',
+      emoji: '💊',
       items: [
         { name: '綜合維他命錠', subCat: '綜合維他命', emoji: '💊', duration: 180, hasEndDate: true, warnDays: 14, location: '餐桌藥盒', notes: '開封後 6 個月內食用完畢' },
         { name: '高單位活性B群', subCat: 'B群活力', emoji: '⚡', duration: 180, hasEndDate: true, warnDays: 14, location: '辦公桌', notes: '每日晨間活力補充' },
@@ -10174,7 +10273,7 @@ var CapacitorBridgeBundle = (() => {
     },
     stationery: {
       label: '文具',
-      emoji: '📚',
+      emoji: '✏️',
       items: [
         { name: '年度手帳筆記本', subCat: '手帳筆記', emoji: '📓', duration: 365, hasEndDate: false, location: '辦公桌', notes: '記錄陪伴與工作生活筆記使用天數' },
         { name: '閱讀書籍與工具書', subCat: '書籍雜誌', emoji: '📖', duration: 180, hasEndDate: false, location: '書房書架', notes: '記錄藏書閱讀與陪伴天數' },
@@ -10189,8 +10288,9 @@ var CapacitorBridgeBundle = (() => {
     },
     sports: {
       label: '運動',
-      emoji: '🏃',
+      emoji: '🏋️',
       items: [
+        { name: '慢跑球鞋', subCat: '球鞋', emoji: '👟', brand: 'Nike Invincible', location: '玄關鞋櫃', hasEndDate: false, notes: '僅記錄購買穿著天數，定期檢視中底衰退' },
         { name: '避震慢跑跑鞋', subCat: '跑鞋運動鞋', emoji: '👟', duration: 365, hasEndDate: false, location: '鞋櫃', notes: 'PU/EVA中底避震壽命約 500~800 公里，記錄使用天數' },
         { name: '專業防滑瑜珈墊', subCat: '瑜珈墊', emoji: '🧘', duration: 365, hasEndDate: false, location: '客廳運動角', notes: '定期使用酒精濕巾清潔除菌' },
         { name: '運動護膝護腕護具', subCat: '運動護具', emoji: '🛡️', duration: 180, hasEndDate: true, warnDays: 14, location: '運動裝備包', notes: '彈性纖維疲勞鬆弛即應換新' },
@@ -10218,9 +10318,8 @@ var CapacitorBridgeBundle = (() => {
     },
     other: {
       label: '其他',
-      emoji: '📌',
+      emoji: '📦',
       items: [
-        { name: '慢跑球鞋', subCat: '球鞋', emoji: '👟', brand: 'Nike Invincible', location: '玄關鞋櫃', hasEndDate: false, notes: '僅記錄購買穿著天數，定期檢視中底衰退' },
         { name: '商務背包', subCat: '包袋', emoji: '🎒', location: '玄關掛架', hasEndDate: false, notes: '通勤耐用度與陪伴使用天數記錄' },
         { name: '日常工作會議', subCat: '會議', emoji: '📅', duration: 7, hasEndDate: true, warnDays: 1, location: '線上會議室', notes: '日常工作進度會議與專案追蹤' },
         { name: '各類生活備忘', subCat: '備忘', emoji: '📌', duration: 30, hasEndDate: true, warnDays: 3, location: '生活隨手記', notes: '各類個人自訂物品使用效期追蹤' }
@@ -11040,7 +11139,7 @@ var CapacitorBridgeBundle = (() => {
       if (item.image) {
         mediaHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
       } else {
-        mediaHtml = escapeHtml(item.emoji || '📦');
+        mediaHtml = getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji});
       }
 
       return `
@@ -11246,7 +11345,7 @@ var CapacitorBridgeBundle = (() => {
       if (item.image) {
         mediaHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
       } else {
-        mediaHtml = escapeHtml(item.emoji || '📦');
+        mediaHtml = getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji});
       }
 
       const archiveDateStr = item.archivedAt ? new Date(item.archivedAt).toLocaleDateString() : '';
@@ -11798,7 +11897,7 @@ var CapacitorBridgeBundle = (() => {
     if (item.image) {
       iconContent = `<img src="${item.image}" class="card-thumb-img" alt="${escapeHtml(item.name)}">`;
     } else {
-      const svgIcon = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : '';
+      const svgIcon = (typeof getCategoryIcon === 'function') ? (getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji}) || getCategoryIcon(item.category)) : '';
       iconContent = svgIcon || `<span>${escapeHtml(item.emoji || '📦')}</span>`;
     }
 
@@ -12193,7 +12292,7 @@ var CapacitorBridgeBundle = (() => {
     if (item.image) {
       sheetEmoji.innerHTML = `<img src="${item.image}" class="sheet-thumb-img" alt="${escapeHtml(item.name)}">`;
     } else {
-      const svgIcon = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : '';
+      const svgIcon = (typeof getCategoryIcon === 'function') ? getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji}) : '';
       sheetEmoji.innerHTML = svgIcon || escapeHtml(item.emoji || '📦');
     }
 
@@ -12605,8 +12704,9 @@ var CapacitorBridgeBundle = (() => {
       previewImageEl.style.display = 'none';
       previewEmojiChar.style.display = 'flex';
       const curCat = (itemCategorySelect && itemCategorySelect.value) ? itemCategorySelect.value : 'other';
-      const catSvg = (typeof getCategoryIcon === 'function') ? getCategoryIcon(curCat) : '';
-      if (catSvg && (!itemEmojiInput.value || itemEmojiInput.value === '🪑' || itemEmojiInput.value === '📦')) {
+      const lookupKey = itemSubCategorySelect?.value || itemEmojiInput?.value || curCat;
+      const catSvg = (typeof getCategoryIcon === 'function') ? getSubCategoryIcon(curCat, itemSubCategorySelect?.value || '') : '';
+      if (catSvg) {
         previewEmojiChar.innerHTML = catSvg;
       } else {
         previewEmojiChar.textContent = itemEmojiInput.value || '📦';
@@ -12671,7 +12771,7 @@ var CapacitorBridgeBundle = (() => {
     showToast('已移除自訂相片，切換為圖標');
   });
 
-  // 手動自訂 Emoji
+  // 手動圖標依分類與細項同步
   itemEmojiInput.addEventListener('input', function () {
     isManualEmojiSet = true;
     updateAvatarPreview();
@@ -13053,6 +13153,14 @@ var CapacitorBridgeBundle = (() => {
   });
 
   // 分類細項下拉選單核心渲染與聯動邏輯
+  function uniqueSubCategoryItems(entries) {
+    const seen = new Set();
+    return entries.filter(entry => {
+      const key = String(entry.subCat || entry.name || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+  }
   function populateSubCategoryDropdown(category, activeSubCatName = '') {
     const allCats = getAllCategories();
     const catData = allCats[category];
@@ -13069,10 +13177,10 @@ var CapacitorBridgeBundle = (() => {
     let hasMatched = false;
 
     if (catData.items && Array.isArray(catData.items)) {
-      catData.items.forEach(subItem => {
+      uniqueSubCategoryItems(catData.items).forEach(subItem => {
         const opt = document.createElement('option');
         opt.value = subItem.subCat;
-        opt.textContent = `${subItem.emoji || catData.emoji || '🏷️'} ${subItem.subCat || subItem.name}`;
+        opt.textContent = `${subItem.subCat || subItem.name}`;
         opt.dataset.name = subItem.name;
         opt.dataset.subcat = subItem.subCat;
         opt.dataset.emoji = subItem.emoji || catData.emoji || '🏷️';
@@ -13126,7 +13234,7 @@ var CapacitorBridgeBundle = (() => {
       const cat = allCats[key];
       const opt = document.createElement('option');
       opt.value = key;
-      opt.textContent = `${cat.emoji} ${cat.label}`;
+      opt.textContent = `${cat.label}`;
       if (key === prevVal) opt.selected = true;
       itemCategorySelect.appendChild(opt);
     });
@@ -14551,7 +14659,7 @@ var CapacitorBridgeBundle = (() => {
       const btn = document.createElement('button');
       btn.className = `category-chip ${catKey === currentCategoryChip ? 'active' : ''}`;
       btn.dataset.cat = catKey;
-      const chipSvg = (typeof getCategoryIcon === 'function') ? getCategoryIcon(catKey) : '';
+      const chipSvg = (typeof getCategoryIcon === 'function') ? (cat.isCustom ? getCategoryIcon(cat.emoji) : getCategoryIcon(catKey)) : '';
       if (chipSvg) {
         btn.innerHTML = `<span class="chip-icon">${chipSvg}</span><span class="chip-label">${escapeHtml(cat.label)}</span>`;
       } else {
@@ -14657,7 +14765,7 @@ var CapacitorBridgeBundle = (() => {
       const cat = allCats[catKey];
       const opt = document.createElement('option');
       opt.value = catKey;
-      opt.textContent = `${cat.emoji} ${cat.label}`;
+      opt.textContent = `${cat.label}`;
       if (catKey === currentFirst) {
         opt.selected = true;
       }
@@ -14695,8 +14803,8 @@ var CapacitorBridgeBundle = (() => {
     const catObj = allCats[currentCategoryChip] || { emoji: '📦', label: '其他' };
     const countInCat = items.filter(it => it.category === currentCategoryChip).length;
     if (catActiveEmoji) {
-      if (typeof getCategoryIcon === 'function' && !catObj.isCustom) {
-        catActiveEmoji.innerHTML = getCategoryIcon(currentCategoryChip);
+      if (typeof getCategoryIcon === 'function') {
+        catActiveEmoji.innerHTML = getCategoryIcon(catObj.isCustom ? catObj.emoji : currentCategoryChip);
       } else {
         catActiveEmoji.textContent = catObj.emoji || '📦';
       }
@@ -14725,7 +14833,7 @@ var CapacitorBridgeBundle = (() => {
       if (item.image) {
         thumbHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}">`;
       } else {
-        thumbHtml = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : (item.emoji || '📦');
+        thumbHtml = (typeof getCategoryIcon === 'function') ? getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji}) : (item.emoji || '📦');
       }
 
       const catObj = allCats[item.category] || { label: '其他' };
@@ -15065,7 +15173,7 @@ var CapacitorBridgeBundle = (() => {
       itemEl.innerHTML = `
         <div class="cat-manage-info">
           <div class="cat-manage-title-wrap">
-            <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function' && !cat.isCustom) ? getCategoryIcon(key) : cat.emoji}</span>
+            <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function') ? getCategoryIcon(cat.isCustom ? cat.emoji : key) : cat.emoji}</span>
             <span class="group-page-badge">${pageName}</span>
             <span class="cat-manage-label" title="${escapeHtml(cat.label)}">${escapeHtml(cat.label)}</span>
             ${isPreset ? `<span class="cat-badge-default" style="font-size:0.7rem;padding:0.15rem 0.4rem;">預設</span>` : ''}
@@ -16598,14 +16706,14 @@ function extractCleanName(rawText) {
     let hasMatched = false;
     if (catData.items && Array.isArray(catData.items)) {
       const seen = new Set();
-      catData.items.forEach(subItem => {
+      uniqueSubCategoryItems(catData.items).forEach(subItem => {
         const scName = (subItem.subCat || subItem.name || '').trim();
         if (!scName || seen.has(scName)) return;
         seen.add(scName);
 
         const opt = document.createElement('option');
         opt.value = scName;
-        opt.textContent = `${subItem.emoji || catData.emoji || '🏷️'} ${scName}`;
+        opt.textContent = `${scName}`;
         const isMilkAlias = (s) => /鮮乳|牛奶|鮮奶|milk/i.test(s || '');
         const isMatch = activeSubCatName && (
           activeSubCatName === scName || 
@@ -16677,7 +16785,7 @@ function extractCleanName(rawText) {
       for (const [key, obj] of Object.entries(allCats)) {
         const opt = document.createElement('option');
         opt.value = key;
-        opt.textContent = `${obj.emoji || '📌'} ${obj.label || key}`;
+        opt.textContent = `${obj.label || key}`;
         catSelect.appendChild(opt);
       }
       const targetCat = (typeof window.normalizeCategoryKey === 'function')
@@ -16892,7 +17000,7 @@ function extractCleanName(rawText) {
         if (iconPreview) {
           iconPreview.style.display = 'flex';
           const curCat = catSelect ? catSelect.value : (parsed.category || 'other');
-          iconPreview.innerHTML = (typeof getCategoryIcon === 'function') ? getCategoryIcon(curCat) : '📦';
+          iconPreview.innerHTML = (typeof getCategoryIcon === 'function') ? getSubCategoryIcon(curCat, document.getElementById('nlpConfirmSubCategory')?.value || '') : '📦';
         }
         if (btnRemoveImg) btnRemoveImg.style.display = 'none';
       }
@@ -16910,7 +17018,7 @@ function extractCleanName(rawText) {
       catSelect.onchange = function () {
         populateNlpSubCategoryDropdown(this.value);
         if (!parsed.image && iconPreview && typeof getCategoryIcon === 'function') {
-          iconPreview.innerHTML = getCategoryIcon(this.value);
+          iconPreview.innerHTML = getSubCategoryIcon(this.value, document.getElementById('nlpConfirmSubCategory')?.value || '');
         }
       };
     }
@@ -18272,8 +18380,42 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <script src="icons.js?v=1.9.8"></script>
-  <script type="module" src="app.js?v=1.9.8"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.8"></script>
+
+  <script type="module" src="app.js?v=1.9.10"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.10"></script>
+
+<script>
+// Native selects retain mobile accessibility; a shared SVG identifies the selection.
+(function(){
+ const pairs=[['itemCategorySelect','itemSubCategorySelect'],['nlpConfirmCategory','nlpConfirmSubCategory']];
+ function refresh(){
+  for(const [catId,subId] of pairs){
+   const cat=document.getElementById(catId),sub=document.getElementById(subId);
+   for(const [el,detail] of [[cat,''],[sub,sub?.value||'']]){
+    if(!el)continue;
+    const svg=getSubCategoryIcon(cat?.value||'other',detail).replace('stroke="currentColor"','stroke="#6f94a3"').replace(/<g>/,'<g fill="none">');
+    el.classList.add('flat-icon-select');
+    el.style.setProperty('--flat-select-icon',`url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+   }
+  }
+  const preview=document.getElementById('nlpConfirmIconPreview');
+  if(preview && preview.style.display!=='none'){
+   const markup=getSubCategoryIcon(document.getElementById('nlpConfirmCategory')?.value,document.getElementById('nlpConfirmSubCategory')?.value);
+   if(preview.innerHTML!==markup)preview.innerHTML=markup;
+  }
+ }
+ for(const [a,b] of pairs)for(const id of [a,b]){
+  const el=document.getElementById(id);if(!el)continue;
+  el.addEventListener('change',()=>queueMicrotask(refresh));
+  new MutationObserver(refresh).observe(el,{childList:true,subtree:true,characterData:true});
+ }
+ document.querySelectorAll('.quick-emoji-btn').forEach(btn=>{
+  const original=btn.dataset.emoji;btn.setAttribute('aria-label','選擇圖標 '+original);
+  btn.innerHTML=getCategoryIcon(original);
+ });
+ refresh();
+})();
+</script>
+
 </body>
 </html>

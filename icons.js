@@ -1,524 +1,350 @@
-/**
- * 期效管家 - 現代微圓角幾何扁平彩色向量圖標庫 (Modern Soft Flat Vector Icons) v1.9.8
- * 設計準則：
- * 1. 【單一核心主體】：絕對不放置多餘或旁邊附屬的干擾圖示，主體居中、飽滿大方，一眼即可直覺辨識。
- * 2. 【2D 正面幾何扁平拼色】：乾淨俐落的微圓角幾何、明亮且具有對比感的現代色彩計畫。
- * 3. 【純粹向量與通用透明度】：所有輪廓與打孔皆為原生 SVG 路徑，無偽造背景遮罩，於亮色、深色、AMOLED 或半透明標籤均能完美呈現。
- * 4. 【標準規格】：viewBox="0 0 48 48"，約 10% 內距，在 16px 至 64px 縮放皆清晰精緻。
- */
+// v1.9.10 - Unified flat pictograms. Shapes and labels are resolved once for every screen. (v1.9.9, v1.9.8)
+(function(root){'use strict';
+const SHAPES={"box": "<path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/>", "food": "<path d=\"M4 3v6c0 3 6 3 6 0V3M7 3v18M4 6h6M18 3c-4 4-4 9 0 9h2M20 3v18\"/>", "milk": "<path d=\"M10 2h4v3l2 2v3l3 3v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7l3-3V7l2-2Z\"/><path d=\"M8 7h8M8 10h8M7 14h4M7 17h3M7 20h4\"/><path d=\"M14 14v5\" stroke-width=\"1.1\"/>", "cup": "<path d=\"M4 8h12v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z\"/><path d=\"M16 9h2a3 3 0 0 1 0 6h-2M7 3v2M12 3v2\"/><path d=\"M7 12h6M7 15h6M3 22h15\" fill=\"none\" stroke-width=\"1.1\"/>", "cookie": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 7h.01M15 8h.01M7 14h.01M13 13h.01M15 17h.01\" stroke-width=\"3\"/>", "fish": "<path d=\"M3 12c5-9 12-9 15 0-3 9-10 9-15 0Zm15 0 4-5v10Z\"/><circle cx=\"8\" cy=\"11\" r=\".7\"/><path d=\"M11 7q4 5 0 10M14 10l2 2-2 2\" fill=\"none\" stroke-width=\"1.1\"/>", "pill": "<path d=\"M4 13 13 4a5 5 0 0 1 7 7l-9 9a5 5 0 0 1-7-7Z\"/><path d=\"m8 9 7 7\"/><path d=\"M5 16l3 3M14 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/>", "jar": "<path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/>", "lipstick": "<path d=\"M8 12h8v9H8ZM9 12V5l6-3v10M7 21h10\"/><path d=\"M10 16h4M10 19h4M11 8l2-1\" fill=\"none\" stroke-width=\"1.1\"/>", "pump": "<path d=\"M7 8h10l2 4v9H5v-9ZM12 8V3h6M9 3h6M8 14h8\"/><path d=\"M8 12h8M8 17h8M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/>", "spray": "<path d=\"M7 3h11v4h-6v4l4 3v7H4v-7l4-3V7H7Z\"/><path d=\"m14 7 3 4M7 16h6\"/><path d=\"M7 19h6M19 4h2M19 7l2 1\" fill=\"none\" stroke-width=\"1.1\"/>", "filter": "<rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M9 6v12M12 6v12M15 6v12\"/><path d=\"M7 5h10M7 19h10\" fill=\"none\" stroke-width=\"1.1\"/>", "shield": "<path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/>", "phone": "<rect x=\"6\" y=\"2\" width=\"12\" height=\"20\" rx=\"3\"/><path d=\"M10 5h4M11 19h2\"/><path d=\"M8 8h8v8H8M8 11h8\" fill=\"none\" stroke-width=\"1.1\"/>", "pen": "<path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/>", "dumbbell": "<path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/>", "wrench": "<path d=\"M21 3a6 6 0 0 1-7 8L6 20a3 3 0 0 1-4-4l9-8a6 6 0 0 1 8-7l-4 4 3 3Z\"/><path d=\"M5 17l2 2\" fill=\"none\" stroke-width=\"1.1\"/>", "paw": "<path d=\"M6 16c1-2 3-6 6-6s5 4 6 6c2 5-4 5-6 3-2 2-8 2-6-3Z\"/><ellipse cx=\"4\" cy=\"9\" rx=\"2\" ry=\"3\"/><ellipse cx=\"9\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"15\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"20\" cy=\"9\" rx=\"2\" ry=\"3\"/>", "baby": "<path d=\"M10 2h4v3h3v4l2 3v9H5v-9l2-3V5h3ZM7 9h10M6 14h5M6 18h5\"/><path d=\"M15 13h2M15 16h2M15 19h2\" fill=\"none\" stroke-width=\"1.1\"/>", "case": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M8 7V3h8v4M3 12h18M10 12v3h4v-3\"/><path d=\"M5 17h3M16 17h3M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/>", "tent": "<path d=\"m12 3 10 18H2ZM12 10l5 11H7Z\"/><path d=\"M12 3v7M2 22h20M3 18l3-1M21 18l-3-1\" fill=\"none\" stroke-width=\"1.1\"/>", "home": "<path d=\"m2 11 10-8 10 8M5 9v12h14V9M10 21v-7h4v7\"/><path d=\"M7 11h3v3H7M15 11h2v3h-2M8 6h8\" fill=\"none\" stroke-width=\"1.1\"/>", "shirt": "<path d=\"m8 3-6 4 3 5 3-2v11h8V10l3 2 3-5-6-4c0 4-8 4-8 0Z\"/><path d=\"M8 4q4 5 8 0M10 17h4M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/>", "film": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7V3h18v4M7 3l3 4M14 3l3 4m-7 4 5 3-5 3Z\"/><path d=\"M5 10v2M19 10v2M5 16v2M19 16v2\" fill=\"none\" stroke-width=\"1.1\"/>", "game": "<path d=\"M7 7h10c4 0 6 13 3 13l-5-4H9l-5 4C1 20 3 7 7 7Z\"/><path d=\"M6 11v4M4 13h4M16 12h.01M19 14h.01\"/><path d=\"M9 10h2M13 10h2M7 17l2-1M15 16l2 1\" fill=\"none\" stroke-width=\"1.1\"/>", "badge": "<circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"m8 16-2 6 6-3 6 3-2-6M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\"/>", "car": "<path d=\"m5 10 2-6h10l2 6M3 10h18v9H3ZM6 19v2M18 19v2M6 14h2M16 14h2\"/><path d=\"M8 7h8M10 15h4M4 17h16\" fill=\"none\" stroke-width=\"1.1\"/>", "calendar": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 2v6M17 2v6M3 10h18M7 14h3M14 14h3M7 18h3\"/><path d=\"M14 18h3M7 7h10\" fill=\"none\" stroke-width=\"1.1\"/>", "ticket": "<path d=\"M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z\"/><path d=\"M15 5v3m0 3v2m0 3v3\"/><path d=\"M6 9h6M6 12h4M6 15h6\" fill=\"none\" stroke-width=\"1.1\"/>", "egg": "<path d=\"M20 14c0 10-16 10-16 0C4 8 8 2 12 2s8 6 8 12Z\"/><path d=\"M8 12q-3 5 2 7\" fill=\"none\" stroke-width=\"1.1\"/>", "leaf": "<path d=\"M20 3C5 1 1 9 6 17s17 0 14-14ZM5 21 16 8\"/><path d=\"M8 16l-1-5M11 13l5 1M14 10l-1-4\" fill=\"none\" stroke-width=\"1.1\"/>", "fruit": "<path d=\"M12 7C2 1 0 14 8 21h8c8-7 6-20-4-14ZM12 7V3l4-2\"/><path d=\"M7 11q-2 4 1 6M12 4q4 0 5-2\" fill=\"none\" stroke-width=\"1.1\"/>", "bread": "<path d=\"M5 11c-5-2-2-9 3-7 2-3 6-3 8 0 5-2 8 5 3 7v10H5Z\"/><path d=\"M8 17h8\"/><path d=\"M8 8v3M12 7v4M16 8v3M8 19h8\" fill=\"none\" stroke-width=\"1.1\"/>", "cheese": "<path d=\"m3 10 16-7 2 7v11H3ZM3 10h18\"/><circle cx=\"7\" cy=\"15\" r=\"1.5\"/><circle cx=\"16\" cy=\"17\" r=\"2\"/><path d=\"M12 13h1M12 7h2\"/>", "meat": "<path d=\"M18 3c7 2 4 12-2 16-5 4-14 2-13-4 0-4 4-5 7-7 3-1 4-7 8-5Z\"/><ellipse cx=\"16\" cy=\"8\" rx=\"2.8\" ry=\"2.2\"/><path d=\"M6 14q2-3 5-3M6 17l4-2M11 18l3-3M17 13l2-2\" stroke-width=\"1.1\"/>", "bottle": "<path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/>", "bowl": "<path d=\"M2 11h20c0 6-4 9-10 9S2 17 2 11ZM8 22h8M7 3v5M12 2v6M17 3v5\"/><path d=\"M6 14q6 6 12 0\" fill=\"none\" stroke-width=\"1.1\"/>", "drop": "<path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/>", "eye": "<path d=\"M2 12c5-10 15-10 20 0-5 10-15 10-20 0Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "bandage": "<path d=\"m3 14 11-11a4 4 0 0 1 7 7L10 21a4 4 0 0 1-7-7Z\"/><path d=\"m8 9 7 7M10 7l7 7\"/><path d=\"M6 15h.01M8 18h.01M16 6h.01M19 9h.01\" fill=\"none\" stroke-width=\"1.1\"/>", "sun": "<circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2\"/>", "brush": "<path d=\"M8 2h8v8H8ZM10 10h4v12h-4M8 5h8M8 8h8\"/><path d=\"M10 3v6M12 3v6M14 3v6M12 14v5\" fill=\"none\" stroke-width=\"1.1\"/>", "cloth": "<path d=\"M4 4h13v16H4ZM17 7h3v15H7v-2M4 15h13\"/><path d=\"M7 7v5M10 7v5M13 7v5M6 17h9\" fill=\"none\" stroke-width=\"1.1\"/>", "sponge": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"13\" rx=\"3\"/><path d=\"M3 15h18M7 10h.01M12 11h.01M17 9h.01\"/>", "laptop": "<path d=\"M5 3h14v13H5ZM2 20l3-4h14l3 4ZM9 7h6\"/><path d=\"M8 6h8v7H8M9 19h6\" fill=\"none\" stroke-width=\"1.1\"/>", "headphones": "<path d=\"M4 13V9a8 8 0 0 1 16 0v4M4 12h4v9H4ZM16 12h4v9h-4Z\"/><path d=\"M6 14v5M18 14v5M8 5q4-3 8 0\" fill=\"none\" stroke-width=\"1.1\"/>", "screen": "<rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M12 17v5M7 22h10\"/><path d=\"M5 6h14v8H5M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/>", "chair": "<rect x=\"6\" y=\"2\" width=\"12\" height=\"11\" rx=\"3\"/><path d=\"M4 16h16v3H4ZM7 19v3M17 19v3M8 13v3M16 13v3\"/><path d=\"M9 5h6M9 8h6M9 11h6M7 17h10\" fill=\"none\" stroke-width=\"1.1\"/>", "watch": "<path d=\"M8 6V2h8v4M8 18v4h8v-4\"/><rect x=\"5\" y=\"6\" width=\"14\" height=\"12\" rx=\"3\"/><path d=\"M12 9v3l3 2\"/><path d=\"M9 4h6M9 20h6M8 9v6M16 9v6M10 16h4\" fill=\"none\" stroke-width=\"1.1\"/>", "camera": "<path d=\"M3 7h4l2-4h6l2 4h4v14H3Z\"/><circle cx=\"12\" cy=\"14\" r=\"4\"/><path d=\"M5 10h3M10 5h4\" fill=\"none\" stroke-width=\"1.1\"/>", "battery": "<rect x=\"2\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M22 10v4M7 9v6M4 12h6M14 12h3\"/><path d=\"M12 9v6M17 9v6\" fill=\"none\" stroke-width=\"1.1\"/>", "plug": "<path d=\"M8 2v5M16 2v5M5 7h14v4a7 7 0 0 1-14 0ZM12 18v5\"/><path d=\"M8 10v4M12 10v5M16 10v4\" fill=\"none\" stroke-width=\"1.1\"/>", "book": "<path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/>", "ruler": "<path d=\"M3 6h18v12H3ZM7 6v5M12 6v3M17 6v5\"/><path d=\"M9 6v3M15 6v3M6 15h12\" fill=\"none\" stroke-width=\"1.1\"/>", "bag": "<path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/>", "shoe": "<path d=\"M3 8h5l3 6 10 3v4H2V10ZM3 17h8M11 14l2-3M15 15l2-2\"/><path d=\"M4 19h14M5 10l2 3\" fill=\"none\" stroke-width=\"1.1\"/>", "ball": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20M12 2v20M5 5c8 4 8 10 0 14M19 5c-8 4-8 10 0 14\"/>", "bulb": "<path d=\"M8 17C0 10 5 2 12 2s12 8 4 15ZM8 20h8M10 23h4M12 17v-6\"/><path d=\"M9 9l3 3 3-3\" fill=\"none\" stroke-width=\"1.1\"/>", "wheel": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v7m0 6v7M2 12h7m6 0h7\"/>", "music": "<path d=\"M9 17V5l12-3v13M9 9l12-3\"/><ellipse cx=\"6\" cy=\"18\" rx=\"3\" ry=\"3\"/><ellipse cx=\"18\" cy=\"16\" rx=\"3\" ry=\"3\"/><path d=\"M11 5v3M19 3v3\" fill=\"none\" stroke-width=\"1.1\"/>", "cloud": "<path d=\"M6 19a5 5 0 0 1-1-10 7 7 0 0 1 13-2 6 6 0 0 1 0 12Z\"/>", "wifi": "<path d=\"M2 7c6-5 14-5 20 0M5 11c4-4 10-4 14 0M8 15c2-2 6-2 8 0\"/><circle cx=\"12\" cy=\"20\" r=\"1\"/>", "plant": "<path d=\"M6 14h12l-2 8H8ZM12 14V6C5 1 2 5 6 9h6c0-7 5-10 9-6 0 4-4 6-9 6\"/><path d=\"M8 17h8M9 20h6\" fill=\"none\" stroke-width=\"1.1\"/>", "diamond": "<path d=\"M6 3h12l5 7-11 12L1 10ZM1 10h22M6 3l6 19 6-19\"/><path d=\"M6 3l6 7 6-7\" fill=\"none\" stroke-width=\"1.1\"/>", "glasses": "<circle cx=\"6\" cy=\"14\" r=\"5\"/><circle cx=\"18\" cy=\"14\" r=\"5\"/><path d=\"M11 14h2M1 13l2-9h3M23 13l-2-9h-3\"/>", "disc": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"m6 6 2 2m8 8 2 2\"/>", "picture": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"m3 17 6-6 5 5 3-3 4 4\"/><circle cx=\"16\" cy=\"8\" r=\"2\"/><path d=\"M5 19h14\" fill=\"none\" stroke-width=\"1.1\"/>", "toy": "<circle cx=\"6\" cy=\"5\" r=\"3\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"M7 16v6h10v-6M9 9h.01M15 9h.01M11 13h2\"/><path d=\"M9 19h6M11 16v5\" fill=\"none\" stroke-width=\"1.1\"/>", "tag": "<path d=\"M3 3h9l10 10-9 9L3 12Z\"/><circle cx=\"8\" cy=\"8\" r=\"1.5\"/>", "face": "<path d=\"M5 3h14v11c0 4-4 7-7 8-3-1-7-4-7-8Z\"/><path d=\"M7 9h3M14 9h3M10 17h4M12 11v3\"/><path d=\"M8 5h8M8 12l1 2M16 12l-1 2\" fill=\"none\" stroke-width=\"1.1\"/>", "perfume": "<rect x=\"5\" y=\"8\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M9 8V3h6v5M8 13h8v5H8\"/><path d=\"M10 5h4M10 15h4M10 17h2\" fill=\"none\" stroke-width=\"1.1\"/>", "razor": "<path d=\"M4 3h16v5H4ZM10 8h4v14h-4M7 5h10\"/>", "chip": "<path d=\"M6 2h9l4 4v16H5V3ZM8 5v4M11 5v4M14 5v4M8 14h8v5H8\"/><path d=\"M10 16h4M10 18h2\" fill=\"none\" stroke-width=\"1.1\"/>", "tape": "<circle cx=\"10\" cy=\"10\" r=\"8\"/><circle cx=\"10\" cy=\"10\" r=\"3\"/><path d=\"M18 10v7h4v5H10a8 8 0 0 1-8-8\"/><path d=\"M13 19h6\" fill=\"none\" stroke-width=\"1.1\"/>", "wiper": "<path d=\"M5 4h14l3 15H2ZM4 16l9-8M9 6l7 7\"/><path d=\"M7 7h2M15 7h2\" fill=\"none\" stroke-width=\"1.1\"/>", "vegetable": "<path d=\"M10 21 7 12C1 12 1 4 6 4c0-4 7-3 7 1 5-5 10 0 7 4 4 4-1 8-5 6l-1 6Z\"/><path d=\"m11 20-4-12M13 20l3-12M12 18V6M5 7l3 3M18 10l-3 3\" stroke-width=\"1.1\"/>", "tea": "<path d=\"M3 10h14v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4ZM17 11h2a3 3 0 0 1 0 6h-2M7 3v4M12 2v5\"/><path d=\"M7 13h6c0 4-6 5-6 0Zm1 4 4-3\" stroke-width=\"1.1\"/>", "shrimp": "<path d=\"M18 5C9-3 0 8 5 16c4 7 12 5 13 0l4 2-1-5-5 1c-1 3-6 3-7-1-2-4 2-8 7-5Z\"/><path d=\"M15 4l5-2M16 6h6M5 8l4 1M4 12h4M6 17l3-3M11 20l1-4\"/><circle cx=\"14\" cy=\"6\" r=\".6\"/>", "chicken": "<path d=\"M17 3c7 1 5 9 1 11-3 2-6 1-8-1l-4 5c0 4-4 4-4 1-3-1-1-5 2-4l5-5c-1-3 3-8 8-7Z\"/><path d=\"M12 9q1-3 4-3M13 12l2-1\" stroke-width=\"1.1\"/>", "tofu": "<path d=\"m3 8 8-4 10 4v11H3ZM3 8h18M11 4v4M3 13h18M12 8v11\"/><path d=\"M6 10h2M15 15h3\" stroke-width=\"1.1\"/>", "moon": "<path d=\"M20 15A9 9 0 0 1 9 3a9 9 0 1 0 11 12Z\"/><path d=\"M17 3v4M15 5h4\"/>", "bell": "<path d=\"M5 17h14l-2-4V9a5 5 0 0 0-10 0v4ZM10 21h4M12 2v2\"/>", "bolt": "<path d=\"m13 2-9 12h7l-1 8 10-13h-8Z\"/>", "trash": "<path d=\"M3 6h18M8 6V3h8v3M5 6l1 16h12l1-16M10 10v8M14 10v8\"/>", "export": "<path d=\"M4 14v7h16v-7M12 16V3m-5 5 5-5 5 5\"/>", "import": "<path d=\"M4 14v7h16v-7M12 3v13m-5-5 5 5 5-5\"/>", "refresh": "<path d=\"M20 8a9 9 0 0 0-15-3L2 8m0-5v5h5M4 16a9 9 0 0 0 15 3l3-3m0 5v-5h-5\"/>", "close": "<path d=\"m6 6 12 12M18 6 6 18\"/>", "plus": "<path d=\"M12 4v16M4 12h16\"/>", "spark": "<path d=\"m10 3 2 6 6 2-6 2-2 7-2-7-6-2 6-2ZM19 2v5M17 4h5\"/>", "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 6v6l4 3\"/>", "target": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>", "robot": "<rect x=\"4\" y=\"7\" width=\"16\" height=\"14\" rx=\"3\"/><path d=\"M12 3v4M8 12v2M16 12v2M9 18h6M1 11v6M23 11v6\"/>", "note": "<path d=\"M5 2h10l5 5v15H5ZM15 2v6h5M8 12h9M8 16h9M8 19h5\"/>", "check": "<path d=\"m4 12 5 5L20 6\"/>", "info": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v6M12 7h.01\"/>", "palette": "<path d=\"M12 2a10 10 0 1 0 0 20c3 0 0-4 3-5h3c7-1 3-15-6-15Z\"/><circle cx=\"7\" cy=\"8\" r=\"1\"/><circle cx=\"12\" cy=\"6\" r=\"1\"/><circle cx=\"17\" cy=\"9\" r=\"1\"/><circle cx=\"6\" cy=\"14\" r=\"1\"/>", "gear": "<path d=\"m9 2 1 3h4l1-3 4 3-2 3 2 3h3v4h-3l-2 3 2 3-4 2-1-3h-4l-1 3-4-2 2-3-2-3H2v-4h3l2-3-2-3Z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/>", "bean": "<ellipse cx=\"12\" cy=\"12\" rx=\"7\" ry=\"10\" transform=\"rotate(35 12 12)\"/><path d=\"M16 4C7 8 17 16 8 20\"/>", "teabag": "<path d=\"M5 9h10v13H5ZM7 9V6h6v3M10 6V2h10v8M18 10h4v5h-4Z\"/><path d=\"m8 14 4 4m0-4-4 4\"/>", "straw": "<path d=\"M5 7h14l-2 15H7ZM4 7h16M12 7l2-5h5M7 14h10\"/>", "grapes": "<circle cx=\"8\" cy=\"8\" r=\"3\"/><circle cx=\"15\" cy=\"8\" r=\"3\"/><circle cx=\"5\" cy=\"13\" r=\"3\"/><circle cx=\"12\" cy=\"13\" r=\"3\"/><circle cx=\"18\" cy=\"13\" r=\"3\"/><circle cx=\"9\" cy=\"18\" r=\"3\"/><circle cx=\"15\" cy=\"18\" r=\"3\"/><path d=\"M12 5V2l5-1\"/>", "bubbles": "<circle cx=\"7\" cy=\"7\" r=\"4\"/><circle cx=\"17\" cy=\"14\" r=\"5\"/><circle cx=\"5\" cy=\"19\" r=\"2\"/><circle cx=\"19\" cy=\"4\" r=\"2\"/>", "wine": "<path d=\"M7 2h10l1 8a6 6 0 0 1-12 0ZM6 8h12M12 16v6M8 22h8\"/>", "can": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"19\" rx=\"3\"/><path d=\"M6 7h12M6 18h12M10 5h4M9 10h6v5H9Z\"/>", "chocolate": "<path d=\"M6 2h12v20H6ZM6 8h12M6 14h12M12 2v12M6 14l6 5 6-5\"/>", "candy": "<path d=\"M7 8h10v8H7ZM7 8 2 5v14l5-3M17 8l5-3v14l-5-3M10 8v8M14 8v8\"/>", "nut": "<path d=\"M12 2c12 5 11 20 0 20S0 7 12 2Z\"/><path d=\"M12 4v16M8 8l-1 8M16 8l1 8\"/>", "pudding": "<path d=\"M7 5h10l4 15H3ZM7 5c2-4 8-4 10 0M5 12h14M2 22h20\"/>", "noodles": "<path d=\"M2 12h20c0 7-20 7-20 0ZM7 3v9M10 3v9M13 3v9M16 3v9M5 2h14M7 20h10\"/>", "dumpling": "<path d=\"M2 15c2-15 18-15 20 0-5 8-15 8-20 0Z\"/><path d=\"m5 8 2 5m2-8 1 7m4-7-1 7m6-4-2 5\"/>", "pig": "<path d=\"m5 7-3-5 7 2h6l7-2-3 5c7 15-21 15-14 0Z\"/><ellipse cx=\"12\" cy=\"15\" rx=\"5\" ry=\"3\"/><path d=\"M10 15h.01M14 15h.01M7 9h.01M17 9h.01\"/>", "cow": "<path d=\"M6 7 2 3v6l4 2v7c0 6 12 6 12 0v-7l4-2V3l-4 4ZM6 7h12M6 16h12\"/><path d=\"M9 11h.01M15 11h.01M9 19h.01M15 19h.01\"/>", "syringe": "<path d=\"m7 5 12 12-5 5L2 10ZM5 8l4-4M15 1l8 8M19 5l-5 5M17 20l5 3M7 12l2-2M10 15l2-2\"/>", "tooth": "<path d=\"M12 4C-1-3 2 12 5 19c3 8 3-5 7-5s4 13 7 5c3-7 6-22-7-15Z\"/>", "tube": "<path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/>", "mask": "<path d=\"M5 6h14v11l-7 5-7-5ZM5 8c-7-4-5 9 0 7M19 8c7-4 5 9 0 7M8 10h8M8 14h8\"/>", "flask": "<path d=\"M8 2h8M10 2v8L3 21h18l-7-11V2M7 15h10\"/><circle cx=\"11\" cy=\"18\" r=\"1\"/>", "diaper": "<path d=\"M3 4h18l-2 15-7 3-7-3ZM3 8h18M5 12c5 0 5 5 5 8M19 12c-5 0-5 5-5 8\"/>", "tissue": "<path d=\"M3 11h18v11H3ZM6 11l1-8h10l1 8M8 15h8M9 3l-1 8\"/>", "pacifier": "<path d=\"M9 12V6a3 3 0 0 1 6 0v6M3 12h18v4H3Z\"/><circle cx=\"12\" cy=\"18\" r=\"4\"/>", "printer": "<path d=\"M6 8V2h12v6M6 17H2V8h20v9h-4M6 14h12v8H6ZM17 11h2M9 17h6M9 20h6\"/>", "keyboard": "<rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M5 9h1m3 0h1m3 0h1m3 0h1M5 13h1m3 0h1m3 0h1m3 0h1M7 16h10\"/>", "cable": "<path d=\"M5 2h4v6H5ZM7 8v9a4 4 0 0 0 8 0v-3M13 8h4v6h-4M14 5v3M16 5v3\"/>", "mouse": "<rect x=\"6\" y=\"3\" width=\"12\" height=\"19\" rx=\"6\"/><path d=\"M6 11h12M12 3v8M12 6v2\"/>", "scissors": "<circle cx=\"6\" cy=\"18\" r=\"4\"/><circle cx=\"18\" cy=\"18\" r=\"4\"/><path d=\"M8 15 20 2M16 15 4 2M12 10v1\"/>", "folder": "<path d=\"M2 6h8l3 3h9v13H2ZM2 6V3h8l3 3h7v3\"/>", "bed": "<path d=\"M2 6v16M22 10v12M2 18h20M3 9h7v6H3ZM10 11h12v7H10Z\"/>", "racket": "<ellipse cx=\"14\" cy=\"9\" rx=\"7\" ry=\"8\"/><path d=\"m9 15-7 7M10 5h8M8 9h13M10 13h8M12 2v14M16 2v14\"/>", "roller": "<path d=\"M5 3h14v9H5ZM19 6h3v10H12v6M9 22h6M8 6v3M12 6v3M16 6v3\"/>", "flashlight": "<path d=\"M4 2h16l-4 7v13H8V9ZM8 9h8M10 12h4v4h-4\"/>", "screw": "<path d=\"M5 2h14v4H5ZM9 6h6v13l-3 3-3-3M8 9l8-2M8 13l8-2M8 17l8-2\"/>", "hanger": "<path d=\"M9 5a3 3 0 1 1 4 3v3l9 7v3H2v-3l11-7\"/>", "lock": "<rect x=\"4\" y=\"10\" width=\"16\" height=\"12\" rx=\"2\"/><path d=\"M7 10V6a5 5 0 0 1 10 0v4M12 15v3\"/>", "flower": "<path d=\"M12 3c5-6 7 1 5 4 8-2 8 6 2 7 6 5 0 10-5 5-1 7-9 4-8-1-7 1-8-7-2-9-4-6 3-9 6-5Z\"/><circle cx=\"12\" cy=\"11\" r=\"3\"/>", "bone": "<path d=\"m7 7 10 10c5-2 7 4 3 4-1 4-7 2-5-3L5 9C0 11-2 5 2 5c1-4 7-3 5 2Z\"/>", "microbe": "<ellipse cx=\"12\" cy=\"12\" rx=\"5\" ry=\"8\" transform=\"rotate(35 12 12)\"/><path d=\"M5 7 2 5M9 4V1M18 6l3-2M19 14h4M15 20l1 3M5 17l-3 3M10 9h.01M14 12h.01M11 16h.01\"/>"};
+const CATEGORIES={"food": "food", "drinks": "cup", "snack": "cookie", "fresh": "fish", "medicine": "pill", "supplement": "jar", "beauty": "lipstick", "pao": "pump", "cleaning": "spray", "filter": "filter", "warranty": "shield", "digital": "phone", "stationery": "pen", "sports": "dumbbell", "tools": "wrench", "pet": "paw", "baby": "baby", "office": "case", "outdoor": "tent", "home": "home", "fashion": "shirt", "animation": "film", "game": "game", "otaku": "badge", "vehicle": "car", "subscription": "calendar", "ticket": "ticket", "other": "box"};
+const COLORS={"food": "#168565", "drinks": "#2374b8", "snack": "#b87720", "fresh": "#178f9b", "medicine": "#bb5366", "supplement": "#7b66b2", "beauty": "#bc547b", "pao": "#248e9b", "cleaning": "#2d8b7b", "filter": "#5474b4", "warranty": "#4f7b96", "digital": "#526ab0", "stationery": "#a3792c", "sports": "#b77832", "tools": "#64768b", "pet": "#b07443", "baby": "#b76586", "office": "#5279a3", "outdoor": "#30826a", "home": "#8a784c", "fashion": "#9d658f", "animation": "#9170b7", "game": "#6a75bd", "otaku": "#b46288", "vehicle": "#4f7b95", "subscription": "#637ac1", "ticket": "#b48135", "other": "#71818e"};
+const ALIAS_MAP={
+    // 1. 食品 (food) - 鮮乳盒
+    '食品': 'food', 'food': 'food', '鮮乳': 'food', '鮮奶': 'food', '牛乳': 'food', '牛奶': 'food', 'milk': 'food',
+    '青菜': 'food', '水果': 'food', '雞蛋': 'food', '豆製品': 'food', '起司乳酪': 'food', '調味料': 'food',
+    '食用油': 'food', '米麵穀物': 'food', '南北乾貨': 'food', '熟食料理': 'food', '麵包烘焙': 'food',
+    '全脂鮮乳': 'food', '蔬菜': 'food', '高麗菜': 'food', '香蕉': 'food', '蘋果': 'food', '木瓜': 'food',
+    '當季新鮮青菜': 'food', '當季新鮮水果': 'food', '放牧鮮蛋': 'food', '醬油': 'food', '堅果': 'food',
+    '🥛': 'food', '🥦': 'food', '🍞': 'food', '🍎': 'food', '🥬': 'food', '🥚': 'food', '🥗': 'food', '🍌': 'food', '🍈': 'food', '🧂': 'food',
 
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
-  } else {
-    const exp = factory();
-    root.CATEGORY_ICONS = exp.CATEGORY_ICONS;
-    root.getCategoryIcon = exp.getCategoryIcon;
+    // 2. 飲品 (drinks) - 冷熱外帶杯
+    '飲品': 'drinks', 'drinks': 'drinks', '飲料': 'drinks', '咖啡': 'drinks', 'coffee': 'drinks',
+    '咖啡豆': 'drinks', '濾掛咖啡': 'drinks', '茶葉茶包': 'drinks', '手搖飲品': 'drinks', '果汁蔬果汁': 'drinks',
+    '包裝水': 'drinks', '氣泡水': 'drinks', '碳酸飲料': 'drinks', '啤酒烈酒': 'drinks', '紅白酒': 'drinks',
+    '沖泡飲品': 'drinks', '乳清飲品': 'drinks', '茶包': 'drinks', '蔬果汁': 'drinks', '礦泉水': 'drinks',
+    '啤酒': 'drinks', '紅酒': 'drinks', '白酒': 'drinks', '手搖': 'drinks', '果汁': 'drinks', '燕麥奶': 'drinks',
+    '🥤': 'drinks', '☕': 'drinks', '🧃': 'drinks', '🧋': 'drinks', '🍹': 'drinks', '💧': 'drinks', '🫧': 'drinks', '🍺': 'drinks', '🍷': 'drinks',
+
+    // 3. 零食 (snack) - 巧克力餅乾
+    '零食': 'snack', 'snack': 'snack', '點心': 'snack', '餅乾': 'snack',
+    '餅乾米果': 'snack', '洋芋片脆片': 'snack', '巧克力可可': 'snack', '堅果果乾': 'snack', '糖果軟糖': 'snack',
+    '肉乾肉條': 'snack', '即食泡麵': 'snack', '海苔點心': 'snack', '果凍布丁': 'snack', '傳統糕餅': 'snack',
+    '洋芋片': 'snack', '巧克力': 'snack', '糖果': 'snack', '肉乾': 'snack', '泡麵': 'snack', '海苔': 'snack',
+    '果凍': 'snack', '月餅': 'snack', '糕餅': 'snack', '酥脆餅乾米果': 'snack', '黑巧克力可可': 'snack',
+    '烘焙堅果果乾': 'snack', '蜜汁肉乾肉條': 'snack', '即食杯麵泡麵': 'snack', '香脆海苔點心': 'snack', '傳統糕點月餅': 'snack',
+    '🍪': 'snack', '🍘': 'snack', '🥔': 'snack', '🍫': 'snack', '🥜': 'snack', '🍬': 'snack', '🍜': 'snack', '🍙': 'snack', '🍮': 'snack', '🥮': 'snack',
+
+    // 4. 生鮮 (fresh) - 新鮮海魚
+    '生鮮': 'fresh', 'fresh': 'fresh', '生鮮冷凍': 'fresh', '魚': 'fresh', '海鮮': 'fresh', '肉品': 'fresh',
+    '牛肉羊肉': 'fresh', '生鮮豬肉': 'fresh', '雞肉禽肉': 'fresh', '海鮮魚類': 'fresh', '蝦蟹貝類': 'fresh',
+    '火鍋肉片': 'fresh', '冷凍調理包': 'fresh', '微波熟食': 'fresh', '水餃湯圓': 'fresh', '生鮮時蔬': 'fresh',
+    '牛肉': 'fresh', '豬肉': 'fresh', '雞肉': 'fresh', '魚類': 'fresh', '海鮮鮮魚切片': 'fresh',
+    '活凍蝦蟹貝類': 'fresh', '水餃': 'fresh', '冷凍水餃': 'fresh',
+    '🐟': 'fresh', '🥩': 'fresh', '🥓': 'fresh', '🍗': 'fresh', '🦐': 'fresh', '🥟': 'fresh',
+
+    // 5. 藥品 (medicine) - 紅白膠囊
+    '藥品': 'medicine', 'medicine': 'medicine', '成藥': 'medicine',
+    '眼藥水': 'medicine', '人工淚液': 'medicine', '洗眼液': 'medicine', '外用藥膏': 'medicine',
+    '感冒退燒': 'medicine', '消炎止痛': 'medicine', '腸胃整腸': 'medicine', '處方藥': 'medicine',
+    '醫療敷料': 'medicine', '隱眼保養液': 'medicine', '防蚊止癢': 'medicine', '常備成藥': 'medicine',
+    '藥膏': 'medicine', '保養液': 'medicine', '醫療': 'medicine', '眼藥': 'medicine', '退燒': 'medicine',
+    '胃藥': 'medicine', '止痛': 'medicine', '感冒藥': 'medicine', '眼藥水開封保存': 'medicine',
+    '保濕眼藥水': 'medicine', '牙科洗牙檢查': 'medicine',
+    '💊': 'medicine', '🩹': 'medicine', '🩺': 'medicine', '💉': 'medicine', '🦷': 'medicine', '👁️': 'medicine', '👁': 'medicine',
+
+    // 6. 保健 (supplement) - 維他命營養瓶
+    '保健': 'supplement', 'supplement': 'supplement', '保健品': 'supplement', '營養品': 'supplement',
+    '綜合維他命': 'supplement', 'b群活力': 'supplement', '維生素c': 'supplement', '深海魚油': 'supplement',
+    '葉黃素': 'supplement', '活性益生菌': 'supplement', '膠原蛋白': 'supplement', '鈣片d3': 'supplement',
+    '滴雞精': 'supplement', '高蛋白粉': 'supplement', '機能保健': 'supplement', '維他命': 'supplement',
+    'b群': 'supplement', '維他命錠': 'supplement', '維生素': 'supplement', '益生菌': 'supplement',
+    '鈣片': 'supplement', '高蛋白': 'supplement', '魚油': 'supplement',
+    '🌿': 'supplement', '🧬': 'supplement', '⚡': 'supplement', '🍊': 'supplement', '🦠': 'supplement', '🦴': 'supplement',
+
+    // 7. 美妝 (beauty) - 經典口紅
+    '美妝': 'beauty', 'beauty': 'beauty', '化妝品': 'beauty', '口紅': 'beauty', '護膚': 'beauty', '保養': 'beauty',
+    '精華液': 'beauty', '乳液面霜': 'beauty', '保濕面膜': 'beauty', '卸妝潔顏': 'beauty', '化妝水噴霧': 'beauty',
+    '緊緻眼霜': 'beauty', '防曬隔離': 'beauty', '唇膏口紅': 'beauty', '粉底彩妝': 'beauty', '美甲護理': 'beauty',
+    '香水香氛': 'beauty', '面霜': 'beauty', '面膜': 'beauty', '化妝水': 'beauty', '眼霜': 'beauty',
+    '防曬': 'beauty', '口紅唇彩': 'beauty', '粉底': 'beauty', '香水': 'beauty',
+    '💄': 'beauty', '🧖‍♀️': 'beauty', '💦': 'beauty', '☀️': 'beauty', '🎨': 'beauty', '🌸': 'beauty',
+
+    // 8. 日用 (pao) - 按壓洗沐瓶
+    '日用': 'pao', 'pao': 'pao', '日用品': 'pao', '日化開封': 'pao', '沐浴': 'pao', '洗手乳': 'pao',
+    '洗髮沐浴': 'pao', '潤髮護髮': 'pao', '牙膏口腔': 'pao', '洗手香皂': 'pao', '身體乳液': 'pao',
+    '護手滋潤': 'pao', '刮鬍刀具': 'pao', '女性護理': 'pao', '毛巾面巾': 'pao', '日常消耗': 'pao',
+    '沐浴露': 'pao', '洗髮精': 'pao', '牙膏': 'pao', '香皂': 'pao', '護手霜': 'pao', '刮鬍刀': 'pao', '毛巾': 'pao',
+    '🧴': 'pao', '🧻': 'pao', '👐': 'pao', '🪒': 'pao',
+
+    // 9. 清潔 (cleaning) - 清潔噴霧瓶 / 菜瓜布海綿
+    '清潔': 'cleaning', 'cleaning': 'cleaning', '掃除': 'cleaning', '噴霧': 'cleaning',
+    '菜瓜布': 'cleaning', '菜瓜布海綿': 'cleaning', '海綿': 'cleaning', '科技海綿': 'cleaning', '洗碗海綿': 'cleaning',
+    '抹布': 'cleaning', '抹布抹巾': 'cleaning', '洗碗精': 'cleaning', '洗碗精洗劑': 'cleaning', '洗衣精': 'cleaning',
+    '洗衣精洗衣球': 'cleaning', '潔廁去垢': 'cleaning', '水垢油垢清': 'cleaning', '消毒酒精': 'cleaning',
+    '除塵防塵': 'cleaning', '除濕防潮': 'cleaning', '除蟎噴霧': 'cleaning', '地板清潔': 'cleaning', '疏通清潔': 'cleaning',
+    '潔廁劑': 'cleaning', '酒精': 'cleaning', '除蟎': 'cleaning', '廚房菜瓜布': 'cleaning', '擦拭抹布': 'cleaning',
+    '🧽': 'cleaning', '🧼': 'cleaning', '🧹': 'cleaning', '🪣': 'cleaning', '🧺': 'cleaning', '🚽': 'cleaning', '💨': 'cleaning',
+
+    // 10. 耗材 (filter) - 圓筒濾心
+    '耗材': 'filter', 'filter': 'filter', '濾網': 'filter', '濾心': 'filter', '濾芯': 'filter',
+    '清淨機濾網': 'filter', '淨水器濾芯': 'filter', '音波牙刷頭': 'filter', '集水除濕盒': 'filter',
+    '掃地機主刷邊刷': 'filter', '吸塵器耗材': 'filter', '咖啡機除鈣': 'filter', '冷氣濾網': 'filter', '通風濾材': 'filter',
+    '牙刷': 'filter', '除濕盒': 'filter', '主刷': 'filter', '淨水': 'filter', '淨水器': 'filter',
+    '音波牙刷刷頭': 'filter', '掃地機主刷': 'filter', '咖啡機除鈣劑': 'filter',
+    '🌀': 'filter', '🔄': 'filter', '🪥': 'filter',
+
+    // 11. 保固 (warranty) - 安全防護盾牌
+    '保固': 'warranty', 'warranty': 'warranty', '保修': 'warranty',
+    '智慧手機': 'warranty', '筆記型電腦': 'warranty', '平板電腦': 'warranty', '藍牙耳機': 'warranty',
+    '家用電器': 'warranty', '電視螢幕': 'warranty', '人體工學家具': 'warranty', '智慧手錶': 'warranty',
+    '遊戲主機': 'warranty', '攝影器材': 'warranty', '保固維修': 'warranty',
+    '筆電': 'warranty', '電腦': 'warranty', '手機': 'warranty', '平板': 'warranty', '電視': 'warranty',
+    '手錶': 'warranty', '耳機': 'warranty', '螢幕': 'warranty', '家電': 'warranty',
+    '我的椅子': 'warranty', '家具': 'warranty', '椅子': 'warranty',
+    '🛡️': 'warranty', '🛡': 'warranty', '🪑': 'warranty',
+
+    // 12. 數位 (digital) - 全螢幕智慧手機
+    '數位': 'digital', 'digital': 'digital', '3c': 'digital', '電子': 'digital',
+    '充電器快充': 'digital', '傳輸充電線': 'digital', '行動電源': 'digital', '耳機周邊': 'digital',
+    '保護貼保護殼': 'digital', '記憶卡隨身碟': 'digital', '鍵盤滑鼠': 'digital', '智慧穿戴': 'digital', '擴充轉接hub': 'digital',
+    '快充': 'digital', '充電器': 'digital', '充電線': 'digital', '線材': 'digital', '保護貼': 'digital',
+    '保護殼': 'digital', '隨身碟': 'digital', '記憶卡': 'digital', '鍵盤': 'digital', '滑鼠': 'digital', 'hub': 'digital',
+    '📱': 'digital', '🔌': 'digital', '🔋': 'digital', '🎧': 'digital', '💾': 'digital', '⌨️': 'digital', '🎛️': 'digital', '⌚': 'digital',
+
+    // 13. 車輛 (vehicle) - 現代房車
+    '車輛': 'vehicle', 'vehicle': 'vehicle', '汽車': 'vehicle', '車': 'vehicle',
+    '機油': 'vehicle', '機油芯': 'vehicle', '齒輪油': 'vehicle', '輪胎對調': 'vehicle', '電瓶': 'vehicle',
+    '雨刷': 'vehicle', '煞車油皮': 'vehicle', '火星塞': 'vehicle', '空氣濾清器': 'vehicle', '定檢驗車': 'vehicle',
+    '車險強制險': 'vehicle', '輪胎': 'vehicle', '煞車': 'vehicle', '驗車': 'vehicle', '車險': 'vehicle',
+    '汽車機油': 'vehicle', '機車齒輪油': 'vehicle', '汽車輪胎': 'vehicle', '汽車電瓶': 'vehicle', '汽車雨刷': 'vehicle',
+    '煞車來令片': 'vehicle', '汽機車定期檢驗': 'vehicle', '汽機車強制險': 'vehicle',
+    '🚗': 'vehicle', '🛵': 'vehicle', '🛞': 'vehicle', '🛑': 'vehicle', '📋': 'vehicle', '📑': 'vehicle',
+
+    // 14. 訂閱 (subscription) - 循環翻頁撕曆
+    '訂閱': 'subscription', 'subscription': 'subscription', '週期': 'subscription',
+    '影音串流': 'subscription', '音樂串流': 'subscription', '雲端空間': 'subscription', '專業軟體': 'subscription',
+    '健身會籍': 'subscription', '寬頻電信': 'subscription', '房屋租約': 'subscription', '訂閱服務': 'subscription', '年約保險': 'subscription',
+    '串流影音': 'subscription', '串流音樂': 'subscription', '雲端硬碟': 'subscription', '軟體': 'subscription',
+    '健身': 'subscription', '電信': 'subscription', '租約': 'subscription', '雲端': 'subscription', '影音': 'subscription', '音樂': 'subscription',
+    '📅': 'subscription', '🎵': 'subscription', '☁️': 'subscription', '💪': 'subscription', '📶': 'subscription',
+
+    // 15. 辦公 (office) - 皮革公事包
+    '辦公': 'office', 'office': 'office', '商務': 'office',
+    '彩色印表機墨水': 'office', '雷射碳粉匣': 'office', '3c鹼性電池': 'office', '工作手帳筆記本': 'office',
+    '出國護照簽證': 'office', '專業證照回訓': 'office', '耗材墨水': 'office', '碳粉匣': 'office',
+    '電池': 'office', '筆記文具': 'office', '證件合約': 'office', '專業證照': 'office', '護照': 'office', '簽證': 'office', '證照': 'office',
+    '💼': 'office', '🖨️': 'office', '🛂': 'office', '📜': 'office',
+
+    // 16. 文具 (stationery) - 削尖鉛筆
+    '文具': 'stationery', 'stationery': 'stationery', '鉛筆': 'stationery', '原子筆': 'stationery', '圖書': 'stationery', '書籍': 'stationery',
+    '手帳筆記': 'stationery', '書籍雜誌': 'stationery', '簽字鋼筆': 'stationery', '墨水替芯': 'stationery',
+    '膠帶黏著': 'stationery', '檔案夾收納': 'stationery', '繪畫美術': 'stationery', '裁切工具': 'stationery', '辦公文具': 'stationery',
+    '手帳': 'stationery', '鋼筆': 'stationery', '墨水': 'stationery', '膠帶': 'stationery', '收納': 'stationery',
+    '剪刀': 'stationery', '美工刀': 'stationery', '檔案夾': 'stationery', '筆記': 'stationery',
+    '✏️': 'stationery', '✏': 'stationery', '📚': 'stationery', '📓': 'stationery', '📖': 'stationery', '✒️': 'stationery', '🖋️': 'stationery', '📂': 'stationery', '✂️': 'stationery', '📎': 'stationery',
+
+    // 17. 運動 (sports) - 六角啞鈴與球鞋
+    '運動': 'sports', 'sports': 'sports', '健身': 'sports', '啞鈴': 'sports',
+    '球鞋': 'sports', '跑鞋': 'sports', '慢跑鞋': 'sports', '運動鞋': 'sports', '籃球鞋': 'sports', '羽球鞋': 'sports',
+    '登山鞋': 'sports', '鞋': 'sports', '跑鞋運動鞋': 'sports', '運動護具': 'sports', '瑜珈墊': 'sports',
+    '彈力帶拉力繩': 'sports', '啞鈴重訓': 'sports', '機能水壺': 'sports', '運動補給': 'sports', '運動包袋': 'sports',
+    '球拍線路': 'sports', '慢跑球鞋': 'sports', '避震慢跑跑鞋': 'sports', '鞋墊': 'sports', '布鞋': 'sports', '涼鞋': 'sports', '拖鞋': 'sports',
+    '🏋️': 'sports', '🏋': 'sports', '👟': 'sports', '🏃': 'sports', '🧘': 'sports', '🏸': 'sports', '🥊': 'sports',
+
+    // 18. 戶外 (outdoor) - 露營帳篷
+    '戶外': 'outdoor', 'outdoor': 'outdoor', '露營': 'outdoor', '帳篷': 'outdoor',
+    '露營天幕': 'outdoor', '登山裝備': 'outdoor', '戶外炊具': 'outdoor', '防潮地墊': 'outdoor', '登山手杖': 'outdoor',
+    '能量果膠': 'outdoor', '防寒睡袋': 'outdoor', '露營裝備': 'outdoor', '水壺配件': 'outdoor', '補給品': 'outdoor',
+    '睡袋': 'outdoor', '手杖': 'outdoor', '地墊': 'outdoor', '登山': 'outdoor', '登山健行鞋': 'outdoor', '露營帳篷天幕': 'outdoor',
+    '⛺': 'outdoor', '🏕️': 'outdoor', '🥾': 'outdoor',
+
+    // 19. 居家 (home) - 溫馨小屋
+    '居家': 'home', 'home': 'home', '家庭': 'home', '房屋': 'home',
+    '室內植栽': 'home', '花草肥料': 'home', 'led照明': 'home', '防蟎寢具': 'home', '住警消防': 'home',
+    '香氛擴香': 'home', '水電修繕': 'home', '收納整理': 'home', '植栽': 'home', '肥料': 'home', '燈泡': 'home',
+    '寢具': 'home', '消防': 'home', '住警器': 'home', '擴香': 'home', '修繕': 'home', '室內觀葉綠植': 'home',
+    '植物長效緩釋肥': 'home', 'led節能燈泡': 'home', '防蟎天絲寢具': 'home', '住警器與警報設備': 'home', '管路防漏五金修繕': 'home',
+    '🏠': 'home', '🪴': 'home', '🌱': 'home', '💡': 'home', '🛏️': 'home', '🧯': 'home',
+
+    // 20. 穿搭 (fashion) - 潮流短袖T恤
+    '穿搭': 'fashion', 'fashion': 'fashion', '服飾': 'fashion', '衣服': 'fashion',
+    '換季送洗': 'fashion', '真皮皮革保養': 'fashion', '珠寶首飾': 'fashion', '衣物防護防蛀': 'fashion', '精品鞋靴': 'fashion',
+    '名牌包袋': 'fashion', '飾品小物': 'fashion', '太陽眼鏡': 'fashion', '送洗': 'fashion', '皮革保養': 'fashion',
+    '珠寶': 'fashion', '防蛀': 'fashion', '鞋靴': 'fashion', '包袋': 'fashion', '飾品': 'fashion', '墨鏡': 'fashion',
+    '皮夾': 'fashion', '皮包': 'fashion', '褲子': 'fashion', '襯衫': 'fashion', '外套': 'fashion', '洋裝': 'fashion',
+    '羽絨冬衣專業送洗': 'fashion', '真皮皮包皮夾': 'fashion', '純銀珠寶飾品': 'fashion', '天然樟木防蛀防蟲包': 'fashion', '精品皮鞋鞋靴': 'fashion',
+    '👕': 'fashion', '👗': 'fashion', '🧥': 'fashion', '👜': 'fashion', '💍': 'fashion', '👠': 'fashion', '🕶️': 'fashion',
+
+    // 21. 五金 (tools) - 活動板手
+    '五金': 'tools', 'tools': 'tools', '工具': 'tools', '板手': 'tools', '修繕': 'tools',
+    '螺絲工具組': 'tools', '手電筒照明': 'tools', '防水絕緣膠帶': 'tools', '接著快乾膠': 'tools', '修繕五金': 'tools',
+    '量尺測量': 'tools', '潤滑防鏽油': 'tools', '五金耗材': 'tools', '螺絲': 'tools', '手電筒': 'tools',
+    '絕緣膠帶': 'tools', '快乾膠': 'tools', '量尺': 'tools', '防鏽油': 'tools', '精密螺絲起子工具組': 'tools',
+    'led高流明手電筒': 'tools', '電工防水絕緣膠帶': 'tools', '萬能接著快乾膠': 'tools', '家庭修繕五金螺絲': 'tools',
+    '不鏽鋼量尺測量工具': 'tools', 'wd-40多功能防鏽油': 'tools', '家庭水電耗材五金': 'tools',
+    '🔧': 'tools', '🪛': 'tools', '🔦': 'tools', '🧪': 'tools', '🔩': 'tools', '📏': 'tools',
+
+    // 22. 寵物 (pet) - 萌系肉球爪印
+    '寵物': 'pet', 'pet': 'pet', '毛孩': 'pet', '肉球': 'pet',
+    '乾糧飼料': 'pet', '主食罐頭': 'pet', '副食肉泥': 'pet', '原肉凍乾': 'pet', '體內外驅蟲': 'pet',
+    '核心疫苗': 'pet', '貓砂尿墊': 'pet', '寵物潔牙': 'pet', '洗毛護理': 'pet', '寵物保健品': 'pet',
+    '乾糧': 'pet', '罐頭': 'pet', '凍乾': 'pet', '驅蟲藥': 'pet', '疫苗': 'pet', '貓砂': 'pet', '潔牙': 'pet',
+    '寵物主糧乾糧': 'pet', '主食機能罐頭': 'pet', '體內外驅蟲滴劑': 'pet', '狂犬年度疫苗': 'pet', '凝結天然貓砂': 'pet', '原肉零食凍乾': 'pet', '寵物潔牙凝膠': 'pet',
+    '🐾': 'pet', '🥣': 'pet', '🥫': 'pet', '🪵': 'pet',
+
+    // 23. 母嬰 (baby) - 寬口嬰兒奶瓶
+    '母嬰': 'baby', 'baby': 'baby', '嬰兒': 'baby', '奶瓶': 'baby',
+    '配方奶粉': 'baby', '成長奶粉': 'baby', '透氣尿布': 'baby', '純水濕紙巾': 'baby', '副食品常溫粥': 'baby',
+    '奶瓶奶嘴': 'baby', '米餅副食': 'baby', '幼兒常規疫苗': 'baby', '兒童餐具': 'baby', '配方奶': 'baby',
+    '尿布': 'baby', '濕紙巾': 'baby', '副食品': 'baby', '奶嘴用品': 'baby', '幼兒疫苗': 'baby', '奶嘴': 'baby',
+    '嬰兒配方奶粉': 'baby', '透氣紙尿褲': 'baby', '純水柔濕紙巾': 'baby', '寶寶副食品粥': 'baby', '矽膠奶瓶奶嘴': 'baby', '嬰幼兒常規疫苗': 'baby',
+    '🍼': 'baby', '🧷': 'baby',
+
+    // 24. 動畫 (animation) - 導演場記板
+    '動畫': 'animation', 'animation': 'animation', '動漫': 'animation', '影視': 'animation', '場記板': 'animation', '漫畫': 'animation', 'comic': 'animation',
+    '漫畫單行本': 'animation', '輕小說': 'animation', 'bd藍光影音': 'animation', '畫冊設定集': 'animation', '周邊特典': 'animation',
+    '海報掛軸': 'animation', '同人周邊': 'animation', '小說': 'animation', '畫冊': 'animation', '周邊': 'animation', '海報': 'animation',
+    '漫畫/單行本': 'animation', 'bd/影音': 'animation', '畫冊/設定集': 'animation',
+    '🎬': 'animation', '💿': 'animation',
+
+    // 25. 遊戲 (game) - 無線遊戲手把
+    '遊戲': 'game', 'game': 'game', '電玩': 'game', '手把': 'game',
+    'switch卡帶': 'game', 'psxbox光碟': 'game', '主機手把': 'game', '點數卡序號': 'game', '特典周邊': 'game',
+    '典藏套裝': 'game', 'amiibo': 'game', '卡帶': 'game', '光碟': 'game', '點數卡': 'game', '特典': 'game',
+    'switch 卡帶': 'game', 'ps/xbox 光碟': 'game', '主機/手把周邊': 'game', '點數卡/序號': 'game',
+    '🎮': 'game', '🕹️': 'game', '💳': 'game', '🎁': 'game',
+
+    // 26. 二次元 (otaku) - 閃耀吧唧徽章
+    '二次元': 'otaku', 'otaku': 'otaku', '谷子': 'otaku', '吧唧': 'otaku',
+    '徽章吧唧': 'otaku', '壓克力立牌磚': 'otaku', '色紙相卡': 'otaku', '手辦模型景品': 'otaku', '棉花娃玩偶': 'otaku',
+    '一番賞獎品': 'otaku', '痛包配件': 'otaku', '徽章': 'otaku', '立牌': 'otaku', '相卡': 'otaku', '色紙': 'otaku',
+    '模型': 'otaku', '玩偶': 'otaku', '一番賞': 'otaku', '痛包': 'otaku', '徽章/吧唧': 'otaku',
+    '壓克力立牌/磚': 'otaku', '色紙/相卡': 'otaku', '模型/黏土人/景品': 'otaku', '棉花娃/玩偶': 'otaku',
+    '✨': 'otaku', '🏅': 'otaku', '🪧': 'otaku', '🖼️': 'otaku', '🪀': 'otaku', '🧸': 'otaku', '🏆': 'otaku',
+
+    // 27. 票券 (ticket) - 展演票根
+    '票券': 'ticket', 'ticket': 'ticket', '票券/活動': 'ticket', '展覽': 'ticket', '電影票': 'ticket', '門票': 'ticket',
+    '演唱會門票': 'ticket', '動漫展覽票': 'ticket', '活動兌換券': 'ticket', '餐券住宿券': 'ticket', '高鐵車票': 'ticket',
+    '商品禮券': 'ticket', '演唱會': 'ticket', '展覽門票': 'ticket', '兌換券': 'ticket', '餐券': 'ticket', '車票': 'ticket',
+    '演唱會/音樂會': 'ticket', '動漫展覽門票': 'ticket',
+    '🎟️': 'ticket', '🎟': 'ticket', '🎤': 'ticket', '🔖': 'ticket',
+
+    // 28. 其他 (other) - 牛皮紙包裹箱
+    '其他': 'other', 'other': 'other', '包裹': 'other', '紙箱': 'other', '雜物': 'other',
+    '一般雜項': 'other', '配件小物': 'other', '未分類': 'other', '工作會議': 'other', '各類備忘': 'other',
+    '日常生活用品': 'other', '未分類備忘物品': 'other', '商務背包': 'other', '日常工作會議': 'other', '各類生活備忘': 'other',
+    '會議': 'other', '備忘': 'other',
+    '📦': 'other', '📌': 'other'
+  };
+const RULES=[["milk", "鮮乳|牛奶|乳品"], ["egg", "雞蛋|蛋品"], ["leaf", "青菜|時蔬|蔬菜|茶葉|茶包|海苔"], ["fruit", "水果|果汁"], ["cheese", "起司|乳酪|豆製|豆腐"], ["bread", "麵包|烘焙|糕餅"], ["meat", "牛肉|羊肉|豬肉|雞肉|禽肉|肉片|肉乾|肉條"], ["fish", "海鮮|水產|魚|蝦|蟹|貝"], ["bowl", "米麵|穀物|熟食|調理|料理|泡麵|水餃|湯圓|副食品|常溫粥|飼料|乾糧"], ["cup", "咖啡|手搖|沖泡"], ["bottle", "水壺|包裝水|氣泡水|飲料|啤酒|烈酒|紅白酒|調味|食用油|機油|齒輪油|煞車油|潤滑|防鏽"], ["cookie", "餅乾|米果|脆片|洋芋片|巧克力|堅果|果乾|糖果|果凍|布丁"], ["eye", "眼藥|淚液|隱眼|隱形|葉黃素"], ["bandage", "敷料|繃|外用藥膏|藥膏"], ["pill", "感冒|退燒|止痛|消炎|處方|成藥|腸胃|驅蟲|疫苗"], ["jar", "維他命|維生素|B群|保健|益生菌|膠原|鈣片|蛋白|奶粉|滴雞精|罐頭"], ["drop", "精華|乳液|面霜|化妝水|眼霜|身體乳|護手|保養液"], ["sun", "防曬|隔離"], ["lipstick", "口紅|唇膏|彩妝|美甲|粉底"], ["pump", "洗髮|沐浴|潤髮|護髮|香皂|洗手|卸妝|潔顏|洗毛"], ["brush", "牙刷|刷頭|牙膏|潔牙|口腔|主刷|邊刷"], ["cloth", "毛巾|面巾|抹布|抹巾|尿布|濕紙巾|尿墊|寢具|睡袋|地墊|瑜珈墊"], ["sponge", "菜瓜布|海綿"], ["spray", "清潔|洗劑|洗碗|洗衣|潔廁|去垢|油垢|水垢|消毒|酒精|除塵|除蟎|防蚊|防蛀"], ["filter", "濾網|濾芯|濾清|濾材|除濕|防潮|耗材"], ["phone", "手機|平板|保護貼|保護殼"], ["laptop", "電腦|軟體|鍵盤|滑鼠|HUB"], ["headphones", "耳機|音響"], ["screen", "電視|螢幕|家電|電器"], ["chair", "家具|椅"], ["watch", "手錶|穿戴"], ["camera", "攝影|相機"], ["battery", "電瓶|電池|行動電源"], ["plug", "充電|傳輸|轉接|電線"], ["book", "書籍|雜誌|手帳|筆記|漫畫|小說|畫冊"], ["pen", "鋼筆|簽字|墨水|替芯|繪畫|美術"], ["ruler", "量尺|測量"], ["bag", "包袋|背包|收納|檔案夾|痛包"], ["shoe", "跑鞋|球鞋|運動鞋|鞋靴"], ["ball", "球拍|球類"], ["dumbbell", "健身|重訓|啞鈴|彈力|護具"], ["wrench", "螺絲|五金|修繕|工具|維修|水電"], ["bulb", "照明|手電筒|LED"], ["wheel", "輪胎|煞車"], ["shield", "保險|車險|保固|消防"], ["calendar", "驗車|會議|備忘|訂閱"], ["music", "音樂|演唱會"], ["cloud", "雲端"], ["wifi", "電信|寬頻"], ["home", "租約"], ["tent", "帳篷|天幕|登山|戶外"], ["plant", "植栽|肥料|花草"], ["diamond", "珠寶|首飾|飾品"], ["glasses", "眼鏡"], ["shirt", "衣物|送洗|皮革"], ["disc", "光碟|藍光|BD"], ["picture", "海報|掛軸|相卡|色紙|立牌"], ["toy", "娃|玩偶|模型|手辦|景品|Amiibo"], ["badge", "徽章|吧唧|特典|周邊|一番賞"], ["game", "卡帶|手把|主機"], ["ticket", "票|兌換|禮券|點數卡"], ["baby", "奶瓶|奶嘴|幼兒|兒童"]].map(([key,pattern])=>[key,new RegExp(pattern,'i')]);
+const EXACT={'青菜':'vegetable','葉菜類':'vegetable','生鮮時蔬':'vegetable','蔬菜':'vegetable','茶葉茶包':'tea','茶葉':'tea','豆製品':'tofu','雞肉禽肉':'chicken','蝦蟹貝類':'shrimp','遊戲機':'game','生鮮肉品':'meat','火鍋肉片':'meat','保濕面膜':'face','香水香氛':'perfume','香氛擴香':'perfume','刮鬍刀具':'razor','女性護理':'cloth','充電器快充':'plug','手帳筆記':'book','乳清飲品':'jar','南北乾貨':'bag','膠帶黏著':'tape','防水絕緣膠帶':'tape','接著快乾膠':'drop','記憶卡隨身碟':'chip','運動補給':'bottle','副食肉泥':'meat','原肉凍乾':'meat','米餅副食':'cookie','兒童餐具':'food','影音串流':'film','戶外炊具':'bowl','能量果膠':'bottle','火星塞':'plug','雨刷':'wiper','典藏套裝':'box','定檢驗車':'car','外用藥膏':'bandage'};
+function resolve(category, sub='') {
+ const raw=String(category||'other').trim().toLowerCase();
+ const cat=CATEGORIES[raw]?raw:(ALIAS_MAP[raw]||'other');
+ const detail=String(sub||(!CATEGORIES[raw]?raw:'')).trim();
+ const foodShape=/葉菜|青菜|蔬菜|時蔬/.test(detail)?'vegetable':/鮮乳|鮮奶|牛乳|牛奶/.test(detail)?'milk':null;
+ const rule=detail && RULES.find(([,pattern])=>pattern.test(detail));
+ return {cat,key:foodShape||EXACT[detail]||(rule?rule[0]:CATEGORIES[cat]||'box')};
+}
+const SUBTYPE_ART={"vehicle": {"機油": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "齒輪油": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m9 2 1 3h4l1-3 4 3-2 3 2 3h3v4h-3l-2 3 2 3-4 2-1-3h-4l-1 3-4-2 2-3-2-3H2v-4h3l2-3-2-3Z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></g>", "輪胎": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v7m0 6v7M2 12h7m6 0h7\"/>", "電瓶": "<rect x=\"2\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M22 10v4M7 9v6M4 12h6M14 12h3\"/><path d=\"M12 9v6M17 9v6\" fill=\"none\" stroke-width=\"1.1\"/>", "雨刷": "<path d=\"M5 4h14l3 15H2ZM4 16l9-8M9 6l7 7\"/><path d=\"M7 7h2M15 7h2\" fill=\"none\" stroke-width=\"1.1\"/>", "煞車": "<g transform=\"translate(0 1) scale(.78)\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v7m0 6v7M2 12h7m6 0h7\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "驗車": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m5 10 2-6h10l2 6M3 10h18v9H3ZM6 19v2M18 19v2M6 14h2M16 14h2\"/><path d=\"M8 7h8M10 15h4M4 17h16\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m4 12 5 5L20 6\"/></g>", "車險": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m5 10 2-6h10l2 6M3 10h18v9H3ZM6 19v2M18 19v2M6 14h2M16 14h2\"/><path d=\"M8 7h8M10 15h4M4 17h16\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/></g>"}, "subscription": {"影音": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M12 17v5M7 22h10\"/><path d=\"M5 6h14v8H5M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"3\" y=\"7\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7V3h18v4M7 3l3 4M14 3l3 4m-7 4 5 3-5 3Z\"/><path d=\"M5 10v2M19 10v2M5 16v2M19 16v2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "音樂": "<path d=\"M9 17V5l12-3v13M9 9l12-3\"/><ellipse cx=\"6\" cy=\"18\" rx=\"3\" ry=\"3\"/><ellipse cx=\"18\" cy=\"16\" rx=\"3\" ry=\"3\"/><path d=\"M11 5v3M19 3v3\" fill=\"none\" stroke-width=\"1.1\"/>", "雲端": "<path d=\"M6 19a5 5 0 0 1-1-10 7 7 0 0 1 13-2 6 6 0 0 1 0 12Z\"/>", "軟體": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 3h14v13H5ZM2 20l3-4h14l3 4ZM9 7h6\"/><path d=\"M8 6h8v7H8M9 19h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m9 2 1 3h4l1-3 4 3-2 3 2 3h3v4h-3l-2 3 2 3-4 2-1-3h-4l-1 3-4-2 2-3-2-3H2v-4h3l2-3-2-3Z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></g>", "健身": "<path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/>", "電信": "<path d=\"M2 7c6-5 14-5 20 0M5 11c4-4 10-4 14 0M8 15c2-2 6-2 8 0\"/><circle cx=\"12\" cy=\"20\" r=\"1\"/>", "租約": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m2 11 10-8 10 8M5 9v12h14V9M10 21v-7h4v7\"/><path d=\"M7 11h3v3H7M15 11h2v3h-2M8 6h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M5 2h10l5 5v15H5ZM15 2v6h5M8 12h9M8 16h9M8 19h5\"/></g>"}, "medicine": {"眼藥水": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M2 12c5-10 15-10 20 0-5 10-15 10-20 0Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></g>", "維他命": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2\"/></g>", "魚油": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M3 12c5-9 12-9 15 0-3 9-10 9-15 0Zm15 0 4-5v10Z\"/><circle cx=\"8\" cy=\"11\" r=\".7\"/><path d=\"M11 7q4 5 0 10M14 10l2 2-2 2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "藥膏": "<path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/>", "成藥": "<path d=\"M4 13 13 4a5 5 0 0 1 7 7l-9 9a5 5 0 0 1-7-7Z\"/><path d=\"m8 9 7 7\"/><path d=\"M5 16l3 3M14 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/>", "保養液": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M2 12c5-10 15-10 20 0-5 10-15 10-20 0Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></g>", "醫療": "<path d=\"M12 4C-1-3 2 12 5 19c3 8 3-5 7-5s4 13 7 5c3-7 6-22-7-15Z\"/>"}, "cleaning": {"菜瓜布": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"13\" rx=\"3\"/><path d=\"M3 15h18M7 10h.01M12 11h.01M17 9h.01\"/>", "洗衣精": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 8h10l2 4v9H5v-9ZM12 8V3h6M9 3h6M8 14h8\"/><path d=\"M8 12h8M8 17h8M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m8 3-6 4 3 5 3-2v11h8V10l3 2 3-5-6-4c0 4-8 4-8 0Z\"/><path d=\"M8 4q4 5 8 0M10 17h4M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/></g>", "洗碗精": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 8h10l2 4v9H5v-9ZM12 8V3h6M9 3h6M8 14h8\"/><path d=\"M8 12h8M8 17h8M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M4 3v6c0 3 6 3 6 0V3M7 3v18M4 6h6M18 3c-4 4-4 9 0 9h2M20 3v18\"/></g>", "抹布": "<path d=\"M4 4h13v16H4ZM17 7h3v15H7v-2M4 15h13\"/><path d=\"M7 7v5M10 7v5M13 7v5M6 17h9\" fill=\"none\" stroke-width=\"1.1\"/>", "潔廁劑": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h11v4h-6v4l4 3v7H4v-7l4-3V7H7Z\"/><path d=\"m14 7 3 4M7 16h6\"/><path d=\"M7 19h6M19 4h2M19 7l2 1\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "酒精": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 4v16M4 12h16\"/></g>", "除蟎": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h11v4h-6v4l4 3v7H4v-7l4-3V7H7Z\"/><path d=\"m14 7 3 4M7 16h6\"/><path d=\"M7 19h6M19 4h2M19 7l2 1\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><ellipse cx=\"12\" cy=\"12\" rx=\"5\" ry=\"8\" transform=\"rotate(35 12 12)\"/><path d=\"M5 7 2 5M9 4V1M18 6l3-2M19 14h4M15 20l1 3M5 17l-3 3M10 9h.01M14 12h.01M11 16h.01\"/></g>"}, "warranty": {"家具": "<rect x=\"6\" y=\"2\" width=\"12\" height=\"11\" rx=\"3\"/><path d=\"M4 16h16v3H4ZM7 19v3M17 19v3M8 13v3M16 13v3\"/><path d=\"M9 5h6M9 8h6M9 11h6M7 17h10\" fill=\"none\" stroke-width=\"1.1\"/>", "電腦": "<path d=\"M5 3h14v13H5ZM2 20l3-4h14l3 4ZM9 7h6\"/><path d=\"M8 6h8v7H8M9 19h6\" fill=\"none\" stroke-width=\"1.1\"/>", "手機": "<rect x=\"6\" y=\"2\" width=\"12\" height=\"20\" rx=\"3\"/><path d=\"M10 5h4M11 19h2\"/><path d=\"M8 8h8v8H8M8 11h8\" fill=\"none\" stroke-width=\"1.1\"/>", "耳機": "<path d=\"M4 13V9a8 8 0 0 1 16 0v4M4 12h4v9H4ZM16 12h4v9h-4Z\"/><path d=\"M6 14v5M18 14v5M8 5q4-3 8 0\" fill=\"none\" stroke-width=\"1.1\"/>", "家電": "<rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M12 17v5M7 22h10\"/><path d=\"M5 6h14v8H5M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/>", "手錶": "<path d=\"M8 6V2h8v4M8 18v4h8v-4\"/><rect x=\"5\" y=\"6\" width=\"14\" height=\"12\" rx=\"3\"/><path d=\"M12 9v3l3 2\"/><path d=\"M9 4h6M9 20h6M8 9v6M16 9v6M10 16h4\" fill=\"none\" stroke-width=\"1.1\"/>", "遊戲機": "<path d=\"M7 7h10c4 0 6 13 3 13l-5-4H9l-5 4C1 20 3 7 7 7Z\"/><path d=\"M6 11v4M4 13h4M16 12h.01M19 14h.01\"/><path d=\"M9 10h2M13 10h2M7 17l2-1M15 16l2 1\" fill=\"none\" stroke-width=\"1.1\"/>"}, "filter": {"濾網": "<rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M9 6v12M12 6v12M15 6v12\"/><path d=\"M7 5h10M7 19h10\" fill=\"none\" stroke-width=\"1.1\"/>", "濾芯": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M9 6v12M12 6v12M15 6v12\"/><path d=\"M7 5h10M7 19h10\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "牙刷": "<path d=\"M8 2h8v8H8ZM10 10h4v12h-4M8 5h8M8 8h8\"/><path d=\"M10 3v6M12 3v6M14 3v6M12 14v5\" fill=\"none\" stroke-width=\"1.1\"/>", "除濕盒": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "掃地耗材": "<g transform=\"translate(0 1) scale(.78)\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v7m0 6v7M2 12h7m6 0h7\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M8 2h8v8H8ZM10 10h4v12h-4M8 5h8M8 8h8\"/><path d=\"M10 3v6M12 3v6M14 3v6M12 14v5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "咖啡保養": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M4 8h12v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z\"/><path d=\"M16 9h2a3 3 0 0 1 0 6h-2M7 3v2M12 3v2\"/><path d=\"M7 12h6M7 15h6M3 22h15\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m9 2 1 3h4l1-3 4 3-2 3 2 3h3v4h-3l-2 3 2 3-4 2-1-3h-4l-1 3-4-2 2-3-2-3H2v-4h3l2-3-2-3Z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></g>"}, "animation": {"漫畫": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"m3 17 6-6 5 5 3-3 4 4\"/><circle cx=\"16\" cy=\"8\" r=\"2\"/><path d=\"M5 19h14\" fill=\"none\" stroke-width=\"1.1\"/></g>", "輕小說": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "影音": "<g transform=\"translate(0 1) scale(.78)\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"m6 6 2 2m8 8 2 2\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"3\" y=\"7\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7V3h18v4M7 3l3 4M14 3l3 4m-7 4 5 3-5 3Z\"/><path d=\"M5 10v2M19 10v2M5 16v2M19 16v2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "畫冊": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2a10 10 0 1 0 0 20c3 0 0-4 3-5h3c7-1 3-15-6-15Z\"/><circle cx=\"7\" cy=\"8\" r=\"1\"/><circle cx=\"12\" cy=\"6\" r=\"1\"/><circle cx=\"17\" cy=\"9\" r=\"1\"/><circle cx=\"6\" cy=\"14\" r=\"1\"/></g>", "周邊": "<circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"m8 16-2 6 6-3 6 3-2-6M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\"/>"}, "game": {"Switch卡帶": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M6 2h9l4 4v16H5V3ZM8 5v4M11 5v4M14 5v4M8 14h8v5H8\"/><path d=\"M10 16h4M10 18h2\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M7 7h10c4 0 6 13 3 13l-5-4H9l-5 4C1 20 3 7 7 7Z\"/><path d=\"M6 11v4M4 13h4M16 12h.01M19 14h.01\"/><path d=\"M9 10h2M13 10h2M7 17l2-1M15 16l2 1\" fill=\"none\" stroke-width=\"1.1\"/></g>", "光碟": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"m6 6 2 2m8 8 2 2\"/>", "周邊": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 7h10c4 0 6 13 3 13l-5-4H9l-5 4C1 20 3 7 7 7Z\"/><path d=\"M6 11v4M4 13h4M16 12h.01M19 14h.01\"/><path d=\"M9 10h2M13 10h2M7 17l2-1M15 16l2 1\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M8 2v5M16 2v5M5 7h14v4a7 7 0 0 1-14 0ZM12 18v5\"/><path d=\"M8 10v4M12 10v5M16 10v4\" fill=\"none\" stroke-width=\"1.1\"/></g>", "點數卡": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z\"/><path d=\"M15 5v3m0 3v2m0 3v3\"/><path d=\"M6 9h6M6 12h4M6 15h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 4v16M4 12h16\"/></g>", "特典": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"m8 16-2 6 6-3 6 3-2-6M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\"/></g>"}, "otaku": {"徽章": "<circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"m8 16-2 6 6-3 6 3-2-6M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\"/>", "立牌": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"m3 17 6-6 5 5 3-3 4 4\"/><circle cx=\"16\" cy=\"8\" r=\"2\"/><path d=\"M5 19h14\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"6\" cy=\"5\" r=\"3\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"M7 16v6h10v-6M9 9h.01M15 9h.01M11 13h2\"/><path d=\"M9 19h6M11 16v5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "相卡": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"m3 17 6-6 5 5 3-3 4 4\"/><circle cx=\"16\" cy=\"8\" r=\"2\"/><path d=\"M5 19h14\" fill=\"none\" stroke-width=\"1.1\"/>", "模型": "<g transform=\"translate(0 1) scale(.78)\"><circle cx=\"6\" cy=\"5\" r=\"3\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"M7 16v6h10v-6M9 9h.01M15 9h.01M11 13h2\"/><path d=\"M9 19h6M11 16v5\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m9 2 1 3h4l1-3 4 3-2 3 2 3h3v4h-3l-2 3 2 3-4 2-1-3h-4l-1 3-4-2 2-3-2-3H2v-4h3l2-3-2-3Z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></g>", "玩偶": "<circle cx=\"6\" cy=\"5\" r=\"3\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"M7 16v6h10v-6M9 9h.01M15 9h.01M11 13h2\"/><path d=\"M9 19h6M11 16v5\" fill=\"none\" stroke-width=\"1.1\"/>", "一番賞": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"m8 16-2 6 6-3 6 3-2-6M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\"/></g>"}, "ticket": {"電影票": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z\"/><path d=\"M15 5v3m0 3v2m0 3v3\"/><path d=\"M6 9h6M6 12h4M6 15h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"3\" y=\"7\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7V3h18v4M7 3l3 4M14 3l3 4m-7 4 5 3-5 3Z\"/><path d=\"M5 10v2M19 10v2M5 16v2M19 16v2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "演唱會": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z\"/><path d=\"M15 5v3m0 3v2m0 3v3\"/><path d=\"M6 9h6M6 12h4M6 15h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M9 17V5l12-3v13M9 9l12-3\"/><ellipse cx=\"6\" cy=\"18\" rx=\"3\" ry=\"3\"/><ellipse cx=\"18\" cy=\"16\" rx=\"3\" ry=\"3\"/><path d=\"M11 5v3M19 3v3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "展覽門票": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z\"/><path d=\"M15 5v3m0 3v2m0 3v3\"/><path d=\"M6 9h6M6 12h4M6 15h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"m3 17 6-6 5 5 3-3 4 4\"/><circle cx=\"16\" cy=\"8\" r=\"2\"/><path d=\"M5 19h14\" fill=\"none\" stroke-width=\"1.1\"/></g>", "兌換券": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z\"/><path d=\"M15 5v3m0 3v2m0 3v3\"/><path d=\"M6 9h6M6 12h4M6 15h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/></g>"}, "food": {"青菜": "<path d=\"M10 21 7 12C1 12 1 4 6 4c0-4 7-3 7 1 5-5 10 0 7 4 4 4-1 8-5 6l-1 6Z\"/><path d=\"m11 20-4-12M13 20l3-12M12 18V6M5 7l3 3M18 10l-3 3\" stroke-width=\"1.1\"/>", "水果": "<path d=\"M12 7C2 1 0 14 8 21h8c8-7 6-20-4-14ZM12 7V3l4-2\"/><path d=\"M7 11q-2 4 1 6M12 4q4 0 5-2\" fill=\"none\" stroke-width=\"1.1\"/>", "鮮乳": "<path d=\"M10 2h4v3l2 2v3l3 3v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7l3-3V7l2-2Z\"/><path d=\"M8 7h8M8 10h8M7 14h4M7 17h3M7 20h4\"/><path d=\"M14 14v5\" stroke-width=\"1.1\"/>", "雞蛋": "<path d=\"M20 14c0 10-16 10-16 0C4 8 8 2 12 2s8 6 8 12Z\"/><path d=\"M8 12q-3 5 2 7\" fill=\"none\" stroke-width=\"1.1\"/>", "咖啡": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M4 8h12v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z\"/><path d=\"M16 9h2a3 3 0 0 1 0 6h-2M7 3v2M12 3v2\"/><path d=\"M7 12h6M7 15h6M3 22h15\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><ellipse cx=\"12\" cy=\"12\" rx=\"7\" ry=\"10\" transform=\"rotate(35 12 12)\"/><path d=\"M16 4C7 8 17 16 8 20\"/></g>", "茶包": "<path d=\"M5 9h10v13H5ZM7 9V6h6v3M10 6V2h10v8M18 10h4v5h-4Z\"/><path d=\"m8 14 4 4m0-4-4 4\"/>", "調味料": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M4 3v6c0 3 6 3 6 0V3M7 3v18M4 6h6M18 3c-4 4-4 9 0 9h2M20 3v18\"/></g>", "零食": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 7h.01M15 8h.01M7 14h.01M13 13h.01M15 17h.01\" stroke-width=\"3\"/>", "生鮮肉品": "<path d=\"M18 3c7 2 4 12-2 16-5 4-14 2-13-4 0-4 4-5 7-7 3-1 4-7 8-5Z\"/><ellipse cx=\"16\" cy=\"8\" rx=\"2.8\" ry=\"2.2\"/><path d=\"M6 14q2-3 5-3M6 17l4-2M11 18l3-3M17 13l2-2\" stroke-width=\"1.1\"/>"}, "pao": {"洗沐": "<path d=\"M7 8h10l2 4v9H5v-9ZM12 8V3h6M9 3h6M8 14h8\"/><path d=\"M8 12h8M8 17h8M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/>", "防曬": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2\"/></g>", "保養": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "護手霜": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "牙膏": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 4C-1-3 2 12 5 19c3 8 3-5 7-5s4 13 7 5c3-7 6-22-7-15Z\"/></g>", "刮鬍刀": "<path d=\"M4 3h16v5H4ZM10 8h4v14h-4M7 5h10\"/>", "香水": "<rect x=\"5\" y=\"8\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M9 8V3h6v5M8 13h8v5H8\"/><path d=\"M10 5h4M10 15h4M10 17h2\" fill=\"none\" stroke-width=\"1.1\"/>", "彩妝": "<path d=\"M8 12h8v9H8ZM9 12V5l6-3v10M7 21h10\"/><path d=\"M10 16h4M10 19h4M11 8l2-1\" fill=\"none\" stroke-width=\"1.1\"/>"}, "pet": {"乾糧": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M2 11h20c0 6-4 9-10 9S2 17 2 11ZM8 22h8M7 3v5M12 2v6M17 3v5\"/><path d=\"M6 14q6 6 12 0\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 16c1-2 3-6 6-6s5 4 6 6c2 5-4 5-6 3-2 2-8 2-6-3Z\"/><ellipse cx=\"4\" cy=\"9\" rx=\"2\" ry=\"3\"/><ellipse cx=\"9\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"15\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"20\" cy=\"9\" rx=\"2\" ry=\"3\"/></g>", "罐頭": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"6\" y=\"3\" width=\"12\" height=\"19\" rx=\"3\"/><path d=\"M6 7h12M6 18h12M10 5h4M9 10h6v5H9Z\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 16c1-2 3-6 6-6s5 4 6 6c2 5-4 5-6 3-2 2-8 2-6-3Z\"/><ellipse cx=\"4\" cy=\"9\" rx=\"2\" ry=\"3\"/><ellipse cx=\"9\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"15\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"20\" cy=\"9\" rx=\"2\" ry=\"3\"/></g>", "驅蟲藥": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M4 13 13 4a5 5 0 0 1 7 7l-9 9a5 5 0 0 1-7-7Z\"/><path d=\"m8 9 7 7\"/><path d=\"M5 16l3 3M14 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><ellipse cx=\"12\" cy=\"12\" rx=\"5\" ry=\"8\" transform=\"rotate(35 12 12)\"/><path d=\"M5 7 2 5M9 4V1M18 6l3-2M19 14h4M15 20l1 3M5 17l-3 3M10 9h.01M14 12h.01M11 16h.01\"/></g>", "疫苗健檢": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m7 5 12 12-5 5L2 10ZM5 8l4-4M15 1l8 8M19 5l-5 5M17 20l5 3M7 12l2-2M10 15l2-2\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 16c1-2 3-6 6-6s5 4 6 6c2 5-4 5-6 3-2 2-8 2-6-3Z\"/><ellipse cx=\"4\" cy=\"9\" rx=\"2\" ry=\"3\"/><ellipse cx=\"9\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"15\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"20\" cy=\"9\" rx=\"2\" ry=\"3\"/></g>", "貓砂尿墊": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 16c1-2 3-6 6-6s5 4 6 6c2 5-4 5-6 3-2 2-8 2-6-3Z\"/><ellipse cx=\"4\" cy=\"9\" rx=\"2\" ry=\"3\"/><ellipse cx=\"9\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"15\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"20\" cy=\"9\" rx=\"2\" ry=\"3\"/></g>", "零食凍乾": "<path d=\"m7 7 10 10c5-2 7 4 3 4-1 4-7 2-5-3L5 9C0 11-2 5 2 5c1-4 7-3 5 2Z\"/>", "寵物保健": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 16c1-2 3-6 6-6s5 4 6 6c2 5-4 5-6 3-2 2-8 2-6-3Z\"/><ellipse cx=\"4\" cy=\"9\" rx=\"2\" ry=\"3\"/><ellipse cx=\"9\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"15\" cy=\"5\" rx=\"2\" ry=\"3\"/><ellipse cx=\"20\" cy=\"9\" rx=\"2\" ry=\"3\"/></g>"}, "baby": {"配方奶": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"6\" y=\"3\" width=\"12\" height=\"19\" rx=\"3\"/><path d=\"M6 7h12M6 18h12M10 5h4M9 10h6v5H9Z\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M10 2h4v3l2 2v3l3 3v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7l3-3V7l2-2Z\"/><path d=\"M8 7h8M8 10h8M7 14h4M7 17h3M7 20h4\"/><path d=\"M14 14v5\" stroke-width=\"1.1\"/></g>", "尿布": "<path d=\"M3 4h18l-2 15-7 3-7-3ZM3 8h18M5 12c5 0 5 5 5 8M19 12c-5 0-5 5-5 8\"/>", "濕紙巾": "<path d=\"M3 11h18v11H3ZM6 11l1-8h10l1 8M8 15h8M9 3l-1 8\"/>", "副食品": "<path d=\"M2 11h20c0 6-4 9-10 9S2 17 2 11ZM8 22h8M7 3v5M12 2v6M17 3v5\"/><path d=\"M6 14q6 6 12 0\" fill=\"none\" stroke-width=\"1.1\"/>", "奶嘴用品": "<path d=\"M9 12V6a3 3 0 0 1 6 0v6M3 12h18v4H3Z\"/><circle cx=\"12\" cy=\"18\" r=\"4\"/>", "幼兒疫苗": "<path d=\"m7 5 12 12-5 5L2 10ZM5 8l4-4M15 1l8 8M19 5l-5 5M17 20l5 3M7 12l2-2M10 15l2-2\"/>"}, "office": {"耗材墨水": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 8V2h12v6M6 17H2V8h20v9h-4M6 14h12v8H6ZM17 11h2M9 17h6M9 20h6\"/></g>", "碳粉匣": "<path d=\"M6 8V2h12v6M6 17H2V8h20v9h-4M6 14h12v8H6ZM17 11h2M9 17h6M9 20h6\"/>", "電池": "<rect x=\"2\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M22 10v4M7 9v6M4 12h6M14 12h3\"/><path d=\"M12 9v6M17 9v6\" fill=\"none\" stroke-width=\"1.1\"/>", "筆記文具": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "證件合約": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h10l5 5v15H5ZM15 2v6h5M8 12h9M8 16h9M8 19h5\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "專業證照": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h10l5 5v15H5ZM15 2v6h5M8 12h9M8 16h9M8 19h5\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"10\" r=\"7\"/><path d=\"m8 16-2 6 6-3 6 3-2-6M12 6l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\"/></g>"}, "outdoor": {"高蛋白": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "露營裝備": "<path d=\"m12 3 10 18H2ZM12 10l5 11H7Z\"/><path d=\"M12 3v7M2 22h20M3 18l3-1M21 18l-3-1\" fill=\"none\" stroke-width=\"1.1\"/>", "登山裝備": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m12 3 10 18H2ZM12 10l5 11H7Z\"/><path d=\"M12 3v7M2 22h20M3 18l3-1M21 18l-3-1\" fill=\"none\" stroke-width=\"1.1\"/></g>", "水壺配件": "<path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/>", "補給品": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m13 2-9 12h7l-1 8 10-13h-8Z\"/></g>", "球拍線路": "<ellipse cx=\"14\" cy=\"9\" rx=\"7\" ry=\"8\"/><path d=\"m9 15-7 7M10 5h8M8 9h13M10 13h8M12 2v14M16 2v14\"/>"}, "home": {"植栽綠化": "<path d=\"M6 14h12l-2 8H8ZM12 14V6C5 1 2 5 6 9h6c0-7 5-10 9-6 0 4-4 6-9 6\"/><path d=\"M8 17h8M9 20h6\" fill=\"none\" stroke-width=\"1.1\"/>", "花草肥料": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 3c5-6 7 1 5 4 8-2 8 6 2 7 6 5 0 10-5 5-1 7-9 4-8-1-7 1-8-7-2-9-4-6 3-9 6-5Z\"/><circle cx=\"12\" cy=\"11\" r=\"3\"/></g>", "燈具照明": "<path d=\"M8 17C0 10 5 2 12 2s12 8 4 15ZM8 20h8M10 23h4M12 17v-6\"/><path d=\"M9 9l3 3 3-3\" fill=\"none\" stroke-width=\"1.1\"/>", "寢具家飾": "<path d=\"M2 6v16M22 10v12M2 18h20M3 9h7v6H3ZM10 11h12v7H10Z\"/>", "居家安全": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m2 11 10-8 10 8M5 9v12h14V9M10 21v-7h4v7\"/><path d=\"M7 11h3v3H7M15 11h2v3h-2M8 6h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "修繕保養": "<path d=\"M21 3a6 6 0 0 1-7 8L6 20a3 3 0 0 1-4-4l9-8a6 6 0 0 1 8-7l-4 4 3 3Z\"/><path d=\"M5 17l2 2\" fill=\"none\" stroke-width=\"1.1\"/>"}, "fashion": {"換季送洗": "<path d=\"M9 5a3 3 0 1 1 4 3v3l9 7v3H2v-3l11-7\"/>", "皮革保養": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "珠寶飾品": "<path d=\"M6 3h12l5 7-11 12L1 10ZM1 10h22M6 3l6 19 6-19\"/><path d=\"M6 3l6 7 6-7\" fill=\"none\" stroke-width=\"1.1\"/>", "衣物防護": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m8 3-6 4 3 5 3-2v11h8V10l3 2 3-5-6-4c0 4-8 4-8 0Z\"/><path d=\"M8 4q4 5 8 0M10 17h4M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "精品鞋靴": "<path d=\"M3 8h5l3 6 10 3v4H2V10ZM3 17h8M11 14l2-3M15 15l2-2\"/><path d=\"M4 19h14M5 10l2 3\" fill=\"none\" stroke-width=\"1.1\"/>"}, "drinks": {"咖啡豆": "<ellipse cx=\"12\" cy=\"12\" rx=\"7\" ry=\"10\" transform=\"rotate(35 12 12)\"/><path d=\"M16 4C7 8 17 16 8 20\"/>", "濾掛咖啡": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M4 8h12v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z\"/><path d=\"M16 9h2a3 3 0 0 1 0 6h-2M7 3v2M12 3v2\"/><path d=\"M7 12h6M7 15h6M3 22h15\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"2\"/><path d=\"M9 6v12M12 6v12M15 6v12\"/><path d=\"M7 5h10M7 19h10\" fill=\"none\" stroke-width=\"1.1\"/></g>", "茶葉茶包": "<path d=\"M5 9h10v13H5ZM7 9V6h6v3M10 6V2h10v8M18 10h4v5h-4Z\"/><path d=\"m8 14 4 4m0-4-4 4\"/>", "手搖飲品": "<path d=\"M5 7h14l-2 15H7ZM4 7h16M12 7l2-5h5M7 14h10\"/>", "果汁蔬果汁": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 7C2 1 0 14 8 21h8c8-7 6-20-4-14ZM12 7V3l4-2\"/><path d=\"M7 11q-2 4 1 6M12 4q4 0 5-2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "包裝水": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "氣泡水": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"7\" cy=\"7\" r=\"4\"/><circle cx=\"17\" cy=\"14\" r=\"5\"/><circle cx=\"5\" cy=\"19\" r=\"2\"/><circle cx=\"19\" cy=\"4\" r=\"2\"/></g>", "碳酸飲料": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"6\" y=\"3\" width=\"12\" height=\"19\" rx=\"3\"/><path d=\"M6 7h12M6 18h12M10 5h4M9 10h6v5H9Z\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"7\" cy=\"7\" r=\"4\"/><circle cx=\"17\" cy=\"14\" r=\"5\"/><circle cx=\"5\" cy=\"19\" r=\"2\"/><circle cx=\"19\" cy=\"4\" r=\"2\"/></g>", "啤酒烈酒": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M20 3C5 1 1 9 6 17s17 0 14-14ZM5 21 16 8\"/><path d=\"M8 16l-1-5M11 13l5 1M14 10l-1-4\" fill=\"none\" stroke-width=\"1.1\"/></g>", "紅白酒": "<path d=\"M7 2h10l1 8a6 6 0 0 1-12 0ZM6 8h12M12 16v6M8 22h8\"/>", "沖泡飲品": "<path d=\"M4 8h12v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z\"/><path d=\"M16 9h2a3 3 0 0 1 0 6h-2M7 3v2M12 3v2\"/><path d=\"M7 12h6M7 15h6M3 22h15\" fill=\"none\" stroke-width=\"1.1\"/>", "乳清飲品": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/></g>"}, "snack": {"餅乾米果": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 7h.01M15 8h.01M7 14h.01M13 13h.01M15 17h.01\" stroke-width=\"3\"/>", "洋芋片脆片": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M20 3C5 1 1 9 6 17s17 0 14-14ZM5 21 16 8\"/><path d=\"M8 16l-1-5M11 13l5 1M14 10l-1-4\" fill=\"none\" stroke-width=\"1.1\"/></g>", "巧克力可可": "<path d=\"M6 2h12v20H6ZM6 8h12M6 14h12M12 2v12M6 14l6 5 6-5\"/>", "堅果果乾": "<path d=\"M12 2c12 5 11 20 0 20S0 7 12 2Z\"/><path d=\"M12 4v16M8 8l-1 8M16 8l1 8\"/>", "糖果軟糖": "<path d=\"M7 8h10v8H7ZM7 8 2 5v14l5-3M17 8l5-3v14l-5-3M10 8v8M14 8v8\"/>", "肉乾肉條": "<path d=\"M18 3c7 2 4 12-2 16-5 4-14 2-13-4 0-4 4-5 7-7 3-1 4-7 8-5Z\"/><ellipse cx=\"16\" cy=\"8\" rx=\"2.8\" ry=\"2.2\"/><path d=\"M6 14q2-3 5-3M6 17l4-2M11 18l3-3M17 13l2-2\" stroke-width=\"1.1\"/>", "即食泡麵": "<path d=\"M2 12h20c0 7-20 7-20 0ZM7 3v9M10 3v9M13 3v9M16 3v9M5 2h14M7 20h10\"/>", "海苔點心": "<path d=\"M20 3C5 1 1 9 6 17s17 0 14-14ZM5 21 16 8\"/><path d=\"M8 16l-1-5M11 13l5 1M14 10l-1-4\" fill=\"none\" stroke-width=\"1.1\"/>", "果凍布丁": "<path d=\"M7 5h10l4 15H3ZM7 5c2-4 8-4 10 0M5 12h14M2 22h20\"/>", "傳統糕餅": "<path d=\"M5 11c-5-2-2-9 3-7 2-3 6-3 8 0 5-2 8 5 3 7v10H5Z\"/><path d=\"M8 17h8\"/><path d=\"M8 8v3M12 7v4M16 8v3M8 19h8\" fill=\"none\" stroke-width=\"1.1\"/>"}, "fresh": {"牛肉羊肉": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M18 3c7 2 4 12-2 16-5 4-14 2-13-4 0-4 4-5 7-7 3-1 4-7 8-5Z\"/><ellipse cx=\"16\" cy=\"8\" rx=\"2.8\" ry=\"2.2\"/><path d=\"M6 14q2-3 5-3M6 17l4-2M11 18l3-3M17 13l2-2\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M6 7 2 3v6l4 2v7c0 6 12 6 12 0v-7l4-2V3l-4 4ZM6 7h12M6 16h12\"/><path d=\"M9 11h.01M15 11h.01M9 19h.01M15 19h.01\"/></g>", "生鮮豬肉": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M18 3c7 2 4 12-2 16-5 4-14 2-13-4 0-4 4-5 7-7 3-1 4-7 8-5Z\"/><ellipse cx=\"16\" cy=\"8\" rx=\"2.8\" ry=\"2.2\"/><path d=\"M6 14q2-3 5-3M6 17l4-2M11 18l3-3M17 13l2-2\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m5 7-3-5 7 2h6l7-2-3 5c7 15-21 15-14 0Z\"/><ellipse cx=\"12\" cy=\"15\" rx=\"5\" ry=\"3\"/><path d=\"M10 15h.01M14 15h.01M7 9h.01M17 9h.01\"/></g>", "雞肉禽肉": "<path d=\"M17 3c7 1 5 9 1 11-3 2-6 1-8-1l-4 5c0 4-4 4-4 1-3-1-1-5 2-4l5-5c-1-3 3-8 8-7Z\"/><path d=\"M12 9q1-3 4-3M13 12l2-1\" stroke-width=\"1.1\"/>", "海鮮魚類": "<path d=\"M3 12c5-9 12-9 15 0-3 9-10 9-15 0Zm15 0 4-5v10Z\"/><circle cx=\"8\" cy=\"11\" r=\".7\"/><path d=\"M11 7q4 5 0 10M14 10l2 2-2 2\" fill=\"none\" stroke-width=\"1.1\"/>", "蝦蟹貝類": "<path d=\"M18 5C9-3 0 8 5 16c4 7 12 5 13 0l4 2-1-5-5 1c-1 3-6 3-7-1-2-4 2-8 7-5Z\"/><path d=\"M15 4l5-2M16 6h6M5 8l4 1M4 12h4M6 17l3-3M11 20l1-4\"/><circle cx=\"14\" cy=\"6\" r=\".6\"/>", "火鍋肉片": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M18 3c7 2 4 12-2 16-5 4-14 2-13-4 0-4 4-5 7-7 3-1 4-7 8-5Z\"/><ellipse cx=\"16\" cy=\"8\" rx=\"2.8\" ry=\"2.2\"/><path d=\"M6 14q2-3 5-3M6 17l4-2M11 18l3-3M17 13l2-2\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M2 11h20c0 6-4 9-10 9S2 17 2 11ZM8 22h8M7 3v5M12 2v6M17 3v5\"/><path d=\"M6 14q6 6 12 0\" fill=\"none\" stroke-width=\"1.1\"/></g>", "水餃湯圓": "<path d=\"M2 15c2-15 18-15 20 0-5 8-15 8-20 0Z\"/><path d=\"m5 8 2 5m2-8 1 7m4-7-1 7m6-4-2 5\"/>", "生鮮時蔬": "<path d=\"M10 21 7 12C1 12 1 4 6 4c0-4 7-3 7 1 5-5 10 0 7 4 4 4-1 8-5 6l-1 6Z\"/><path d=\"m11 20-4-12M13 20l3-12M12 18V6M5 7l3 3M18 10l-3 3\" stroke-width=\"1.1\"/>"}, "supplement": {"綜合維他命": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 4v16M4 12h16\"/></g>", "B群活力": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m13 2-9 12h7l-1 8 10-13h-8Z\"/></g>", "維生素C": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 7C2 1 0 14 8 21h8c8-7 6-20-4-14ZM12 7V3l4-2\"/><path d=\"M7 11q-2 4 1 6M12 4q4 0 5-2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "深海魚油": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M3 12c5-9 12-9 15 0-3 9-10 9-15 0Zm15 0 4-5v10Z\"/><circle cx=\"8\" cy=\"11\" r=\".7\"/><path d=\"M11 7q4 5 0 10M14 10l2 2-2 2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "葉黃素": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M2 12c5-10 15-10 20 0-5 10-15 10-20 0Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></g>", "活性益生菌": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><ellipse cx=\"12\" cy=\"12\" rx=\"5\" ry=\"8\" transform=\"rotate(35 12 12)\"/><path d=\"M5 7 2 5M9 4V1M18 6l3-2M19 14h4M15 20l1 3M5 17l-3 3M10 9h.01M14 12h.01M11 16h.01\"/></g>", "膠原蛋白": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "鈣片D3": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m7 7 10 10c5-2 7 4 3 4-1 4-7 2-5-3L5 9C0 11-2 5 2 5c1-4 7-3 5 2Z\"/></g>", "滴雞精": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M17 3c7 1 5 9 1 11-3 2-6 1-8-1l-4 5c0 4-4 4-4 1-3-1-1-5 2-4l5-5c-1-3 3-8 8-7Z\"/><path d=\"M12 9q1-3 4-3M13 12l2-1\" stroke-width=\"1.1\"/></g>", "高蛋白粉": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/></g>"}, "beauty": {"精華液": "<path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/>", "乳液面霜": "<path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/>", "保濕面膜": "<path d=\"M5 3h14v11c0 4-4 7-7 8-3-1-7-4-7-8Z\"/><path d=\"M7 9h3M14 9h3M10 17h4M12 11v3\"/><path d=\"M8 5h8M8 12l1 2M16 12l-1 2\" fill=\"none\" stroke-width=\"1.1\"/>", "卸妝潔顏": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 8h10l2 4v9H5v-9ZM12 8V3h6M9 3h6M8 14h8\"/><path d=\"M8 12h8M8 17h8M10 19h4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M5 3h14v11c0 4-4 7-7 8-3-1-7-4-7-8Z\"/><path d=\"M7 9h3M14 9h3M10 17h4M12 11v3\"/><path d=\"M8 5h8M8 12l1 2M16 12l-1 2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "化妝水噴霧": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h11v4h-6v4l4 3v7H4v-7l4-3V7H7Z\"/><path d=\"m14 7 3 4M7 16h6\"/><path d=\"M7 19h6M19 4h2M19 7l2 1\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "緊緻眼霜": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M2 12c5-10 15-10 20 0-5 10-15 10-20 0Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></g>", "防曬隔離": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"12\" r=\"5\"/><path d=\"M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2\"/></g>", "唇膏口紅": "<path d=\"M8 12h8v9H8ZM9 12V5l6-3v10M7 21h10\"/><path d=\"M10 16h4M10 19h4M11 8l2-1\" fill=\"none\" stroke-width=\"1.1\"/>", "粉底彩妝": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h10v4H7ZM6 7h12l2 4v10H4V11Z\"/><path d=\"M9 14h6M12 11v6\"/><path d=\"M7 19h10M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2a10 10 0 1 0 0 20c3 0 0-4 3-5h3c7-1 3-15-6-15Z\"/><circle cx=\"7\" cy=\"8\" r=\"1\"/><circle cx=\"12\" cy=\"6\" r=\"1\"/><circle cx=\"17\" cy=\"9\" r=\"1\"/><circle cx=\"6\" cy=\"14\" r=\"1\"/></g>", "香水香氛": "<rect x=\"5\" y=\"8\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M9 8V3h6v5M8 13h8v5H8\"/><path d=\"M10 5h4M10 15h4M10 17h2\" fill=\"none\" stroke-width=\"1.1\"/>"}, "digital": {"充電器快充": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M8 2v5M16 2v5M5 7h14v4a7 7 0 0 1-14 0ZM12 18v5\"/><path d=\"M8 10v4M12 10v5M16 10v4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m13 2-9 12h7l-1 8 10-13h-8Z\"/></g>", "傳輸充電線": "<path d=\"M5 2h4v6H5ZM7 8v9a4 4 0 0 0 8 0v-3M13 8h4v6h-4M14 5v3M16 5v3\"/>", "行動電源": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"2\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M22 10v4M7 9v6M4 12h6M14 12h3\"/><path d=\"M12 9v6M17 9v6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M8 2v5M16 2v5M5 7h14v4a7 7 0 0 1-14 0ZM12 18v5\"/><path d=\"M8 10v4M12 10v5M16 10v4\" fill=\"none\" stroke-width=\"1.1\"/></g>", "耳機周邊": "<path d=\"M4 13V9a8 8 0 0 1 16 0v4M4 12h4v9H4ZM16 12h4v9h-4Z\"/><path d=\"M6 14v5M18 14v5M8 5q4-3 8 0\" fill=\"none\" stroke-width=\"1.1\"/>", "保護貼保護殼": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"6\" y=\"2\" width=\"12\" height=\"20\" rx=\"3\"/><path d=\"M10 5h4M11 19h2\"/><path d=\"M8 8h8v8H8M8 11h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "記憶卡隨身碟": "<path d=\"M6 2h9l4 4v16H5V3ZM8 5v4M11 5v4M14 5v4M8 14h8v5H8\"/><path d=\"M10 16h4M10 18h2\" fill=\"none\" stroke-width=\"1.1\"/>", "鍵盤滑鼠": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M5 9h1m3 0h1m3 0h1m3 0h1M5 13h1m3 0h1m3 0h1m3 0h1M7 16h10\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"6\" y=\"3\" width=\"12\" height=\"19\" rx=\"6\"/><path d=\"M6 11h12M12 3v8M12 6v2\"/></g>", "智慧穿戴": "<path d=\"M8 6V2h8v4M8 18v4h8v-4\"/><rect x=\"5\" y=\"6\" width=\"14\" height=\"12\" rx=\"3\"/><path d=\"M12 9v3l3 2\"/><path d=\"M9 4h6M9 20h6M8 9v6M16 9v6M10 16h4\" fill=\"none\" stroke-width=\"1.1\"/>", "擴充轉接HUB": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M8 2v5M16 2v5M5 7h14v4a7 7 0 0 1-14 0ZM12 18v5\"/><path d=\"M8 10v4M12 10v5M16 10v4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M5 2h4v6H5ZM7 8v9a4 4 0 0 0 8 0v-3M13 8h4v6h-4M14 5v3M16 5v3\"/></g>"}, "stationery": {"手帳筆記": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 2v6M17 2v6M3 10h18M7 14h3M14 14h3M7 18h3\"/><path d=\"M14 18h3M7 7h10\" fill=\"none\" stroke-width=\"1.1\"/></g>", "書籍雜誌": "<path d=\"M3 3h7l2 2 2-2h7v17h-7l-2 2-2-2H3ZM12 5v17M6 7h3M15 7h3\"/><path d=\"M6 11h3M15 11h3M6 15h3M15 15h3\" fill=\"none\" stroke-width=\"1.1\"/>", "簽字鋼筆": "<path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/>", "墨水替芯": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/></g>", "膠帶黏著": "<circle cx=\"10\" cy=\"10\" r=\"8\"/><circle cx=\"10\" cy=\"10\" r=\"3\"/><path d=\"M18 10v7h4v5H10a8 8 0 0 1-8-8\"/><path d=\"M13 19h6\" fill=\"none\" stroke-width=\"1.1\"/>", "檔案夾收納": "<path d=\"M2 6h8l3 3h9v13H2ZM2 6V3h8l3 3h7v3\"/>", "繪畫美術": "<path d=\"M12 2a10 10 0 1 0 0 20c3 0 0-4 3-5h3c7-1 3-15-6-15Z\"/><circle cx=\"7\" cy=\"8\" r=\"1\"/><circle cx=\"12\" cy=\"6\" r=\"1\"/><circle cx=\"17\" cy=\"9\" r=\"1\"/><circle cx=\"6\" cy=\"14\" r=\"1\"/>", "裁切工具": "<circle cx=\"6\" cy=\"18\" r=\"4\"/><circle cx=\"18\" cy=\"18\" r=\"4\"/><path d=\"M8 15 20 2M16 15 4 2M12 10v1\"/>", "辦公文具": "<g transform=\"translate(0 1) scale(.78)\"><rect x=\"3\" y=\"7\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M8 7V3h8v4M3 12h18M10 12v3h4v-3\"/><path d=\"M5 17h3M16 17h3M9 5h6\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m4 16 12-12a3 3 0 0 1 4 4L8 20l-5 1Z\"/><path d=\"m13 7 4 4M4 16l4 4\"/><path d=\"M6 15l3 3M15 6l3 3\" fill=\"none\" stroke-width=\"1.1\"/></g>"}, "sports": {"球鞋": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 8h5l3 6 10 3v4H2V10ZM3 17h8M11 14l2-3M15 15l2-2\"/><path d=\"M4 19h14M5 10l2 3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20M12 2v20M5 5c8 4 8 10 0 14M19 5c-8 4-8 10 0 14\"/></g>", "跑鞋運動鞋": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M3 8h5l3 6 10 3v4H2V10ZM3 17h8M11 14l2-3M15 15l2-2\"/><path d=\"M4 19h14M5 10l2 3\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m13 2-9 12h7l-1 8 10-13h-8Z\"/></g>", "瑜珈墊": "<path d=\"M5 3h14v9H5ZM19 6h3v10H12v6M9 22h6M8 6v3M12 6v3M16 6v3\"/>", "運動護具": "<path d=\"m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z\"/><path d=\"m8 12 3 3 5-6\"/><path d=\"M7 7l5-2 5 2M8 17l4 3 4-3\" fill=\"none\" stroke-width=\"1.1\"/>", "彈力帶拉力繩": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h4v6H5ZM7 8v9a4 4 0 0 0 8 0v-3M13 8h4v6h-4M14 5v3M16 5v3\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/></g>", "啞鈴重訓": "<path d=\"M3 8h4v8H3ZM17 8h4v8h-4ZM7 10h10v4H7M1 10v4M23 10v4\"/><path d=\"M5 9v6M19 9v6M10 11v2M14 11v2\" fill=\"none\" stroke-width=\"1.1\"/>", "機能水壺": "<path d=\"M9 2h6v6l3 4v10H6V12l3-4ZM9 5h6M6 14h12M6 18h12\"/><path d=\"M10 3h4M9 16h6M8 20h8\" fill=\"none\" stroke-width=\"1.1\"/>", "運動補給": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m13 2-9 12h7l-1 8 10-13h-8Z\"/></g>", "運動包袋": "<path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/>", "球拍線路": "<ellipse cx=\"14\" cy=\"9\" rx=\"7\" ry=\"8\"/><path d=\"m9 15-7 7M10 5h8M8 9h13M10 13h8M12 2v14M16 2v14\"/>"}, "tools": {"螺絲工具組": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M21 3a6 6 0 0 1-7 8L6 20a3 3 0 0 1-4-4l9-8a6 6 0 0 1 8-7l-4 4 3 3Z\"/><path d=\"M5 17l2 2\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M5 2h14v4H5ZM9 6h6v13l-3 3-3-3M8 9l8-2M8 13l8-2M8 17l8-2\"/></g>", "手電筒照明": "<path d=\"M4 2h16l-4 7v13H8V9ZM8 9h8M10 12h4v4h-4\"/>", "防水絕緣膠帶": "<circle cx=\"10\" cy=\"10\" r=\"8\"/><circle cx=\"10\" cy=\"10\" r=\"3\"/><path d=\"M18 10v7h4v5H10a8 8 0 0 1-8-8\"/><path d=\"M13 19h6\" fill=\"none\" stroke-width=\"1.1\"/>", "接著快乾膠": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M5 2h14l-3 15H8ZM8 17h8v5H8M6 5h12M9 10h6M12 7v6\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M12 2C9 7 4 11 4 15a8 8 0 0 0 16 0c0-4-5-8-8-13Z\"/><path d=\"M8 14q-2 4 2 5\" fill=\"none\" stroke-width=\"1.1\"/></g>", "修繕五金": "<path d=\"M5 2h14v4H5ZM9 6h6v13l-3 3-3-3M8 9l8-2M8 13l8-2M8 17l8-2\"/>", "量尺測量": "<path d=\"M3 6h18v12H3ZM7 6v5M12 6v3M17 6v5\"/><path d=\"M9 6v3M15 6v3M6 15h12\" fill=\"none\" stroke-width=\"1.1\"/>", "潤滑防鏽油": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"M7 3h11v4h-6v4l4 3v7H4v-7l4-3V7H7Z\"/><path d=\"m14 7 3 4M7 16h6\"/><path d=\"M7 19h6M19 4h2M19 7l2 1\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"m9 2 1 3h4l1-3 4 3-2 3 2 3h3v4h-3l-2 3 2 3-4 2-1-3h-4l-1 3-4-2 2-3-2-3H2v-4h3l2-3-2-3Z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/></g>", "五金耗材": "<g transform=\"translate(0 1) scale(.78)\"><path d=\"m3 7 9-4 9 4v11l-9 4-9-4Z\"/><path d=\"m3 7 9 4 9-4M12 11v11M7 5l9 4\"/><path d=\"M6 14l3 1M6 17l3 1M16 12v4l3-1v-4\" fill=\"none\" stroke-width=\"1.1\"/></g><g transform=\"translate(13 13) scale(.44)\" stroke-width=\"2.3\"><path d=\"M21 3a6 6 0 0 1-7 8L6 20a3 3 0 0 1-4-4l9-8a6 6 0 0 1 8-7l-4 4 3 3Z\"/><path d=\"M5 17l2 2\" fill=\"none\" stroke-width=\"1.1\"/></g>"}, "other": {"包袋": "<path d=\"M5 8h14l2 14H3ZM8 8V5a4 4 0 0 1 8 0v3\"/><path d=\"M7 13h10v6H7M8 9v2M16 9v2\" fill=\"none\" stroke-width=\"1.1\"/>", "會議": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 2v6M17 2v6M3 10h18M7 14h3M14 14h3M7 18h3\"/><path d=\"M14 18h3M7 7h10\" fill=\"none\" stroke-width=\"1.1\"/>", "備忘": "<path d=\"M5 2h10l5 5v15H5ZM15 2v6h5M8 12h9M8 16h9M8 19h5\"/>"}};
+function svg(category,sub='',className='') {
+ const {cat,key}=resolve(category,sub);
+ const subtype=String(sub||'').normalize('NFKC').trim();
+ const artwork=SUBTYPE_ART[cat]?.[subtype] || SHAPES[key];
+ const cls=String(className).replace(/[^a-zA-Z0-9 _-]/g,'');
+ return `<svg class="flat-item-icon ${cls}" data-icon="${key}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="--icon-color:${COLORS[cat]||COLORS.other}" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><g>${artwork}</g></svg>`;
+}
+root.getCategoryIcon=(category,className='')=>{const cat=CATEGORIES[category]?category:(ALIAS_MAP[category]||'other');return svg(cat,'',className);};
+root.getItemIcon=item=>svg(CATEGORIES[item.category]?item.category:(item.iconHint||item.category),item.subCategory||item.subCat||item.name||'');
+root.getSubCategoryIcon=(category,sub)=>svg(category,sub);
+root.CATEGORY_ICONS=Object.fromEntries(Object.keys(CATEGORIES).map(key=>[key,svg(key)]));
+root.SUBTYPE_ART=SUBTYPE_ART;
+root.ITEM_ICON_SHAPES=SHAPES;
+root.getUiIcon=key=>`<svg class="app-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${SHAPES[key]||SHAPES.info}</svg>`;
+if(typeof module!=='undefined'&&module.exports){module.exports={CATEGORY_ICONS:root.CATEGORY_ICONS,getCategoryIcon:root.getCategoryIcon,getItemIcon:root.getItemIcon,getSubCategoryIcon:root.getSubCategoryIcon,getUiIcon:root.getUiIcon,ITEM_ICON_SHAPES:SHAPES,SUBTYPE_ART:SUBTYPE_ART};}
+})(globalThis);
+
+// Progressive enhancement: retain the original select and its data/event contract.
+if(typeof document!=='undefined'){
+document.addEventListener('DOMContentLoaded', () => {
+  const pairs=[['itemCategorySelect','itemSubCategorySelect'],['nlpConfirmCategory','nlpConfirmSubCategory']];
+  const entries=[];
+  const dialog=document.createElement('dialog');
+  dialog.className='icon-picker-dialog';
+  dialog.innerHTML='<header><h2 id="iconPickerTitle">選擇細項</h2><button type="button" aria-label="關閉選單">×</button></header><div class="icon-picker-options" role="listbox" aria-labelledby="iconPickerTitle"></div>';
+  dialog.setAttribute('aria-labelledby','iconPickerTitle');
+  document.body.append(dialog);
+  const list=dialog.querySelector('[role=listbox]');list.id='iconPickerOptions';
+  let active=null;
+  dialog.querySelector('header button').onclick=()=>dialog.close();
+  dialog.addEventListener('click',e=>{if(e.target===dialog){const b=dialog.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)dialog.close();}});
+  dialog.addEventListener('close',()=>{if(active){active.button.setAttribute('aria-expanded','false');active.button.focus();}});
+  function graphic(entry,option){
+    if(option?.value?.startsWith('__'))return getCategoryIcon('stationery');
+    return entry.detail?getSubCategoryIcon(entry.category.value,option?.value||''):getCategoryIcon(option?.value||'other');
   }
-})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
-  'use strict';
-
-  const CATEGORY_ICONS = {
-    // 1. 食品 (food)：單一純鮮乳盒（屋頂摺角、天藍乳品色帶、純白水滴標章）
-    food: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 鮮奶盒頂部壓條封口 (Carton Top Crimp) -->
-      <path d="M18 9H30L28 5H20L18 9Z" fill="#94A3B8"/>
-      <rect x="19" y="5" width="10" height="2" rx="0.5" fill="#CBD5E1"/>
-      <!-- 鮮奶盒純白屋頂與盒身本體 (Carton Milk White Body) -->
-      <path d="M11 17L18 9H30L37 17V41C37 42.7 35.7 44 34 44H14C12.3 44 11 42.7 11 41V17Z" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.8"/>
-      <!-- 盒身右半微立體陰影 (Carton Right Shadow) -->
-      <path d="M24 9H30L37 17V41C37 42.7 35.7 44 34 44H24V9Z" fill="#E2E8F0"/>
-      <!-- 屋頂摺痕 (Gable Fold Crease) -->
-      <path d="M18 9L24 17L30 9" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- 鮮乳天藍色中段色帶 (Blue Milk Label) -->
-      <path d="M11 22H37V36H11V22Z" fill="#38BDF8"/>
-      <path d="M24 22H37V36H24V22Z" fill="#0284C7"/>
-      <!-- 白色品牌標籤橫條 (White Label Band) -->
-      <rect x="13" y="27" width="22" height="4.5" rx="1.2" fill="#FFFFFF" opacity="0.95"/>
-      <!-- 盒身純白鮮奶水滴標章 (Milk Droplet Emblem) -->
-      <circle cx="24" cy="17" r="3.2" fill="#0284C7"/>
-      <circle cx="24" cy="17" r="1.8" fill="#FFFFFF"/>
-      <!-- 左側高光線 (Highlight) -->
-      <line x1="13.5" y1="18" x2="13.5" y2="41" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
-    </svg>`,
-
-    // 2. 飲品 (drinks)：單一外帶冷熱飲杯（雙色杯身、防燙杯套、杯蓋）
-    drinks: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 白色杯蓋 (Lid) -->
-      <rect x="11" y="8" width="26" height="5" rx="2.5" fill="#F8FAFC"/>
-      <path d="M15 8L17 5H31L33 8H15Z" fill="#E2E8F0"/>
-      <!-- 飲品杯身 (Cup Body) -->
-      <path d="M13 13H35L31.5 41C31.3 42.1 30.4 43 29.3 43H18.7C17.6 43 16.7 42.1 16.5 41L13 13Z" fill="#F97316"/>
-      <!-- 暖色隔熱杯套 (Sleeve) -->
-      <path d="M14.5 21H33.5L32.2 33H15.8L14.5 21Z" fill="#EA580C"/>
-      <!-- 杯套咖啡圓形徽章 (Emblem) -->
-      <circle cx="24" cy="27" r="3.5" fill="#FED7AA"/>
-      <circle cx="24" cy="27" r="2" fill="#C2410C"/>
-      <!-- 杯身高光 (Highlight) -->
-      <path d="M15.5 15L17.5 39" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
-    </svg>`,
-
-    // 3. 零食 (snack)：單一香濃巧克力餅乾（金黃烘焙圓餅、飽滿巧克力豆）
-    snack: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 餅乾圓形主體 (Cookie Body) -->
-      <circle cx="24" cy="24" r="18" fill="#D97706"/>
-      <!-- 餅乾微暗外圈邊緣 (Baked Edge Rim) -->
-      <circle cx="24" cy="24" r="18" stroke="#B45309" stroke-width="1.5"/>
-      <!-- 香濃巧克力豆 (Chocolate Chips) -->
-      <circle cx="16" cy="18" r="3" fill="#78350F"/>
-      <circle cx="27" cy="16" r="2.8" fill="#78350F"/>
-      <circle cx="21" cy="25" r="3.2" fill="#78350F"/>
-      <circle cx="32" cy="24" r="2.8" fill="#78350F"/>
-      <circle cx="17" cy="31" r="2.6" fill="#78350F"/>
-      <circle cx="27" cy="33" r="3" fill="#78350F"/>
-      <circle cx="33" cy="32" r="2.2" fill="#78350F"/>
-      <!-- 餅乾頂部微高光 (Cookie Highlight) -->
-      <path d="M12 18C15 11 27 10 33 13" stroke="#FDE68A" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
-    </svg>`,
-
-    // 4. 生鮮 (fresh)：單一新鮮海魚（流線魚身、清爽水藍肚、魚鰭紋理）
-    fresh: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 鮮魚背部藍色主體 (Fish Back) -->
-      <path d="M5 24C12 14 26 13 36 21L43 14V34L36 27C26 35 12 34 5 24Z" fill="#38BDF8"/>
-      <!-- 鮮魚白色魚肚 (White Belly) -->
-      <path d="M5 24C12 29 23 32 36 27L43 34V24C36 27 26 29 5 24Z" fill="#E0F2FE"/>
-      <!-- 背鰭與腹鰭 (Fins) -->
-      <path d="M22 15C25 10 30 11 31 15" fill="#0284C7"/>
-      <path d="M20 33C23 37 28 36 29 33" fill="#0284C7"/>
-      <!-- 靈動魚眼 (Eye) -->
-      <circle cx="12" cy="21" r="2.5" fill="#FFFFFF"/>
-      <circle cx="11.5" cy="21" r="1.3" fill="#0F172A"/>
-      <!-- 魚鰓弧線 (Gill Line) -->
-      <path d="M17 19C19 22 19 26 17 29" stroke="#0284C7" stroke-width="2" stroke-linecap="round"/>
-      <path d="M25 21C26.5 23 26.5 25 25 27" stroke="#0284C7" stroke-width="1.8" stroke-linecap="round"/>
-    </svg>`,
-
-    // 5. 藥品 (medicine)：單一紅白立體膠囊（45度斜角、亮白反光、十字標記）
-    medicine: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g transform="rotate(-40 24 24)">
-        <!-- 膠囊紅色上半部 (Red Cap) -->
-        <path d="M16 11C16 6.6 19.6 3 24 3C28.4 3 32 6.6 32 11V24H16V11Z" fill="#F43F5E"/>
-        <!-- 膠囊白色下半部 (White Body) -->
-        <path d="M16 24H32V37C32 41.4 28.4 45 24 45C19.6 45 16 41.4 16 37V24Z" fill="#F8FAFC"/>
-        <!-- 膠囊中央縫線 (Center Seam) -->
-        <line x1="16" y1="24" x2="32" y2="24" stroke="#E2E8F0" stroke-width="2"/>
-        <!-- 側身高光反射 (Glossy Reflection) -->
-        <rect x="18.5" y="8" width="2.5" height="28" rx="1.25" fill="#FFFFFF" opacity="0.65"/>
-        <!-- 醫藥十字標誌 (Medical Cross) -->
-        <rect x="23" y="12" width="2" height="6" rx="0.5" fill="#FFFFFF" opacity="0.85"/>
-        <rect x="21" y="14" width="6" height="2" rx="0.5" fill="#FFFFFF" opacity="0.85"/>
-      </g>
-    </svg>`,
-
-    // 6. 保健 (supplement)：單一綜合維他命營養瓶（金屬旋蓋、碧綠瓶身、V字能量標章）
-    supplement: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 金色金屬旋蓋 (Gold Cap) -->
-      <rect x="16" y="5" width="16" height="6" rx="2" fill="#F59E0B"/>
-      <rect x="18" y="11" width="12" height="2" fill="#D97706"/>
-      <!-- 碧綠瓶身 (Teal Bottle) -->
-      <rect x="12" y="13" width="24" height="29" rx="7" fill="#0D9488"/>
-      <!-- 潔淨白色標籤 (Label) -->
-      <rect x="14" y="19" width="20" height="17" rx="3" fill="#CCFBF1"/>
-      <!-- 維他命 V 能量徽章 (Vitamin V Emblem) -->
-      <path d="M19 23L24 32L29 23" stroke="#0D9488" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- 瓶身高光 (Highlight) -->
-      <path d="M14 17V39" stroke="#5EEAD4" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
-    </svg>`,
-
-    // 7. 美妝 (beauty)：單一經典口紅（深灰金屬管、金飾環、斜切紅潤膏體）
-    beauty: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 口紅底管 (Tube Base) -->
-      <rect x="16" y="23" width="16" height="20" rx="3" fill="#1E293B"/>
-      <!-- 金色中段飾環 (Gold Middle Ring) -->
-      <rect x="17.5" y="17" width="13" height="6" fill="#F59E0B"/>
-      <!-- 經典斜切口紅膏體 (Red Bullet) -->
-      <path d="M19 17H29V8C29 8 26 5 23 5C20 5 19 10 19 17Z" fill="#E11D48"/>
-      <!-- 斜切面高光 (Bevel Highlight) -->
-      <path d="M19.5 17L27.5 8" stroke="#FDA4AF" stroke-width="2" stroke-linecap="round"/>
-      <!-- 底管垂直反光線 (Base Highlight) -->
-      <rect x="18.5" y="25" width="2" height="16" rx="1" fill="#475569"/>
-    </svg>`,
-
-    // 8. 日用 (pao)：單一按壓式洗沐瓶（按壓泵頭、薰衣草紫瓶身、水滴標籤）
-    pao: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 泵頭噴嘴 (Pump Head) -->
-      <path d="M24 5H15C13.5 5 13 6.5 13 8C13 9.5 14.5 9.5 16 9.5H22V13H26V8C26 6.3 25.1 5 24 5Z" fill="#C4B5FD"/>
-      <!-- 泵頸 (Neck) -->
-      <rect x="22" y="12" width="4" height="4" fill="#A78BFA"/>
-      <!-- 瓶身本體 (Bottle Body) -->
-      <rect x="14" y="16" width="20" height="27" rx="7" fill="#8B5CF6"/>
-      <!-- 淡紫標籤 (Label) -->
-      <rect x="17" y="24" width="14" height="13" rx="3" fill="#DDD6FE"/>
-      <!-- 水滴圖樣 (Droplet) -->
-      <path d="M24 27C24 27 21 31 21 32.5C21 34.2 22.3 35.5 24 35.5C25.7 35.5 27 34.2 27 32.5C27 31 24 27 24 27Z" fill="#8B5CF6"/>
-    </svg>`,
-
-    // 9. 清潔 (cleaning)：單一多功能清潔噴霧瓶（噴槍握柄、天藍瓶身、刻度線）
-    cleaning: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 噴頭組件 (Spray Head) -->
-      <path d="M20 7H28V14H20V7Z" fill="#0891B2"/>
-      <path d="M28 8H36L38 13H28V8Z" fill="#06B6D4"/>
-      <path d="M29 13L32 19H28V13Z" fill="#22D3EE"/>
-      <rect x="36" y="9.5" width="2.5" height="2.5" rx="0.5" fill="#E0F2FE"/>
-      <!-- 噴霧瓶身 (Bottle Body) -->
-      <path d="M19 18C19 15.5 21 14 23.5 14H25.5C28 14 30 15.5 30 18L31 41C31 42.1 30.1 43 29 43H20C18.9 43 18 42.1 18 41L19 18Z" fill="#06B6D4"/>
-      <!-- 透明劑量視窗 (Level Window) -->
-      <rect x="21" y="25" width="7" height="12" rx="2" fill="#E0F2FE"/>
-      <path d="M22 30H27M22 34H26" stroke="#0891B2" stroke-width="1.2" stroke-linecap="round"/>
-    </svg>`,
-
-    // 10. 耗材 (filter)：單一空氣濾清/淨水圓筒濾心（折疊濾網紋理、頂座外環）
-    filter: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 圓筒頂座 (Top Collar) -->
-      <ellipse cx="24" cy="11" rx="14" ry="5" fill="#94A3B8"/>
-      <ellipse cx="24" cy="11" rx="8" ry="3" fill="#475569"/>
-      <!-- 濾網主體 (Filter Pleats Body) -->
-      <path d="M10 11V34C10 37 16.3 39.5 24 39.5C31.7 39.5 38 37 38 34V11" fill="#64748B"/>
-      <!-- HEPA 垂直折疊皺褶 (Pleats) -->
-      <line x1="14" y1="14" x2="14" y2="36" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-      <line x1="19" y1="16" x2="19" y2="39" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-      <line x1="24" y1="16" x2="24" y2="39.5" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-      <line x1="29" y1="16" x2="29" y2="39" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-      <line x1="34" y1="14" x2="34" y2="36" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-      <!-- 底座支撐環 (Bottom Rim) -->
-      <path d="M10 34C10 37 16.3 39.5 24 39.5C31.7 39.5 38 37 38 34" stroke="#94A3B8" stroke-width="2"/>
-    </svg>`,
-
-    // 11. 保固 (warranty)：單一安全防護盾牌（湛藍雙層盾、亮白安全核准勾號）
-    warranty: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 盾牌外廓 (Shield Outer) -->
-      <path d="M24 4L39 9V22C39 32.5 32.5 39.5 24 44C15.5 39.5 9 32.5 9 22V9L24 4Z" fill="#2563EB"/>
-      <!-- 盾牌內層立體色塊 (Inner Shield) -->
-      <path d="M24 7.5L36 11.5V22C36 30.5 30.8 36.5 24 40.5C17.2 36.5 12 30.5 12 22V11.5L24 7.5Z" fill="#3B82F6"/>
-      <!-- 盾牌右側陰影層 (Depth Shadow) -->
-      <path d="M24 7.5L36 11.5V22C36 30.5 30.8 36.5 24 40.5V7.5Z" fill="#1D4ED8" opacity="0.3"/>
-      <!-- 白色核准勾號 (Checkmark) -->
-      <path d="M17 22L22 27L31 17" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`,
-
-    // 12. 數位 (digital)：單一全螢幕智慧手機（窄邊框、前鏡頭孔、亮藍螢幕）
-    digital: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 手機外框 (Phone Frame) -->
-      <rect x="12" y="4" width="24" height="40" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1.5"/>
-      <!-- 亮藍螢幕 (Screen) -->
-      <rect x="14" y="7" width="20" height="34" rx="3.5" fill="#38BDF8"/>
-      <!-- 前鏡頭孔 (Camera Notch) -->
-      <circle cx="24" cy="9.5" r="1.2" fill="#0F172A"/>
-      <!-- 底部手勢條 (Home Indicator Bar) -->
-      <rect x="20" y="38" width="8" height="1.5" rx="0.75" fill="#FFFFFF" opacity="0.85"/>
-      <!-- 螢幕高光反射 (Screen Glare) -->
-      <path d="M14 18L26 7H34L14 27V18Z" fill="#FFFFFF" opacity="0.25"/>
-    </svg>`,
-
-    // 13. 車輛 (vehicle)：單一現代房車側影（流線車體、車窗輪廓、前後車輪）
-    vehicle: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 房車車體本體 (Car Body) -->
-      <path d="M4 27L8 18C9.5 16 12 15 15 15H31C34 15 36.5 16.5 38.5 19L43 24H44C45.1 24 46 24.9 46 26V32C46 32.6 45.6 33 45 33H42C42 29.7 39.3 27 36 27C32.7 27 30 29.7 30 33H18C18 29.7 15.3 27 12 27C8.7 27 6 29.7 6 33H3C2.4 33 2 32.6 2 32V29C2 27.9 2.9 27 4 27Z" fill="#3B82F6"/>
-      <!-- 前後車窗 (Windows) -->
-      <path d="M15 17.5H22V24H10L15 17.5Z" fill="#93C5FD"/>
-      <path d="M24 17.5H30C32 17.5 33.5 18.5 35 20.5L37.5 24H24V17.5Z" fill="#93C5FD"/>
-      <!-- 車燈 (Lights) -->
-      <rect x="43" y="26" width="3" height="3" rx="1" fill="#FBBF24"/>
-      <rect x="2" y="27" width="2" height="3" rx="0.5" fill="#EF4444"/>
-      <!-- 前後車輪與輪圈 (Wheels & Rims) -->
-      <circle cx="12" cy="33" r="5.5" fill="#1E293B"/>
-      <circle cx="12" cy="33" r="2.5" fill="#E2E8F0"/>
-      <circle cx="36" cy="33" r="5.5" fill="#1E293B"/>
-      <circle cx="36" cy="33" r="2.5" fill="#E2E8F0"/>
-    </svg>`,
-
-    // 14. 訂閱 (subscription)：單一日曆循環翻頁（撕曆、紫色循環更新箭頭）
-    subscription: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 日曆底紙 (Calendar Base) -->
-      <rect x="8" y="9" width="32" height="34" rx="6" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
-      <!-- 紅色頂部橫條 (Red Header) -->
-      <path d="M8 15C8 11.7 10.7 9 14 9H34C37.3 9 40 11.7 40 15V17H8V15Z" fill="#EF4444"/>
-      <!-- 吊環孔 (Binder Rings) -->
-      <rect x="14" y="6" width="4" height="6" rx="2" fill="#94A3B8"/>
-      <rect x="30" y="6" width="4" height="6" rx="2" fill="#94A3B8"/>
-      <!-- 循環箭頭標誌 (Recurring Cycle Arrows) -->
-      <path d="M24 23C27.9 23 31 26.1 31 30C31 31.5 30.5 32.8 29.7 34L32 36.3H26V30.3L28.2 32.5C28.7 31.8 29 30.9 29 30C29 27.2 26.8 25 24 25C22.6 25 21.4 25.6 20.5 26.5L19.1 25.1C20.3 23.8 22.1 23 24 23Z" fill="#8B5CF6"/>
-      <path d="M24 37C20.1 37 17 33.9 17 30C17 28.5 17.5 27.2 18.3 26L16 23.7H22V29.7L19.8 27.5C19.3 28.2 19 29.1 19 30C19 32.8 21.2 35 24 35C25.4 35 26.6 34.4 27.5 33.5L28.9 34.9C27.7 36.2 25.9 37 24 37Z" fill="#A78BFA"/>
-    </svg>`,
-
-    // 15. 辦公 (office)：單一經典皮革公事包（提把、銅釦翻蓋、飽滿皮革包身）
-    office: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 皮革提把 (Briefcase Handle) -->
-      <path d="M19 12V8C19 6.9 19.9 6 21 6H27C28.1 6 29 6.9 29 8V12" stroke="#92400E" stroke-width="3" stroke-linecap="round"/>
-      <!-- 公事包本體 (Main Body) -->
-      <rect x="6" y="12" width="36" height="28" rx="5" fill="#B45309"/>
-      <!-- 前掀蓋 (Front Flap) -->
-      <path d="M6 16C6 13.8 7.8 12 10 12H38C40.2 12 42 13.8 42 16V24L26 29.5C24.7 30 23.3 30 22 29.5L6 24V16Z" fill="#D97706"/>
-      <!-- 金屬鎖扣 (Metal Clasp) -->
-      <rect x="22" y="27" width="4" height="6" rx="1.5" fill="#F59E0B"/>
-      <circle cx="24" cy="30" r="1" fill="#78350F"/>
-      <!-- 車縫裝飾線 (Stitches) -->
-      <line x1="8" y1="36" x2="40" y2="36" stroke="#92400E" stroke-width="1.2" stroke-dasharray="2 2"/>
-    </svg>`,
-
-    // 16. 文具 (stationery)：單一經典黃金削尖鉛筆（45度斜角、粉紅橡皮擦、石墨筆尖）
-    stationery: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g transform="rotate(45 24 24)">
-        <!-- 粉紅橡皮擦 (Pink Eraser) -->
-        <path d="M21 4H27V9H21V4Z" fill="#F43F5E"/>
-        <!-- 銀色金屬環箍 (Metal Ferrule) -->
-        <rect x="20.5" y="9" width="7" height="4" fill="#CBD5E1"/>
-        <line x1="20.5" y1="11" x2="27.5" y2="11" stroke="#94A3B8" stroke-width="0.8"/>
-        <!-- 黃色六角筆桿 (Yellow Pencil Body) -->
-        <rect x="21" y="13" width="6" height="23" fill="#F59E0B"/>
-        <!-- 筆桿深色陰影面 (Shadow Side) -->
-        <rect x="24.5" y="13" width="2.5" height="23" fill="#D97706"/>
-        <!-- 削尖原木錐體 (Sharpened Wood Tip) -->
-        <polygon points="21,36 27,36 24,44" fill="#FDE68A"/>
-        <!-- 石墨黑鉛筆芯 (Graphite Lead Point) -->
-        <polygon points="22.8,41 25.2,41 24,44" fill="#1E293B"/>
-      </g>
-    </svg>`,
-
-    // 17. 運動 (sports)：單一專業六角啞鈴（45度斜角、防滑刻紋金屬握桿、深鐵六角頭）
-    sports: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g transform="rotate(45 24 24)">
-        <!-- 金屬握桿 (Handle) -->
-        <rect x="21" y="8" width="6" height="32" rx="2" fill="#94A3B8"/>
-        <!-- 防滑刻紋 (Knurling) -->
-        <line x1="21" y1="18" x2="27" y2="18" stroke="#64748B" stroke-width="1"/>
-        <line x1="21" y1="21" x2="27" y2="21" stroke="#64748B" stroke-width="1"/>
-        <line x1="21" y1="24" x2="27" y2="24" stroke="#64748B" stroke-width="1"/>
-        <line x1="21" y1="27" x2="27" y2="27" stroke="#64748B" stroke-width="1"/>
-        <line x1="21" y1="30" x2="27" y2="30" stroke="#64748B" stroke-width="1"/>
-        <!-- 上方六角鐵頭 (Top Hex Head) -->
-        <path d="M24 2L33 6V14L24 18L15 14V6L24 2Z" fill="#334155"/>
-        <path d="M24 4L31 7V13L24 16L17 13V7L24 4Z" fill="#475569"/>
-        <!-- 下方六角鐵頭 (Bottom Hex Head) -->
-        <path d="M24 30L33 34V42L24 46L15 42V34L24 30Z" fill="#334155"/>
-        <path d="M24 32L31 35V41L24 44L17 41V35L24 32Z" fill="#475569"/>
-      </g>
-    </svg>`,
-
-    // 18. 戶外 (outdoor)：單一經典露營帳篷（亮橘帳身、門簾開口、營帳頂旗）
-    outdoor: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 帳篷主體錐頂 (Tent Body) -->
-      <path d="M24 8L5 38H43L24 8Z" fill="#F97316"/>
-      <!-- 帳篷右側立體陰影 (Right Facet) -->
-      <path d="M24 8L43 38H31L24 8Z" fill="#EA580C"/>
-      <!-- 門口陰影與開口門簾 (Tent Door Opening) -->
-      <path d="M24 16L15 38H33L24 16Z" fill="#7C2D12"/>
-      <!-- 門布細節 (Flaps) -->
-      <path d="M24 16L18 38H21L24 22L27 38H30L24 16Z" fill="#FB923C"/>
-      <!-- 頂端營旗 (Tent Flag) -->
-      <path d="M24 4V8L19 6L24 4Z" fill="#FBBF24"/>
-    </svg>`,
-
-    // 19. 居家 (home)：單一溫馨小屋（紅瓦斜屋頂、小煙囪、暖黃窗戶、木門）
-    home: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 煙囪 (Chimney) -->
-      <rect x="31" y="9" width="4" height="9" rx="1" fill="#DC2626"/>
-      <!-- 房屋磚牆主體 (House Walls) -->
-      <rect x="10" y="21" width="28" height="21" rx="3" fill="#FEF3C7"/>
-      <!-- 紅瓦三角屋頂 (Pitched Roof) -->
-      <path d="M24 5L5 22H43L24 5Z" fill="#EF4444"/>
-      <path d="M24 5L43 22H37L24 10.5V5Z" fill="#DC2626"/>
-      <!-- 暖黃十字窗戶 (Warm Window) -->
-      <rect x="14" y="25" width="8" height="8" rx="1.5" fill="#F59E0B"/>
-      <line x1="18" y1="25" x2="18" y2="33" stroke="#FEF3C7" stroke-width="1.5"/>
-      <line x1="14" y1="29" x2="22" y2="29" stroke="#FEF3C7" stroke-width="1.5"/>
-      <!-- 溫暖木門 (Wooden Door) -->
-      <path d="M26 42V29C26 27.5 27.5 26.5 29 26.5H33C34.5 26.5 35 27.5 35 29V42H26Z" fill="#B45309"/>
-      <!-- 門把銅鈕 (Door Knob) -->
-      <circle cx="28" cy="35" r="1" fill="#FBBF24"/>
-    </svg>`,
-
-    // 20. 穿搭 (fashion)：單一潮流短袖T恤（俐落領口、折疊袖口、純色大方）
-    fashion: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- T恤全輪廓 (T-Shirt Body) -->
-      <path d="M16 8L8 15L12 21L15 19V40C15 41.1 15.9 42 17 42H31C32.1 42 33 41.1 33 40V19L36 21L40 15L32 8C30.5 12 17.5 12 16 8Z" fill="#3B82F6"/>
-      <!-- 圓領領口羅紋 (Ribbed Collar) -->
-      <path d="M18 8C19 12 29 12 30 8" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- 袖子縫線 (Sleeve Seams) -->
-      <line x1="15" y1="19" x2="11" y2="14" stroke="#2563EB" stroke-width="1.5"/>
-      <line x1="33" y1="19" x2="37" y2="14" stroke="#1D4ED8" stroke-width="1.5"/>
-      <!-- 下擺高光 (Bottom Hem Accent) -->
-      <line x1="17" y1="39" x2="31" y2="39" stroke="#60A5FA" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>`,
-
-    // 21. 五金 (tools)：單一活動活動板手（開口鉗口、調節渦輪螺桿、純向量無遮罩）
-    tools: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g transform="rotate(-45 24 24)">
-        <!-- 板手手柄與懸掛孔（以路徑挖空，全透明相容） -->
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M21 14C21 12.3 22.3 11 24 11C25.7 11 27 12.3 27 14V37C27 39.8 24.8 42 22 42C19.2 42 17 39.8 17 37C17 34.2 19.2 32 22 32V14H21ZM22 39.5C23.4 39.5 24.5 38.4 24.5 37C24.5 35.6 23.4 34.5 22 34.5C20.6 34.5 19.5 35.6 19.5 37C19.5 38.4 20.6 39.5 22 39.5Z" fill="#94A3B8"/>
-        <!-- 活動板手頭部（開放鉗口實體路徑） -->
-        <path d="M16 14C16 7.5 20.5 4.5 23 4.5V11H25V4.5C27.5 4.5 32 7.5 32 14H16Z" fill="#64748B"/>
-        <!-- 調節滾花滾輪 (Thumb Wheel) -->
-        <rect x="21.5" y="13" width="5" height="5" rx="1" fill="#475569"/>
-        <line x1="22" y1="15.5" x2="26" y2="15.5" stroke="#94A3B8" stroke-width="1"/>
-      </g>
-    </svg>`,
-
-    // 22. 寵物 (pet)：單一萌系暖心肉球爪印（大肉墊、4枚圓潤趾瓣、溫暖高辨識）
-    pet: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 掌心大肉墊 (Main Paw Pad) -->
-      <path d="M24 20C17.5 20 12 25 14.5 33C16 38 20 41 24 41C28 41 32 38 33.5 33C36 25 30.5 20 24 20Z" fill="#F59E0B"/>
-      <!-- 大肉墊立體光影 (Highlight) -->
-      <path d="M18 29C17 26 21 22 24 22C27 22 31 26 30 29" stroke="#FDE68A" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
-      <!-- 4 枚圓潤趾瓣 (4 Toe Beans) -->
-      <ellipse cx="12" cy="19" rx="4" ry="5.5" transform="rotate(-20 12 19)" fill="#FB923C"/>
-      <ellipse cx="20" cy="11" rx="4.2" ry="6" transform="rotate(-6 20 11)" fill="#FB923C"/>
-      <ellipse cx="28" cy="11" rx="4.2" ry="6" transform="rotate(6 28 11)" fill="#FB923C"/>
-      <ellipse cx="36" cy="19" rx="4" ry="5.5" transform="rotate(20 36 19)" fill="#FB923C"/>
-    </svg>`,
-
-    // 23. 母嬰 (baby)：單一寬口嬰兒奶瓶（矽膠奶嘴、雙耳刻度、新鮮奶水）
-    baby: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 矽膠奶嘴 (Silicone Teat) -->
-      <path d="M20 10C20 6.5 22 4 24 4C26 4 28 6.5 28 10H20Z" fill="#FDE047"/>
-      <!-- 防脹氣瓶環 (Collar Ring) -->
-      <rect x="17" y="10" width="14" height="4" rx="1.5" fill="#2DD4BF"/>
-      <!-- 寬口奶瓶瓶身 (Bottle Body) -->
-      <rect x="15" y="14" width="18" height="28" rx="5" fill="#93C5FD" fill-opacity="0.35" stroke="#60A5FA" stroke-width="2"/>
-      <!-- 瓶內新鮮奶液 (Milk Level) -->
-      <rect x="17" y="24" width="14" height="16" rx="3" fill="#FFFFFF"/>
-      <!-- 毫升刻度標記 (Measurement Ticks) -->
-      <line x1="18" y1="19" x2="22" y2="19" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="18" y1="25" x2="24" y2="25" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="18" y1="31" x2="22" y2="31" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="18" y1="37" x2="24" y2="37" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round"/>
-    </svg>`,
-
-    // 24. 動畫 (animation)：單一經典導演場記板（黑白斜斑馬紋、打板展開視角）
-    animation: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 場記板底板 (Slate Board) -->
-      <rect x="8" y="18" width="32" height="24" rx="3" fill="#1E293B"/>
-      <!-- 場次隔線 (Chalk Lines) -->
-      <line x1="12" y1="25" x2="36" y2="25" stroke="#64748B" stroke-width="2"/>
-      <line x1="12" y1="32" x2="36" y2="32" stroke="#64748B" stroke-width="2"/>
-      <line x1="24" y1="25" x2="24" y2="39" stroke="#64748B" stroke-width="2"/>
-      <!-- 頂部拍板棒（斜角開啟） (Clapstick) -->
-      <g transform="rotate(-15 8 18)">
-        <rect x="8" y="10" width="32" height="8" rx="2" fill="#0F172A"/>
-        <!-- 黑白斜斑馬紋 (Diagonal Stripes) -->
-        <polygon points="12,10 16,10 12,18 8,18" fill="#FFFFFF"/>
-        <polygon points="20,10 24,10 20,18 16,18" fill="#FFFFFF"/>
-        <polygon points="28,10 32,10 28,18 24,18" fill="#FFFFFF"/>
-        <polygon points="36,10 40,10 36,18 32,18" fill="#FFFFFF"/>
-      </g>
-    </svg>`,
-
-    // 25. 遊戲 (game)：單一人體工學無線遊戲手把（雙類比搖桿、十字鍵、彩色動作按鍵）
-    game: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 手把機身流線曲線 (Controller Body) -->
-      <path d="M12 14C17 14 19 16 24 16C29 16 31 14 36 14C43 14 47 19 45 28L43 38C42 41 38.5 42 36 40L30 34C28 33 26 33 24 33C22 33 20 33 18 34L12 40C9.5 42 6 41 5 38L3 28C1 19 5 14 12 14Z" fill="#6366F1"/>
-      <!-- 十字方向鍵 (D-Pad) -->
-      <rect x="11" y="21" width="8" height="2.8" rx="1" fill="#1E293B"/>
-      <rect x="13.6" y="18.4" width="2.8" height="8" rx="1" fill="#1E293B"/>
-      <!-- 左右雙類比搖桿 (Dual Thumbsticks) -->
-      <circle cx="18" cy="29" r="3.5" fill="#4338CA"/>
-      <circle cx="18" cy="29" r="2" fill="#312E81"/>
-      <circle cx="30" cy="29" r="3.5" fill="#4338CA"/>
-      <circle cx="30" cy="29" r="2" fill="#312E81"/>
-      <!-- 彩色動作按鍵 ABXY (Action Buttons) -->
-      <circle cx="34" cy="19" r="1.5" fill="#F43F5E"/>
-      <circle cx="37.5" cy="22.5" r="1.5" fill="#10B981"/>
-      <circle cx="30.5" cy="22.5" r="1.5" fill="#38BDF8"/>
-      <circle cx="34" cy="26" r="1.5" fill="#FBBF24"/>
-    </svg>`,
-
-    // 26. 二次元 (otaku)：單一閃耀吧唧徽章（金屬外圈包邊、耀眼金色十字星光）
-    otaku: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 徽章外金屬底環 (Can Badge Rim) -->
-      <circle cx="24" cy="24" r="18" fill="#EC4899"/>
-      <!-- 徽章粉嫩主盤面 (Badge Face) -->
-      <circle cx="24" cy="24" r="15.5" fill="#F472B6"/>
-      <!-- 中心大愛心 (Heart Emblem) -->
-      <path d="M24 31L18.5 25.5C16.5 23.5 16.5 20.5 18.5 18.5C20.5 16.5 23.5 17 24 19C24.5 17 27.5 16.5 29.5 18.5C31.5 20.5 31.5 23.5 29.5 25.5L24 31Z" fill="#FFFFFF"/>
-      <!-- 閃耀十字金星 (Sparkle Star) -->
-      <path d="M34 11L35 14L38 15L35 16L34 19L33 16L30 15L33 14L34 11Z" fill="#FDE047"/>
-      <path d="M13 32L13.8 34L16 34.8L13.8 35.5L13 37.5L12.2 35.5L10 34.8L12.2 34L13 32Z" fill="#FDE047"/>
-      <!-- 弧面反光高光 (Gloss Arc) -->
-      <path d="M15 13C20 9.5 28 9.5 33 13" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-    </svg>`,
-
-    // 27. 票券 (ticket)：單一展演票根（兩側原生圓形凹切孔、撕角虛線、金黃票面）
-    ticket: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <g transform="rotate(-15 24 24)">
-        <!-- 票券主體（原生打孔路徑，全透明相容） -->
-        <path d="M10 15H38C40.2 15 42 16.8 42 19V21C39.5 21 38 22.5 38 24C38 25.5 39.5 27 42 27V29C42 31.2 40.2 33 38 33H10C7.8 33 6 31.2 6 29V27C8.5 27 10 25.5 10 24C10 22.5 8.5 21 6 21V19C6 16.8 7.8 15 10 15Z" fill="#F59E0B"/>
-        <!-- 票券虛線撕條 (Perforated Tear Line) -->
-        <line x1="31" y1="15" x2="31" y2="33" stroke="#FDE68A" stroke-width="1.8" stroke-dasharray="2.5 2.5"/>
-        <!-- 白色五角星 (Star) -->
-        <path d="M17 19L18.5 22.5L22 23L19.5 25.5L20 29L17 27.2L14 29L14.5 25.5L12 23L15.5 22.5L17 19Z" fill="#FFFFFF"/>
-        <!-- 條碼線條 (Barcode) -->
-        <line x1="35" y1="18" x2="35" y2="30" stroke="#78350F" stroke-width="1.8"/>
-        <line x1="38" y1="18" x2="38" y2="30" stroke="#78350F" stroke-width="1.2"/>
-      </g>
-    </svg>`,
-
-    // 28. 其他 (other)：單一牛皮紙包裹箱（十字封箱膠帶、快遞宅配標籤）
-    other: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 紙箱正面本體 (Box Front) -->
-      <rect x="8" y="12" width="32" height="28" rx="4" fill="#D97706"/>
-      <!-- 紙箱頂部掀蓋摺邊 (Top Flaps) -->
-      <path d="M8 16C8 13.8 9.8 12 12 12H36C38.2 12 40 13.8 40 16V20H8V16Z" fill="#B45309"/>
-      <!-- 垂直封箱膠帶 (Vertical Tape) -->
-      <rect x="21" y="12" width="6" height="28" fill="#FDE68A" opacity="0.9"/>
-      <!-- 水平封箱膠帶 (Horizontal Tape) -->
-      <rect x="8" y="16" width="32" height="4" fill="#FDE68A" opacity="0.9"/>
-      <!-- 白色貨運快遞標籤 (Shipping Label) -->
-      <rect x="28" y="26" width="9" height="10" rx="1.5" fill="#FFFFFF"/>
-      <line x1="30" y1="29" x2="35" y2="29" stroke="#64748B" stroke-width="1.2"/>
-      <line x1="30" y1="32" x2="34" y2="32" stroke="#64748B" stroke-width="1.2"/>
-    </svg>`
-  };
-
-  // 分類與子分類、繁體中文別名、原生 Emoji 映射字典
-  const ALIAS_MAP = {
-    '鮮乳': 'food', '鮮奶': 'food', '牛乳': 'food', '牛奶': 'food', 'milk': 'food', '🥛': 'food', '食品': 'food',
-    '飲料': 'drinks', '飲品': 'drinks', '咖啡': 'drinks', 'coffee': 'drinks', '🥤': 'drinks', '☕': 'drinks',
-    '零食': 'snack', '點心': 'snack', '餅乾': 'snack', '🍪': 'snack',
-    '生鮮': 'fresh', '魚': 'fresh', '海鮮': 'fresh', '肉品': 'fresh', '🐟': 'fresh', '🥩': 'fresh',
-    '藥品': 'medicine', '成藥': 'medicine', '💊': 'medicine',
-    '保健': 'supplement', '維他命': 'supplement', '🌿': 'supplement',
-    '美妝': 'beauty', '化妝品': 'beauty', '口紅': 'beauty', '💄': 'beauty',
-    '日用': 'pao', '沐浴': 'pao', '洗手乳': 'pao', '🧻': 'pao',
-    '清潔': 'cleaning', '掃除': 'cleaning', '噴霧': 'cleaning', '🧼': 'cleaning',
-    '耗材': 'filter', '濾網': 'filter', '濾心': 'filter', '🪥': 'filter',
-    '保固': 'warranty', '保修': 'warranty', '🛡️': 'warranty', '🛡': 'warranty',
-    '數位': 'digital', '3c': 'digital', '手機': 'digital', '📱': 'digital',
-    '車輛': 'vehicle', '汽車': 'vehicle', '車': 'vehicle', '🚗': 'vehicle',
-    '訂閱': 'subscription', '週期': 'subscription', '📅': 'subscription',
-    '辦公': 'office', '商務': 'office', '💼': 'office',
-    '文具': 'stationery', '鉛筆': 'stationery', '原子筆': 'stationery', '✏️': 'stationery', '✏': 'stationery',
-    '運動': 'sports', '健身': 'sports', '啞鈴': 'sports', '🏃': 'sports',
-    '戶外': 'outdoor', '露營': 'outdoor', '帳篷': 'outdoor', '⛺': 'outdoor',
-    '居家': 'home', '家庭': 'home', '房屋': 'home', '🏠': 'home',
-    '穿搭': 'fashion', '服飾': 'fashion', '衣服': 'fashion', '👕': 'fashion',
-    '五金': 'tools', '工具': 'tools', '板手': 'tools', '🔧': 'tools',
-    '寵物': 'pet', '毛孩': 'pet', '肉球': 'pet', '🐾': 'pet',
-    '母嬰': 'baby', '嬰兒': 'baby', '奶瓶': 'baby', '🍼': 'baby',
-    '動畫': 'animation', '動漫': 'animation', '影視': 'animation', '場記板': 'animation', '🎬': 'animation',
-    '遊戲': 'game', '電玩': 'game', '手把': 'game', '🎮': 'game',
-    '二次元': 'otaku', '谷子': 'otaku', '周邊': 'otaku', '吧唧': 'otaku', '✨': 'otaku',
-    '票券': 'ticket', '展覽': 'ticket', '電影票': 'ticket', '門票': 'ticket', '🎟️': 'ticket', '🎟': 'ticket',
-    '其他': 'other', '包裹': 'other', '紙箱': 'other', '雜物': 'other', '📦': 'other'
-  };
-
-  /**
-   * 根據分類鍵或別名取得對應的 SVG 字串
-   * @param {string} catKey 分類代碼 (如 'food', 'drinks' 等) 或中文標籤、子分類或 Emoji
-   * @param {string} [className] 額外附加至 <svg> 的 CSS 類別名
-   * @returns {string} 完整的 SVG HTML 字串
-   */
-  function getCategoryIcon(catKey, className = '') {
-    const raw = (catKey || '').toString().trim().toLowerCase();
-    const resolvedKey = CATEGORY_ICONS[raw] ? raw : (ALIAS_MAP[raw] || 'other');
-    let svg = CATEGORY_ICONS[resolvedKey] || CATEGORY_ICONS.other;
-    if (className) {
-      svg = svg.replace('<svg ', `<svg class="${className}" `);
+  function sync(){for(const entry of entries){
+    const option=entry.select.selectedOptions[0];
+    entry.button.replaceChildren();
+    const icon=document.createElement('span');icon.innerHTML=graphic(entry,option);
+    const text=document.createElement('span');text.textContent=option?.textContent||'請選擇';
+    const arrow=document.createElement('span');arrow.className='icon-picker-chevron';arrow.textContent='⌄';arrow.setAttribute('aria-hidden','true');
+    entry.button.append(icon,text,arrow);entry.button.disabled=entry.select.disabled;
+  }}
+  function open(entry){
+    active=entry;sync();list.replaceChildren();
+    dialog.querySelector('h2').textContent=entry.detail?'選擇細項':'選擇分類';
+    for(const option of entry.select.options){
+      const row=document.createElement('button');row.type='button';row.className='icon-picker-option';row.setAttribute('role','option');row.disabled=option.disabled;
+      row.setAttribute('aria-selected',String(option.selected));row.tabIndex=option.selected?0:-1;
+      const icon=document.createElement('span');icon.innerHTML=graphic(entry,option);
+      const label=document.createElement('span');label.textContent=option.textContent.replace(/^➕\s*/,'');
+      const check=document.createElement('span');check.className='icon-picker-check';check.textContent=option.selected?'✓':'';check.setAttribute('aria-hidden','true');
+      row.append(icon,label,check);row.onclick=()=>{
+        entry.select.value=option.value;
+        dialog.close();
+        entry.select.dispatchEvent(new Event('input',{bubbles:true}));
+        entry.select.dispatchEvent(new Event('change',{bubbles:true}));
+        queueMicrotask(sync);
+      };list.append(row);
     }
-    return svg;
+    entry.button.setAttribute('aria-expanded','true');dialog.showModal();
+    const selected=list.querySelector('[aria-selected=true]:not(:disabled)')||list.querySelector('button:not(:disabled)');selected?.focus();selected?.scrollIntoView({block:'nearest'});
   }
-
-  return {
-    CATEGORY_ICONS,
-    getCategoryIcon
-  };
+  list.addEventListener('keydown',e=>{
+    const rows=[...list.querySelectorAll('button:not(:disabled)')];let i=rows.indexOf(document.activeElement);
+    if(e.key==='ArrowDown')i=(i+1)%rows.length;else if(e.key==='ArrowUp')i=(i-1+rows.length)%rows.length;else if(e.key==='Home')i=0;else if(e.key==='End')i=rows.length-1;else return;
+    e.preventDefault();rows.forEach((r,j)=>r.tabIndex=i===j?0:-1);rows[i]?.focus();
+  });
+  for(const [catId,subId] of pairs)for(const id of [catId,subId]){
+    const select=document.getElementById(id);if(!select)continue;
+    const button=document.createElement('button');button.type='button';button.id=id+'IconButton';button.className=select.className+' icon-picker-trigger';button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls',list.id);
+    button.setAttribute('aria-label',id===subId?'選擇細項':'選擇分類');
+    const entry={select,button,category:document.getElementById(catId),detail:id===subId};entries.push(entry);
+    select.insertAdjacentElement('afterend',button);select.hidden=true;select.classList.add('icon-picker-native');button.onclick=()=>open(entry);
+    document.querySelectorAll(`label[for="${id}"]`).forEach(label=>label.htmlFor=button.id);
+    select.addEventListener('change',()=>queueMicrotask(sync));
+    new MutationObserver(sync).observe(select,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['disabled']});
+    const modal=select.closest('.ios-modal')||select.closest('[id$="Modal"]');if(modal)new MutationObserver(sync).observe(modal,{attributes:true,attributeFilter:['style','class']});
+  }
+  window.syncIconPickers=sync;sync();
 });
+
+document.addEventListener('DOMContentLoaded',()=>{
+ const map={'🌓':'moon','🌙':'moon','☀️':'sun','🔔':'bell','⚡':'bolt','📐':'ruler','☁️':'cloud','📷':'camera','📸':'camera','📦':'box','🗑️':'trash','📤':'export','📥':'import','🔄':'refresh','✕':'close','×':'close','➕':'plus','✨':'spark','⏳':'clock','⏰':'clock','🤖':'robot','🎯':'target','💡':'bulb','📝':'note','🎨':'palette','✅':'check','⚠️':'info','🛡️':'shield','📅':'calendar','📌':'tag','💾':'import','🔍':'target','🧹':'brush','🔒':'shield','🪄':'spark'};
+ const selector='.settings-icon,.btn-modal-close,.pill-btn-icon,.card-note-icon,.camera-title-text,.nlp-action-badge,.category-create-title,.btn-ios-remove-photo,.header-smart-clear,.btn-clear-search,.settings-chevron,.icon-picker-chevron,.icon-picker-check,.ios-modal-header h2,button:not(.icon-picker-option):not(.quick-emoji-btn):not(.ios-item-card)';
+ function convert(el){
+  if(el.closest('svg,.ios-item-card,.icon-picker-option,.quick-emoji-btn'))return;
+  const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  for(const node of nodes){
+   if(node.parentElement.closest('svg,input,textarea,option,.chip-label,.settings-info,.cat-manage-name'))continue;
+   let text=node.textContent;if(!Object.keys(map).some(char=>text.includes(char)))continue;
+   const fragment=document.createDocumentFragment();
+   while(text){let found=null,at=text.length;for(const char of Object.keys(map)){const i=text.indexOf(char);if(i>=0&&i<at){at=i;found=char;}}
+    if(!found){fragment.append(document.createTextNode(text));break;}
+    if(at)fragment.append(document.createTextNode(text.slice(0,at)));
+    const span=document.createElement('span');span.innerHTML=getUiIcon(map[found]);fragment.append(span.firstChild);text=text.slice(at+found.length);
+   }node.replaceWith(fragment);
+  }
+ }
+ function scan(root){if(root.nodeType!==1)return;if(root.matches(selector))convert(root);root.querySelectorAll(selector).forEach(convert);}
+ scan(document.body);
+ const observer=new MutationObserver(records=>{observer.disconnect();for(const r of records){if(r.type==='characterData'){const parent=r.target.parentElement?.closest(selector);if(parent)convert(parent);}else{for(const n of r.addedNodes){if(n.nodeType===1)scan(n);else if(n.nodeType===3){const parent=n.parentElement?.closest(selector);if(parent)convert(parent);}}}}observer.observe(document.body,{childList:true,subtree:true,characterData:true});});
+  observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+});
+}

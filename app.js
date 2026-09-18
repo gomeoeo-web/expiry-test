@@ -1,6 +1,6 @@
 /**
  * 期效管家 - 純本機智慧自然語言速記與 RoBERTa-Tiny / BERT-Tiny 命名實體識別引擎
- * Smart Quick Add & On-Device NER Parser v1.9.8
+ * Smart Quick Add & On-Device NER Parser v1.9.10
  *
  * 特性：
  * 1. 支援 Transformers.js 於瀏覽器本地離線執行微型中文命名實體模型 (Xenova/bert-tiny-chinese-ner / RoBERTa-Tiny)。
@@ -73,27 +73,27 @@ function offsetDays(d, numDays) {
 // 1.4 一級分類與細項項目設定 (DEFAULT_CATEGORIES & SUB_CATEGORY_CONFIG)
 // ==========================================
 const DEFAULT_CATEGORIES = {
-  food: { label: '食品', emoji: '🥦' },
-  drinks: { label: '飲品', emoji: '🧃' },
+  food: { label: '食品', emoji: '🥛' },
+  drinks: { label: '飲品', emoji: '🥤' },
   snack: { label: '零食', emoji: '🍪' },
-  fresh: { label: '生鮮', emoji: '🥩' },
+  fresh: { label: '生鮮', emoji: '🐟' },
   medicine: { label: '藥品', emoji: '💊' },
-  supplement: { label: '保健', emoji: '🧬' },
+  supplement: { label: '保健', emoji: '💊' },
   beauty: { label: '美妝', emoji: '💄' },
   pao: { label: '日用', emoji: '🧴' },
-  cleaning: { label: '清潔', emoji: '🧼' },
-  filter: { label: '耗材', emoji: '🔄' },
+  cleaning: { label: '清潔', emoji: '🧽' },
+  filter: { label: '耗材', emoji: '🌀' },
   warranty: { label: '保固', emoji: '🛡️' },
   digital: { label: '數位', emoji: '📱' },
-  stationery: { label: '文具', emoji: '📚' },
-  sports: { label: '運動', emoji: '🏃' },
+  stationery: { label: '文具', emoji: '✏️' },
+  sports: { label: '運動', emoji: '🏋️' },
   tools: { label: '五金', emoji: '🔧' },
   pet: { label: '寵物', emoji: '🐾' },
   baby: { label: '母嬰', emoji: '🍼' },
   office: { label: '辦公', emoji: '💼' },
   outdoor: { label: '戶外', emoji: '⛺' },
-  home: { label: '居家', emoji: '🪴' },
-  fashion: { label: '穿搭', emoji: '👗' },
+  home: { label: '居家', emoji: '🏠' },
+  fashion: { label: '穿搭', emoji: '👕' },
   animation: { label: '動畫', emoji: '🎬' },
   game: { label: '遊戲', emoji: '🎮' },
   otaku: { label: '二次元', emoji: '✨' },
@@ -105,9 +105,7 @@ const DEFAULT_CATEGORIES = {
     emoji: '📦',
     items: [
       { name: '日常生活用品', subCat: '一般雜項', emoji: '📦' },
-      { name: '隨身配件眼鏡', subCat: '配件小物', emoji: '👓' },
       { name: '未分類備忘物品', subCat: '未分類', emoji: '📦' },
-      { name: '慢跑球鞋', subCat: '球鞋', emoji: '👟' },
       { name: '商務背包', subCat: '包袋', emoji: '🎒' },
       { name: '日常工作會議', subCat: '會議', emoji: '📅' },
       { name: '各類生活備忘', subCat: '備忘', emoji: '📌' }
@@ -124,12 +122,12 @@ const SUB_CATEGORY_CONFIG = {
   supplement: ['綜合維他命', 'B群活力', '維生素C', '深海魚油', '葉黃素', '活性益生菌', '膠原蛋白', '鈣片D3', '滴雞精', '高蛋白粉', '機能保健'],
   beauty: ['精華液', '乳液面霜', '保濕面膜', '卸妝潔顏', '化妝水噴霧', '緊緻眼霜', '防曬隔離', '唇膏口紅', '粉底彩妝', '美甲護理', '香水香氛'],
   pao: ['洗髮沐浴', '潤髮護髮', '牙膏口腔', '洗手香皂', '身體乳液', '護手滋潤', '刮鬍刀具', '女性護理', '毛巾面巾', '日常消耗'],
-  cleaning: ['菜瓜布海綿', '洗碗精洗劑', '洗衣精洗衣球', '抹布抹巾', '潔廁去垢', '水垢油垢清', '消毒酒精', '除塵防塵', '除濕防潮', '除蟎噴霧', '地板清潔', '疏通清潔'],
+  cleaning: ['菜瓜布海綿', '菜瓜布', '洗碗精洗劑', '洗衣精洗衣球', '抹布抹巾', '潔廁去垢', '水垢油垢清', '消毒酒精', '除塵防塵', '除濕防潮', '除蟎噴霧', '地板清潔', '疏通清潔'],
   filter: ['清淨機濾網', '淨水器濾芯', '音波牙刷頭', '集水除濕盒', '掃地機主刷邊刷', '吸塵器耗材', '咖啡機除鈣', '冷氣濾網', '通風濾材'],
   warranty: ['智慧手機', '筆記型電腦', '平板電腦', '藍牙耳機', '家用電器', '電視螢幕', '人體工學家具', '智慧手錶', '遊戲主機', '攝影器材', '保固維修'],
   digital: ['充電器快充', '傳輸充電線', '行動電源', '耳機周邊', '保護貼保護殼', '記憶卡隨身碟', '鍵盤滑鼠', '智慧穿戴', '擴充轉接HUB'],
   stationery: ['手帳筆記', '書籍雜誌', '簽字鋼筆', '墨水替芯', '膠帶黏著', '檔案夾收納', '繪畫美術', '裁切工具', '辦公文具'],
-  sports: ['運動護具', '瑜珈墊', '彈力帶拉力繩', '啞鈴重訓', '機能水壺', '跑鞋運動鞋', '運動補給', '運動包袋', '球拍線路'],
+  sports: ['運動護具', '瑜珈墊', '彈力帶拉力繩', '啞鈴重訓', '機能水壺', '跑鞋運動鞋', '球鞋', '運動補給', '運動包袋', '球拍線路'],
   tools: ['螺絲工具組', '手電筒照明', '防水絕緣膠帶', '接著快乾膠', '修繕五金', '量尺測量', '潤滑防鏽油', '五金耗材'],
   pet: ['乾糧飼料', '主食罐頭', '副食肉泥', '原肉凍乾', '體內外驅蟲', '核心疫苗', '貓砂尿墊', '寵物潔牙', '洗毛護理', '寵物保健品'],
   baby: ['配方奶粉', '成長奶粉', '透氣尿布', '純水濕紙巾', '副食品常溫粥', '奶瓶奶嘴', '米餅副食', '幼兒常規疫苗', '兒童餐具'],
@@ -142,7 +140,7 @@ const SUB_CATEGORY_CONFIG = {
   game: ['Switch卡帶', 'PSXbox光碟', '主機手把', '點數卡序號', '特典周邊', '典藏套裝', 'Amiibo'],
   otaku: ['徽章吧唧', '壓克力立牌磚', '色紙相卡', '手辦模型景品', '棉花娃玩偶', '一番賞獎品', '痛包配件'],
   ticket: ['電影票', '演唱會門票', '動漫展覽票', '活動兌換券', '餐券住宿券', '高鐵車票', '商品禮券'],
-  other: ['一般雜項', '配件小物', '未分類', '球鞋', '包袋', '工作會議', '各類備忘']
+  other: ['一般雜項', '配件小物', '未分類', '包袋', '工作會議', '各類備忘']
 };
 
 // ==========================================
@@ -178,7 +176,7 @@ const SMART_KEYWORD_MAP = [
   { keywords: ['隱形眼鏡', '保養液', '隱眼', '生理食鹽水'], emoji: '👁️', cat: 'medicine', subCat: '保養液' },
 
   // 清潔 (cleaning)
-  { keywords: ['菜瓜布', '海綿', '科技海綿', '洗碗海綿'], emoji: '🧼', cat: 'cleaning', subCat: '菜瓜布' },
+  { keywords: ['菜瓜布', '海綿', '科技海綿', '洗碗海綿'], emoji: '🧽', cat: 'cleaning', subCat: '菜瓜布' },
   { keywords: ['洗衣精', '洗衣球', '洗衣膠囊', '洗衣粉', '柔軟精', '漂白水'], emoji: '🧺', cat: 'cleaning', subCat: '洗衣精' },
   { keywords: ['洗碗精', '洗潔精', '洗碗機洗碗粉', '光潔劑', '洗碗錠', '洗碗塊'], emoji: '🍽️', cat: 'cleaning', subCat: '洗碗精' },
   { keywords: ['抹布', '拖把', '除塵拖', '除塵紙', '靜電拖'], emoji: '🧽', cat: 'cleaning', subCat: '抹布' },
@@ -445,7 +443,7 @@ const SMART_KEYWORD_MAP = [
   { keywords: ['彈力帶', '拉力繩', '阻力帶', '訓練帶', '拉力帶'], emoji: '🎗️', cat: 'sports', subCat: '彈力帶拉力繩', duration: 365 },
   { keywords: ['啞鈴', '槓鈴', '壺鈴', '重訓手套', '握力器', '健腹輪'], emoji: '🏋️', cat: 'sports', subCat: '啞鈴重訓', duration: 1095 },
   { keywords: ['運動水壺', '搖搖杯', '蛋白搖搖杯', '水袋', '保溫運動瓶'], emoji: '🍶', cat: 'sports', subCat: '機能水壺', duration: 365 },
-  { keywords: ['運動鞋', '跑鞋', '慢跑鞋', '籃球鞋', '羽球鞋', '登山鞋', '鞋墊'], emoji: '👟', cat: 'sports', subCat: '跑鞋運動鞋', duration: 365 },
+  { keywords: ['球鞋', '運動鞋', '跑鞋', '慢跑鞋', '籃球鞋', '羽球鞋', '登山鞋', '鞋墊'], emoji: '👟', cat: 'sports', subCat: '跑鞋運動鞋', duration: 365 },
   { keywords: ['能量膠', '果膠', '電解質', '鹽錠', '運動補給', '能量棒'], emoji: '⚡', cat: 'sports', subCat: '運動補給', duration: 180 },
   { keywords: ['運動包', '健身包', '運動腰包', '水壺腰包'], emoji: '🎒', cat: 'sports', subCat: '運動包袋', duration: 730 },
   { keywords: ['球拍', '穿線', '網球拍', '羽球拍', '拍線', '握把皮'], emoji: '🏸', cat: 'sports', subCat: '球拍線路', duration: 90 },
@@ -461,12 +459,11 @@ const SMART_KEYWORD_MAP = [
 
   // 其他 (other)
   { keywords: ['一般雜項', '雜項', '雜物', '日用品', '生活用品'], emoji: '📦', cat: 'other', subCat: '一般雜項' },
-  { keywords: ['眼鏡', '墨鏡', '太陽眼鏡', '抗藍光', '鏡框', '鏡片', '老花眼鏡', '護目鏡'], emoji: '👓', cat: 'other', subCat: '配件小物', duration: 365 },
-  { keywords: ['配件小物', '飾品小物', '隨身配件', '小物'], emoji: '👓', cat: 'other', subCat: '配件小物' },
+  { keywords: ['眼鏡', '墨鏡', '太陽眼鏡', '抗藍光', '鏡框', '鏡片', '老花眼鏡', '護目鏡'], emoji: '🕶️', cat: 'fashion', subCat: '太陽眼鏡', duration: 365 },
+  { keywords: ['配件小物', '飾品小物', '隨身配件', '小物'], emoji: '💍', cat: 'fashion', subCat: '飾品小物' },
   { keywords: ['未分類', '其他物品', '待整理'], emoji: '📦', cat: 'other', subCat: '未分類' },
-  { keywords: ['球鞋', '慢跑鞋', '運動鞋', '拖鞋'], emoji: '👟', cat: 'other', subCat: '球鞋' },
   { keywords: ['背包', '後背包', '公事包', '手提包'], emoji: '🎒', cat: 'other', subCat: '包袋' },
-  { keywords: ['衣服', '褲子', '襯衫', '外套', '洋裝'], emoji: '🧥', cat: 'other', subCat: '衣物' },
+  { keywords: ['衣服', '褲子', '襯衫', '外套', '洋裝'], emoji: '👕', cat: 'fashion', subCat: '換季送洗' },
   { keywords: ['會議', '開會', '研討會', '週會', '月會', '晨會'], emoji: '📅', cat: 'other', subCat: '會議' },
   { keywords: ['備忘', '筆記', '代辦', '待辦', '個人事項', '隨手記'], emoji: '📌', cat: 'other', subCat: '備忘' }
 ];
@@ -489,7 +486,7 @@ function matchCategoryAndSubCategory(text, fallbackCat = 'other') {
   // 【配件小物判定】：眼鏡與個人配件 (包含中英日關鍵字，排除隱形眼鏡與保養液，嚴禁進入食品)
   const GLASSES_REGEX = /(眼鏡|墨鏡|太陽眼鏡|メガネ|glasses|sunglasses|spectacles|鏡框|抗藍光|鏡片|老花眼鏡|護目鏡)/i;
   if (GLASSES_REGEX.test(text) && !text.includes('隱形眼鏡') && !text.includes('保養液')) {
-    return { category: 'other', subCategory: '配件小物', emoji: '👓' };
+    return { category: 'fashion', subCategory: '太陽眼鏡', emoji: '🕶️' };
   }
 
   const lower = text.toLowerCase();
