@@ -1704,6 +1704,7 @@ body {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
   padding: 0.36rem 0.72rem;
   border-radius: var(--radius-pill);
@@ -1716,6 +1717,26 @@ body {
   transition: all var(--transition-ios);
   font-family: inherit;
   white-space: nowrap;
+}
+
+.category-chip svg {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.category-chip .chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.category-chip .chip-label {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .category-chip:hover {
@@ -1845,16 +1866,23 @@ body {
 }
 
 .card-icon-box {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-subcard);
   background: #2a2a2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.65rem;
+  font-size: 1.95rem;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+.card-icon-box svg {
+  width: 38px;
+  height: 38px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .card-category-tag {
@@ -1939,6 +1967,49 @@ body {
 
 [data-theme="light"] .card-metric-sub.status-normal {
   color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Card Note Preview on Home Page */
+.card-note-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--ios-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  margin-top: 0.32rem;
+  margin-bottom: 0.36rem;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-ios);
+}
+
+[data-theme="light"] .card-note-preview {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #636366;
+}
+
+[data-theme="amoled"] .card-note-preview {
+  background: #141416;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.card-note-icon {
+  font-size: 0.78rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.card-note-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  flex: 1;
 }
 
 /* Minimalist Progress Bar */
@@ -3024,9 +3095,37 @@ input[type="time"]::-webkit-date-and-time-value {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
+.avatar-preview-box svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.nlp-confirm-icon-preview {
+  width: 88px;
+  height: 88px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2d;
+  border: 1.5px solid var(--ios-border-strong);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.nlp-confirm-icon-preview svg {
+  width: 64px;
+  height: 64px;
+  display: block;
+  flex-shrink: 0;
+}
+
 .avatar-preview-box img,
 .card-icon-box img.card-thumb-img,
-.sheet-emoji img.sheet-thumb-img {
+.sheet-emoji img.sheet-thumb-img,
+.nlp-confirm-image-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -3296,14 +3395,22 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .sheet-emoji {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-subcard);
   background: #2a2a2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 2.1rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sheet-emoji svg {
+  width: 42px;
+  height: 42px;
+  display: block;
   flex-shrink: 0;
 }
 
@@ -4119,6 +4226,18 @@ input[type="time"]::-webkit-date-and-time-value {
   font-size: 1.3rem;
   line-height: 1;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+}
+
+.cat-manage-emoji svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .cat-manage-label {
@@ -4850,7 +4969,8 @@ input[type="time"]::-webkit-date-and-time-value {
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
   border-radius: 14px;
-  margin-top: 0.4rem;
+  margin-top: 0;
+  margin-bottom: 0;
   box-shadow: none;
 }
 
@@ -4876,6 +4996,15 @@ input[type="time"]::-webkit-date-and-time-value {
   font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cat-active-emoji svg {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 
 .cat-active-name {
@@ -5160,6 +5289,13 @@ input[type="time"]::-webkit-date-and-time-value {
   justify-content: center;
   font-size: 1.25rem;
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+.picker-item-thumb svg {
+  width: 30px;
+  height: 30px;
+  display: block;
   flex-shrink: 0;
 }
 
@@ -6986,5 +7122,48 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.45);
 }
+
+/* ==========================================================================
+   Modern Soft Flat Vector SVG Icons Theme Adaptations
+   ========================================================================== */
+.icon-bg-mask {
+  fill: #2a2a2d;
+  transition: fill var(--transition-ios);
+}
+
+[data-theme="light"] .icon-bg-mask {
+  fill: #f2f2f7;
+}
+
+[data-theme="amoled"] .icon-bg-mask {
+  fill: #2e2e38;
+}
+
+[data-theme="light"] .card-icon-box {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .sheet-emoji {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .avatar-preview-box {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .nlp-confirm-icon-preview {
+  background: #f2f2f7 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="amoled"] .nlp-confirm-icon-preview {
+  background: #2e2e38 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
 
 

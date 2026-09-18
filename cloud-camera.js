@@ -1,4 +1,4 @@
-// 1.9.6 — public endpoint only; no API key or developer password in the app.
+// 1.9.8 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
 const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
 

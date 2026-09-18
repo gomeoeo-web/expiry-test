@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.6">
+  <link rel="stylesheet" href="style.css?v=1.9.8">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -2054,14 +2054,14 @@ body {
 }
 
 .card-icon-box {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-subcard);
   background: #2a2a2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.65rem;
+  font-size: 1.95rem;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -2148,6 +2148,49 @@ body {
 
 [data-theme="light"] .card-metric-sub.status-normal {
   color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* Card Note Preview on Home Page */
+.card-note-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--ios-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  margin-top: 0.32rem;
+  margin-bottom: 0.36rem;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-ios);
+}
+
+[data-theme="light"] .card-note-preview {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: #636366;
+}
+
+[data-theme="amoled"] .card-note-preview {
+  background: #141416;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.card-note-icon {
+  font-size: 0.78rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.card-note-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  flex: 1;
 }
 
 /* Minimalist Progress Bar */
@@ -3505,15 +3548,16 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 .sheet-emoji {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-subcard);
   background: #2a2a2d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 2.1rem;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .sheet-title {
@@ -5059,7 +5103,8 @@ input[type="time"]::-webkit-date-and-time-value {
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
   border-radius: 14px;
-  margin-top: 0.4rem;
+  margin-top: 0;
+  margin-bottom: 0;
   box-shadow: none;
 }
 
@@ -5085,6 +5130,15 @@ input[type="time"]::-webkit-date-and-time-value {
   font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cat-active-emoji svg {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 
 .cat-active-name {
@@ -7198,6 +7252,138 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 
 
+/* Modern Soft Flat Vector SVG Icons Rules */
+.card-icon-box {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-icon-box svg {
+  width: 38px;
+  height: 38px;
+  display: block;
+  flex-shrink: 0;
+}
+.sheet-emoji {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.sheet-emoji svg {
+  width: 42px;
+  height: 42px;
+  display: block;
+  flex-shrink: 0;
+}
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.category-chip svg {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.category-chip .chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.category-chip .chip-label {
+  display: inline-block;
+  vertical-align: middle;
+}
+.picker-item-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.picker-item-thumb svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex-shrink: 0;
+}
+.avatar-preview-box svg {
+  width: 48px;
+  height: 48px;
+  display: block;
+  flex-shrink: 0;
+}
+.nlp-confirm-icon-preview {
+  width: 88px;
+  height: 88px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a2d;
+  border: 1.5px solid var(--ios-border-strong);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.nlp-confirm-icon-preview svg {
+  width: 64px;
+  height: 64px;
+  display: block;
+  flex-shrink: 0;
+}
+.cat-manage-emoji {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cat-manage-emoji svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex-shrink: 0;
+}
+.icon-bg-mask {
+  fill: #2a2a2d;
+  transition: fill var(--transition-ios);
+}
+[data-theme="light"] .icon-bg-mask {
+  fill: #f2f2f7;
+}
+[data-theme="amoled"] .icon-bg-mask {
+  fill: #2e2e38;
+}
+[data-theme="light"] .card-icon-box {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .sheet-emoji {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .avatar-preview-box {
+  background: #f2f2f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .nlp-confirm-icon-preview {
+  background: #f2f2f7 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+[data-theme="amoled"] .nlp-confirm-icon-preview {
+  background: #2e2e38 !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
 </style>
 </head>
 <body>
@@ -7320,19 +7506,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                 <button id="btnClearInventorySearch" class="btn-clear-search" style="display:none;">✕</button>
               </div>
 
-              <!-- Category Chips Row (全寬橫向滑動) -->
-              <div class="category-chip-row" id="categoryChipRow">
-                <!-- Populated dynamically with Groups -->
-              </div>
-
-              <!-- Group Action Bar (顯示當前群組、單一常駐群組設定與加入物品) -->
+              <!-- Group Action Bar (只保留群組設定、加入物品按鈕，改至物品分類選項滑動菜單上方) -->
               <div class="category-action-bar" id="categoryActionBar">
-                <div class="category-info-badge">
-                  <span class="cat-active-emoji" id="catActiveEmoji">🚗</span>
-                  <span class="cat-active-name" id="catActiveName">車輛群組</span>
-                  <span class="cat-active-dot">·</span>
-                  <span class="cat-active-count" id="catActiveCount">1 項物品</span>
-                </div>
                 <div class="category-action-buttons-group">
                   <button type="button" class="btn-group-settings-main" id="btnOpenGroupSettings" title="群組設定與分頁管理">
                     <span>群組設定</span>
@@ -7342,6 +7517,11 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                     <span>加入物品</span>
                   </button>
                 </div>
+              </div>
+
+              <!-- Category Chips Row (全寬橫向滑動) -->
+              <div class="category-chip-row" id="categoryChipRow">
+                <!-- Populated dynamically with Groups -->
               </div>
             </section>
 
@@ -7591,9 +7771,6 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
                     <input type="time" id="itemReminderCustomTime" value="09:00">
                   </div>
                 </div>
-                <div class="reminder-hint">
-                  💡 系統將於指定之日期與時間發送推播通知。
-                </div>
               </div>
             </div>
           </div>
@@ -7627,6 +7804,18 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
             <input type="text" id="itemNotes" placeholder="例如：下次 5,000 公里換油、自動扣款信用卡...">
           </div>
 
+          <!-- 是否在主頁顯示備註開關 (預設為否，每樣物品獨立選擇) -->
+          <div class="reminder-switch-container" id="showNotesHomeContainer" style="margin-top: 0.65rem;">
+            <div class="reminder-switch-text">
+              <span class="reminder-switch-label">在主頁顯示備註</span>
+              <span class="reminder-switch-status" id="showNotesHomeStatus">已關閉</span>
+            </div>
+            <label class="ios-switch" for="itemShowNotesHome" aria-label="是否在主頁顯示備註開關">
+              <input type="checkbox" id="itemShowNotesHome">
+              <span class="ios-switch-slider"></span>
+            </label>
+          </div>
+
           <!-- Auto-saved in real-time, no buttons required -->
           <div style="height: 1.25rem; flex-shrink: 0;"></div>
         </form>
@@ -7640,7 +7829,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
       <div class="sheet-drag-handle"></div>
       <div class="sheet-header">
         <div class="sheet-item-info">
-          <div class="sheet-emoji" id="sheetEmoji">🪑</div>
+          <div class="sheet-emoji" id="sheetEmoji"></div>
           <div>
             <h3 class="sheet-title" id="sheetTitle">我的椅子</h3>
             <span class="sheet-tag" id="sheetTag">保固 • 還有 1,085 天</span>
@@ -7854,7 +8043,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.6</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.8</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -8003,11 +8192,12 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
           </div>
         </div>
 
-        <!-- Photo Thumbnail Preview (拍照或選取相片縮圖) -->
-        <div id="nlpConfirmImageWrap" class="nlp-confirm-image-wrap" style="display: none; margin-bottom: 0.85rem; text-align: center;">
-          <div style="position: relative; display: inline-block;">
-            <img id="nlpConfirmImagePreview" src="" alt="物品相片縮圖" style="width: 84px; height: 84px; object-fit: cover; border-radius: 16px; border: 1.5px solid var(--ios-border-strong); box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-            <button type="button" id="btnRemoveNlpImage" title="移除相片" aria-label="移除相片" style="position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #ff453a; color: #ffffff; border: 2px solid var(--ios-surface, #222); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1;">✕</button>
+        <!-- Photo / Vector Icon Thumbnail Preview (相片縮圖或向量圖標預覽) -->
+        <div id="nlpConfirmImageWrap" class="nlp-confirm-image-wrap" style="margin-bottom: 0.85rem; text-align: center;">
+          <div style="position: relative; display: inline-flex; align-items: center; justify-content: center;">
+            <img id="nlpConfirmImagePreview" src="" alt="物品相片縮圖" style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: 16px; border: 1.5px solid var(--ios-border-strong); box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+            <div id="nlpConfirmIconPreview" class="nlp-confirm-icon-preview" style="display: none;"></div>
+            <button type="button" id="btnRemoveNlpImage" title="移除相片" aria-label="移除相片" style="display: none; position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #ff453a; color: #ffffff; border: 2px solid var(--ios-surface, #222); font-size: 11px; font-weight: 700; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1;">✕</button>
           </div>
         </div>
 
@@ -9367,7 +9557,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.6';
+  const APP_VERSION = '1.9.8';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -11603,12 +11793,13 @@ var CapacitorBridgeBundle = (() => {
       card.className = 'ios-item-card';
       card.dataset.id = item.id || '';
 
-    // 縮圖：優先顯示相片，無相片則顯示 emoji
+    // 縮圖：優先顯示相片，無相片則調用現代向量 SVG 圖標
     let iconContent = '';
     if (item.image) {
       iconContent = `<img src="${item.image}" class="card-thumb-img" alt="${escapeHtml(item.name)}">`;
     } else {
-      iconContent = `<span>${escapeHtml(item.emoji || '🪑')}</span>`;
+      const svgIcon = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : '';
+      iconContent = svgIcon || `<span>${escapeHtml(item.emoji || '📦')}</span>`;
     }
 
     const expDateStr = item.expiryDate || item.endDate;
@@ -11691,6 +11882,14 @@ var CapacitorBridgeBundle = (() => {
 
         <!-- Sub Metric: 還有 1,085 天 或 持續使用中 -->
         <div class="card-metric-sub ${subMetricClass}">${subMetricText}</div>
+
+        <!-- Card Note Preview on Home Page (主頁專屬備註標籤) -->
+        ${(!isInventory && item.showNotesHome && item.notes && item.notes.trim()) ? `
+          <div class="card-note-preview" title="${escapeHtml(item.notes)}">
+            <span class="card-note-icon">📝</span>
+            <span class="card-note-text">${escapeHtml(item.notes)}</span>
+          </div>
+        ` : ''}
       </div>
 
       <!-- Progress Bar at bottom of card -->
@@ -11994,7 +12193,8 @@ var CapacitorBridgeBundle = (() => {
     if (item.image) {
       sheetEmoji.innerHTML = `<img src="${item.image}" class="sheet-thumb-img" alt="${escapeHtml(item.name)}">`;
     } else {
-      sheetEmoji.textContent = item.emoji || '🪑';
+      const svgIcon = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : '';
+      sheetEmoji.innerHTML = svgIcon || escapeHtml(item.emoji || '📦');
     }
 
     sheetTitle.textContent = item.name;
@@ -12336,6 +12536,8 @@ var CapacitorBridgeBundle = (() => {
   const itemLocationInput = document.getElementById('itemLocation');
   const itemBrandInput = document.getElementById('itemBrand');
   const itemNotesInput = document.getElementById('itemNotes');
+  const itemShowNotesHome = document.getElementById('itemShowNotesHome');
+  const showNotesHomeStatus = document.getElementById('showNotesHomeStatus');
   const previewEndDateText = document.getElementById('previewEndDateText');
   const previewDaysText = document.getElementById('previewDaysText');
   const itemCategorySelect = document.getElementById('itemCategorySelect');
@@ -12401,8 +12603,14 @@ var CapacitorBridgeBundle = (() => {
       avatarHintText.textContent = '已套用相片，可點選「✨ 智慧去背」去背';
     } else {
       previewImageEl.style.display = 'none';
-      previewEmojiChar.style.display = 'block';
-      previewEmojiChar.textContent = itemEmojiInput.value || '🪑';
+      previewEmojiChar.style.display = 'flex';
+      const curCat = (itemCategorySelect && itemCategorySelect.value) ? itemCategorySelect.value : 'other';
+      const catSvg = (typeof getCategoryIcon === 'function') ? getCategoryIcon(curCat) : '';
+      if (catSvg && (!itemEmojiInput.value || itemEmojiInput.value === '🪑' || itemEmojiInput.value === '📦')) {
+        previewEmojiChar.innerHTML = catSvg;
+      } else {
+        previewEmojiChar.textContent = itemEmojiInput.value || '📦';
+      }
       btnRemoveImage.style.display = 'none';
       if (btnOpenBgRemoval) btnOpenBgRemoval.style.display = 'none';
       avatarHintText.textContent = '輸入名稱自動配圖，或自行上傳相片';
@@ -13121,6 +13329,9 @@ var CapacitorBridgeBundle = (() => {
     populateCategorySelect('warranty');
     populateSubCategoryDropdown('warranty');
 
+    if (itemShowNotesHome) itemShowNotesHome.checked = false;
+    if (showNotesHomeStatus) showNotesHomeStatus.textContent = '已關閉';
+
     setModalMode('expiry');
     updateAvatarPreview();
 
@@ -13179,6 +13390,8 @@ var CapacitorBridgeBundle = (() => {
     itemLocationInput.value = item.location || '';
     itemBrandInput.value = item.brand || '';
     itemNotesInput.value = item.notes || '';
+    if (itemShowNotesHome) itemShowNotesHome.checked = !!item.showNotesHome;
+    if (showNotesHomeStatus) showNotesHomeStatus.textContent = (item && item.showNotesHome) ? '已開啟' : '已關閉';
 
     populateCategorySelect(item.category || 'warranty');
     populateSubCategoryDropdown(item.category || 'warranty', item.subCategory || '');
@@ -13270,6 +13483,7 @@ var CapacitorBridgeBundle = (() => {
     const location = itemLocationInput.value.trim();
     const brand = itemBrandInput.value.trim();
     const notes = itemNotesInput.value.trim();
+    const showNotesHome = itemShowNotesHome ? !!itemShowNotesHome.checked : false;
 
     if (id) {
       const item = items.find(it => it.id === id);
@@ -13290,6 +13504,7 @@ var CapacitorBridgeBundle = (() => {
         item.location = location;
         item.brand = brand;
         item.notes = notes;
+        item.showNotesHome = showNotesHome;
         scheduleItemNotification(item);
       }
     } else {
@@ -13314,6 +13529,7 @@ var CapacitorBridgeBundle = (() => {
         location,
         brand,
         notes,
+        showNotesHome,
         history: [],
         createdAt: Date.now()
       };
@@ -13418,6 +13634,15 @@ var CapacitorBridgeBundle = (() => {
     });
   }
   itemDurationInput.addEventListener('input', syncFromDuration);
+
+  if (itemShowNotesHome) {
+    itemShowNotesHome.addEventListener('change', function () {
+      if (showNotesHomeStatus) {
+        showNotesHomeStatus.textContent = itemShowNotesHome.checked ? '已開啟' : '已關閉';
+      }
+      autoSaveCurrentItem();
+    });
+  }
 
   // 表單各欄位即時自動儲存 (無需儲存按鈕，即刻記憶改動)
   itemForm.addEventListener('input', autoSaveCurrentItem);
@@ -14326,7 +14551,12 @@ var CapacitorBridgeBundle = (() => {
       const btn = document.createElement('button');
       btn.className = `category-chip ${catKey === currentCategoryChip ? 'active' : ''}`;
       btn.dataset.cat = catKey;
-      btn.textContent = `${cat.emoji} ${cat.label}`;
+      const chipSvg = (typeof getCategoryIcon === 'function') ? getCategoryIcon(catKey) : '';
+      if (chipSvg) {
+        btn.innerHTML = `<span class="chip-icon">${chipSvg}</span><span class="chip-label">${escapeHtml(cat.label)}</span>`;
+      } else {
+        btn.textContent = `${cat.emoji || '📦'} ${cat.label}`;
+      }
       btn.addEventListener('click', function () {
         document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
         this.classList.add('active');
@@ -14464,7 +14694,13 @@ var CapacitorBridgeBundle = (() => {
     const allCats = getAllCategories();
     const catObj = allCats[currentCategoryChip] || { emoji: '📦', label: '其他' };
     const countInCat = items.filter(it => it.category === currentCategoryChip).length;
-    if (catActiveEmoji) catActiveEmoji.textContent = catObj.emoji;
+    if (catActiveEmoji) {
+      if (typeof getCategoryIcon === 'function' && !catObj.isCustom) {
+        catActiveEmoji.innerHTML = getCategoryIcon(currentCategoryChip);
+      } else {
+        catActiveEmoji.textContent = catObj.emoji || '📦';
+      }
+    }
     if (catActiveName) catActiveName.textContent = `${catObj.label}群組`;
     if (catActiveCount) catActiveCount.textContent = `${countInCat} 項物品`;
   }
@@ -14489,7 +14725,7 @@ var CapacitorBridgeBundle = (() => {
       if (item.image) {
         thumbHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}">`;
       } else {
-        thumbHtml = item.emoji || '🪑';
+        thumbHtml = (typeof getCategoryIcon === 'function') ? getCategoryIcon(item.category) : (item.emoji || '📦');
       }
 
       const catObj = allCats[item.category] || { label: '其他' };
@@ -14829,7 +15065,7 @@ var CapacitorBridgeBundle = (() => {
       itemEl.innerHTML = `
         <div class="cat-manage-info">
           <div class="cat-manage-title-wrap">
-            <span class="cat-manage-emoji">${cat.emoji}</span>
+            <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function' && !cat.isCustom) ? getCategoryIcon(key) : cat.emoji}</span>
             <span class="group-page-badge">${pageName}</span>
             <span class="cat-manage-label" title="${escapeHtml(cat.label)}">${escapeHtml(cat.label)}</span>
             ${isPreset ? `<span class="cat-badge-default" style="font-size:0.7rem;padding:0.15rem 0.4rem;">預設</span>` : ''}
@@ -16632,26 +16868,54 @@ function extractCleanName(rawText) {
       updateNlpReminderDisplay();
     }
 
-    // 縮圖照片預覽設定
+    // 縮圖與彩色向量圖標預覽設定
     const imgWrap = document.getElementById('nlpConfirmImageWrap');
     const imgPreview = document.getElementById('nlpConfirmImagePreview');
+    const iconPreview = document.getElementById('nlpConfirmIconPreview');
     const btnRemoveImg = document.getElementById('btnRemoveNlpImage');
-    if (imgWrap && imgPreview) {
+
+    function updateNlpModalPreview() {
+      if (!imgWrap) return;
+      imgWrap.style.display = 'block';
       if (parsed.image) {
-        imgPreview.src = parsed.image;
-        imgWrap.style.display = 'block';
+        if (imgPreview) {
+          imgPreview.src = parsed.image;
+          imgPreview.style.display = 'block';
+        }
+        if (iconPreview) iconPreview.style.display = 'none';
+        if (btnRemoveImg) btnRemoveImg.style.display = 'flex';
       } else {
-        imgWrap.style.display = 'none';
-        imgPreview.src = '';
-      }
-      if (btnRemoveImg) {
-        btnRemoveImg.onclick = function () {
-          if (currentNlpParsed) currentNlpParsed.image = null;
-          imgWrap.style.display = 'none';
+        if (imgPreview) {
           imgPreview.src = '';
-        };
+          imgPreview.style.display = 'none';
+        }
+        if (iconPreview) {
+          iconPreview.style.display = 'flex';
+          const curCat = catSelect ? catSelect.value : (parsed.category || 'other');
+          iconPreview.innerHTML = (typeof getCategoryIcon === 'function') ? getCategoryIcon(curCat) : '📦';
+        }
+        if (btnRemoveImg) btnRemoveImg.style.display = 'none';
       }
     }
+
+    if (btnRemoveImg) {
+      btnRemoveImg.onclick = function () {
+        if (currentNlpParsed) currentNlpParsed.image = null;
+        parsed.image = null;
+        updateNlpModalPreview();
+      };
+    }
+
+    if (catSelect) {
+      catSelect.onchange = function () {
+        populateNlpSubCategoryDropdown(this.value);
+        if (!parsed.image && iconPreview && typeof getCategoryIcon === 'function') {
+          iconPreview.innerHTML = getCategoryIcon(this.value);
+        }
+      };
+    }
+
+    updateNlpModalPreview();
 
     modal.style.display = 'flex';
     lockBodyScroll();
@@ -18008,7 +18272,8 @@ function extractCleanName(rawText) {
 })();
 
 </script>
-  <script type="module" src="app.js?v=1.9.6"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.6"></script>
+  <script src="icons.js?v=1.9.8"></script>
+  <script type="module" src="app.js?v=1.9.8"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.8"></script>
 </body>
 </html>
