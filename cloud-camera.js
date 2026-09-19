@@ -133,7 +133,8 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
       throw abortErr;
     }
     setCloudCameraBusy(true);
-    const blob = await resizeCanvasToBlob(canvas, 1024, 0.7);
+    // 768px keeps product labels readable while reducing vision input tokens.
+    const blob = await resizeCanvasToBlob(canvas, 768, 0.7);
     if (controller.signal.aborted) {
       const abortErr = new Error('辨識已取消');
       abortErr.name = 'AbortError';
