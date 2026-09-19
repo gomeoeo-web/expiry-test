@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.16">
+  <link rel="stylesheet" href="style.css?v=1.9.17">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7445,7 +7445,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 </style>
-<script src="icons.js?v=1.9.16"></script>
+<script src="icons.js?v=1.9.17"></script>
 <style>
 /* Flat icon system: consistent silhouettes, no gradients, highlights or shadows. */
 .flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);width:24px;height:24px;flex-shrink:0;vertical-align:middle;filter:none!important;}
@@ -8348,7 +8348,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.16</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.17</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9865,7 +9865,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.16';
+  const APP_VERSION = '1.9.17';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -18578,20 +18578,33 @@ function extractCleanName(rawText) {
       const sw = source.videoWidth || source.naturalWidth || source.width;
       const sh = source.videoHeight || source.naturalHeight || source.height;
       if (!ctx || !sw || !sh) throw new Error('照片尚未準備好，請重新拍照。');
-      const scale = Math.min(1, 1600 / Math.max(sw, sh));
-      canvas.width = Math.max(1, Math.round(sw * scale));
-      canvas.height = Math.max(1, Math.round(sh * scale));
+      // Keep the complete item image for the local confirmation preview.
+      const localCanvas = document.createElement('canvas');
+      const localScale = Math.min(1, 640 / Math.max(sw, sh));
+      localCanvas.width = Math.max(1, Math.round(sw * localScale));
+      localCanvas.height = Math.max(1, Math.round(sh * localScale));
+      localCanvas.getContext('2d').drawImage(source, 0, 0, sw, sh, 0, 0, localCanvas.width, localCanvas.height);
+      photoDataUrl = localCanvas.toDataURL('image/jpeg', 0.75);
+      localCanvas.width = localCanvas.height = 1;
+
+      // Match the visible preview window so the AI receives the focused area only.
+      const viewport = document.getElementById('cameraViewportWrap');
+      const viewportRect = viewport?.getBoundingClientRect();
+      const previewAspect = viewportRect?.width > 0 && viewportRect?.height > 0
+        ? viewportRect.width / viewportRect.height
+        : 4 / 3;
       const zoom = source.tagName === 'VIDEO' ? currentCameraZoom : 1;
-      const cw = sw / zoom, ch = sh / zoom;
-      ctx.drawImage(source, (sw-cw)/2, (sh-ch)/2, cw, ch, 0, 0, canvas.width, canvas.height);
-      // Small local thumbnail; the higher resolution canvas is uploaded separately.
-      const thumbnail = document.createElement('canvas');
-      const ratio = Math.min(1, 640/Math.max(canvas.width, canvas.height));
-      thumbnail.width = Math.max(1, Math.round(canvas.width*ratio));
-      thumbnail.height = Math.max(1, Math.round(canvas.height*ratio));
-      thumbnail.getContext('2d').drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
-      photoDataUrl = thumbnail.toDataURL('image/jpeg',0.75);
-      thumbnail.width = thumbnail.height = 1;
+      const sourceAspect = sw / sh;
+      let cropW = sourceAspect > previewAspect ? sh * previewAspect : sw;
+      let cropH = sourceAspect > previewAspect ? sh : sw / previewAspect;
+      cropW = Math.min(sw, cropW / zoom);
+      cropH = Math.min(sh, cropH / zoom);
+      const sx = Math.max(0, (sw - cropW) / 2);
+      const sy = Math.max(0, (sh - cropH) / 2);
+      const scale = Math.min(1, 1600 / Math.max(cropW, cropH));
+      canvas.width = Math.max(1, Math.round(cropW * scale));
+      canvas.height = Math.max(1, Math.round(cropH * scale));
+      ctx.drawImage(source, sx, sy, cropW, cropH, 0, 0, canvas.width, canvas.height);
       closeCameraScanModal();
       showAiScanLoading(photoDataUrl);
       if (typeof window.recognizeCloudCamera !== 'function') throw new Error(location.protocol === 'file:' ? '目前是直接開啟 HTML 檔案，無法載入辨識功能。請關閉此頁，雙擊「啟動期效管家.bat」，從 http://localhost:8080/ 使用 APP。' : '辨識程式未載入。請重新整理；若仍失敗，請確認網站包含 cloud-camera.js。');
@@ -18904,8 +18917,8 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.16"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.16"></script>
+  <script type="module" src="app.js?v=1.9.17"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.17"></script>
 
 <script>
 // Native selects retain mobile accessibility; a shared SVG identifies the selection.
