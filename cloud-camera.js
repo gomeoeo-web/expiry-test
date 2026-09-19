@@ -171,12 +171,15 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     const matched = window.matchCategoryAndSubCategory?.(result.name || '');
     const category = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category) ? result.category : (matched?.category || 'other');
     const expiryDate = dateOrNull(result.expiryDate, result.expiryEvidence);
-    const name = result.recognized ? result.name.trim().slice(0, 100) : '';
+    // Keep a useful product name even when the model cannot map it to a
+    // category. The confirmation dialog will use `other` instead of dropping
+    // the name and forcing the user to type it again.
+    const name = typeof result.name === 'string' ? result.name.trim().slice(0, 100) : '';
     const subCategory = (matched && matched.category === category) ? (matched.subCategory || '') : '';
     const autoInferred = window.inferItemLifespanOrUsageDate?.(name, category, subCategory);
     return { success: true, source: cached ? 'cloud-cache' : 'cloud', name, category, subCategory, autoInferred,
       emoji: window.DEFAULT_CATEGORIES?.[category]?.emoji || matched?.emoji || '📦', expiryDate, hasEndDate: !!expiryDate, remindDaysBefore: 3, remindTime: '09:00', image: photoDataUrl,
-      recognitionNotice: [result.recognized ? '' : '無法確認商品，請填入名稱。', expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : (autoInferred?.hasEndDate ? `未讀到包裝到期日，已為您準備建議使用期限（約 ${autoInferred.durationDays} 天）。` : '此物品未讀到效期，可記錄使用日期或手動填寫。'), typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
+      recognitionNotice: [(name ? (result.recognized ? '' : '已辨識名稱，分類暫選「其他」，請確認。') : '無法確認商品，請填入名稱。'), expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : (autoInferred?.hasEndDate ? `未讀到包裝到期日，已為您準備建議使用期限（約 ${autoInferred.durationDays} 天）。` : '此物品未讀到效期，可記錄使用日期或手動填寫。'), typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
       notes: typeof result.expiryEvidence === 'string' && expiryDate ? '日期原文：' + result.expiryEvidence.slice(0, 300) : '' };
   } catch (error) {
     if (error.name === 'AbortError' || controller.signal.aborted) {
