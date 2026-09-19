@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.14">
+  <link rel="stylesheet" href="style.css?v=1.9.16">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7445,7 +7445,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 </style>
-<script src="icons.js?v=1.9.14"></script>
+<script src="icons.js?v=1.9.16"></script>
 <style>
 /* Flat icon system: consistent silhouettes, no gradients, highlights or shadows. */
 .flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);width:24px;height:24px;flex-shrink:0;vertical-align:middle;filter:none!important;}
@@ -7584,6 +7584,69 @@ button, [role="button"], .dock-tab, .category-chip, .home-filter-btn, .btn-sheet
 button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, .btn-sheet-action *, .sheet-action-btn *, .btn-circle-dark *, .btn-modal-close *, .ios-fab-btn *, .fab-add-btn *, .floating-btn *, .history-header-toggle *, .settings-row-btn *, .tag-chip *, .quick-tag-chip *, .mode-pill *, .custom-cat-row-btn * {
   pointer-events: none;
 }
+</style><style>
+/* 1.9.16 compact pending cards and expandable inventory search */
+#inventorySearchField[hidden] { display:none!important; }
+#btnToggleInventorySearch { flex:0 0 44px;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ios-border);background:var(--ios-surface);color:var(--ios-text-primary); }
+#btnToggleInventorySearch[aria-expanded="true"] { color:var(--ios-blue);background:var(--ios-bg); }
+#pendingItemsGrid .pending-card { padding:9px 16px; }
+#pendingItemsGrid .card-top-row { margin-bottom:5px; }
+#pendingItemsGrid .card-item-title { margin-bottom:5px; }
+#pendingItemsGrid .pending-date-grid { padding:6px 0;gap:8px; }
+#pendingItemsGrid .pending-date-grid span { margin-bottom:3px; }
+</style>
+<script>
+// Platform hints select motion styling; CSS feature queries provide safe fallbacks.
+(() => {
+  const ua = navigator.userAgent;
+  const apple = /iPhone|iPad|iPod/.test(ua) || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
+  document.documentElement.dataset.motionProfile = apple ? 'ios' : /SamsungBrowser|Android/.test(ua) ? 'one-ui' : 'web';
+})();
+</script>
+<style id="interactionStyles1916">
+:root { --motion-ease:cubic-bezier(.22,.72,.18,1);--motion-duration:240ms;--glass-blur:16px; }
+:root[data-motion-profile="ios"] { --motion-ease:cubic-bezier(.2,.8,.2,1);--glass-blur:18px; }
+:root[data-motion-profile="one-ui"] { --motion-ease:cubic-bezier(.2,0,0,1);--motion-duration:260ms;--glass-blur:12px; }
+/* Consistent settings rows: heading and action, then a full-width description. */
+.settings-row,.settings-row-btn { display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:14px 16px; }
+.settings-row .settings-info,.settings-row-btn .settings-info { display:contents; }
+.settings-row .settings-icon,.settings-row-btn .settings-icon { grid-column:1;grid-row:1;justify-self:center; }
+.settings-title { grid-column:2;grid-row:1;min-width:0; }
+.settings-desc { grid-column:2 / -1;grid-row:2;min-width:0;margin-top:0;line-height:1.5; }
+.settings-title,.settings-desc,#rowScreenFit .settings-title,#rowScreenFit .settings-desc { white-space:normal;overflow-wrap:anywhere; }
+.settings-row > button,.settings-row > .ios-switch,.settings-row > .settings-quota-pill,.settings-row-actions,.settings-row-btn > .settings-chevron { grid-column:3;grid-row:1;justify-self:end; }
+.settings-row-actions { display:inline-flex;align-items:center;gap:8px;white-space:nowrap; }
+.settings-row-actions .settings-chevron { line-height:1; }
+.settings-row > button { appearance:none;font:inherit;font-size:.8rem;font-weight:600;white-space:nowrap;min-height:44px;padding:8px 12px;border:1px solid var(--ios-border);border-radius:22px;background:var(--ios-surface-elevated);color:var(--ios-text-primary); }
+.settings-row > .settings-quota-pill { font-size:.72rem;padding:5px 8px;white-space:nowrap; }
+#rowScreenFit { display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:4px 10px;padding:14px 16px; }
+#rowScreenFit .settings-title { grid-column:2 / -1; }
+#rowScreenFit .screen-fit-select-wrap { grid-column:2 / -1;grid-row:3;min-width:0;width:100%;margin:8px 0 0; }
+#rowScreenFit .screen-fit-select { width:100%;min-width:0;min-height:44px;font-size:16px;padding:10px 30px 10px 12px;box-sizing:border-box; }
+#rowScreenFit .select-arrow { right:12px; }
+.settings-row-btn:not(:has(.settings-icon)) { display:block; }
+/* Animate transform/opacity only; never animate blur or allocate a layer per card. */
+.floating-island-dock { transition:transform var(--motion-duration) var(--motion-ease),opacity 180ms ease;background:var(--ios-surface); }
+.dock-tab,.btn-modal-close,#btnToggleInventorySearch { transition:transform 160ms var(--motion-ease),opacity 160ms ease,background-color 160ms ease; }
+.dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:scale(.96); }
+.ios-modal-card,.ios-action-sheet { animation-timing-function:var(--motion-ease); }
+.ios-item-card { contain:layout style; }
+.views-slider-viewport.is-swiping .ios-item-card { transition:none!important; }
+.ios-modal-backdrop,.ios-action-backdrop { backdrop-filter:none;-webkit-backdrop-filter:none; }
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .floating-island-dock { background:rgba(35,35,39,.9);backdrop-filter:blur(var(--glass-blur)) saturate(135%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(135%);border:1px solid rgba(180,180,190,.22); }
+  [data-theme="light"] .floating-island-dock { background:rgba(247,247,250,.9);border-color:rgba(80,80,90,.18); }
+}
+@supports (height:100dvh) {
+ .ios-modal-card { max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px); }
+}
+@media (prefers-reduced-transparency:reduce),(prefers-contrast:more) {
+ .floating-island-dock,[data-theme="light"] .floating-island-dock { background:var(--ios-surface);backdrop-filter:none;-webkit-backdrop-filter:none;border-color:var(--ios-text-secondary); }
+}
+@media (prefers-reduced-motion:reduce) {
+ *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important; }
+ .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
+}
 </style></head>
 <body>
   <div class="ios-app-container">
@@ -7699,9 +7762,9 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
           <div class="view-panel" id="viewPanelInventory" style="visibility: hidden;">
             <!-- Search & Group Bar -->
             <section class="inventory-controls" id="inventoryControls">
-              <div class="ios-search-field">
+              <div class="ios-search-field" id="inventorySearchField" hidden>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="inventorySearch" placeholder="搜尋物品名稱、品牌或地點...">
+                <input type="text" id="inventorySearch" aria-label="搜尋物品" placeholder="搜尋物品名稱、品牌或地點...">
                 <button id="btnClearInventorySearch" class="btn-clear-search" style="display:none;">✕</button>
               </div>
 
@@ -7715,6 +7778,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
                     <span class="btn-add-cat-icon">＋</span>
                     <span>加入物品</span>
                   </button>
+                  <button type="button" id="btnToggleInventorySearch" aria-label="搜尋物品" aria-expanded="false" aria-controls="inventorySearchField"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg></button>
                 </div>
               </div>
 
@@ -8239,8 +8303,8 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
               <span class="settings-title">已封存物品</span>
               <span class="settings-desc" id="settingsArchiveCountText">永久封存不刪除，隨時可解除封存</span>
             </div>
-            <span class="trash-badge-count" id="archiveBadgeCount" style="display:none;">0</span>
-            <span class="settings-chevron">›</span>
+            <span class="settings-row-actions"><span class="trash-badge-count" id="archiveBadgeCount" style="display:none;">0</span>
+            <span class="settings-chevron">›</span></span>
           </button>
 
           <button type="button" class="settings-row-btn" id="btnOpenRecentlyDeleted">
@@ -8249,8 +8313,8 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
               <span class="settings-title">最近刪除</span>
               <span class="settings-desc" id="settingsTrashCountText">保留 7 天內刪除之物品，7 天後自動清除</span>
             </div>
-            <span class="trash-badge-count" id="trashBadgeCount" style="display:none;">0</span>
-            <span class="settings-chevron">›</span>
+            <span class="settings-row-actions"><span class="trash-badge-count" id="trashBadgeCount" style="display:none;">0</span>
+            <span class="settings-chevron">›</span></span>
           </button>
         </div>
 
@@ -8284,7 +8348,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.14</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.16</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9801,7 +9865,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.14';
+  const APP_VERSION = '1.9.16';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -10679,7 +10743,7 @@ var CapacitorBridgeBundle = (() => {
     return [
       {
         id: 'seed-milk',
-        name: '全脂鮮乳',
+        name: '全脂鮮乳(範例)',
         category: 'food',
         subCategory: '鮮乳',
         emoji: '🥛',
@@ -10708,7 +10772,21 @@ var CapacitorBridgeBundle = (() => {
   let searchQuery = '';
   let activeSheetItemId = null;
   let hasSwipedHorizontally = false;
-  let lastCardTapTimestamp = 0;
+  function bindItemCardActivation(card, id) {
+    let startX = 0, startY = 0, moved = false;
+    card.addEventListener('pointerdown', event => {
+      startX = event.clientX; startY = event.clientY; moved = !event.isPrimary;
+    }, { passive: true });
+    card.addEventListener('pointermove', event => {
+      if (Math.hypot(event.clientX - startX, event.clientY - startY) > 10) moved = true;
+    }, { passive: true });
+    card.addEventListener('pointercancel', () => { moved = true; }, { passive: true });
+    card.addEventListener('click', event => {
+      event.stopPropagation();
+      if (moved || hasSwipedHorizontally) return;
+      openActionSheet(id);
+    });
+  }
   let lastActionSheetOpenedAt = 0;
   let lastCreatedItem = null; // 最近一筆新增或編輯之物品快取 (Context Continuity)
   const GEMINI_API_KEY_STORAGE = 'lifespan_gemini_api_key';
@@ -11063,6 +11141,7 @@ var CapacitorBridgeBundle = (() => {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
           items = parsed;
+          labelSeedItems();
           localStorage.setItem(DEVICE_INITIALIZED_KEY, 'true');
           return;
         }
@@ -11082,6 +11161,7 @@ var CapacitorBridgeBundle = (() => {
             const oldItems = JSON.parse(oldStored);
             if (Array.isArray(oldItems)) {
               items = oldItems;
+              labelSeedItems();
               saveItems();
               localStorage.setItem(DEVICE_INITIALIZED_KEY, 'true');
               return;
@@ -11112,6 +11192,11 @@ var CapacitorBridgeBundle = (() => {
         localStorage.setItem(DEVICE_INITIALIZED_KEY, 'true');
       }
     }
+  }
+
+  function labelSeedItems() {
+    const seed = items.find(item => item.id === 'seed-milk' && item.name === '全脂鮮乳');
+    if (seed) { seed.name = '全脂鮮乳(範例)'; saveItems(); }
   }
 
   function saveItems() {
@@ -11784,61 +11869,7 @@ var CapacitorBridgeBundle = (() => {
       card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','管理待用物品 '+(item.name || '未命名物品'));
       card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openActionSheet(item.id);}});
 
-      let cardTouchStartX = 0;
-      let cardTouchStartY = 0;
-      let cardTouchStartTime = 0;
-      let cardMoved = false;
-
-      card.addEventListener('touchstart', function (e) {
-        if (e.touches && e.touches.length === 1) {
-          cardTouchStartX = e.touches[0].clientX;
-          cardTouchStartY = e.touches[0].clientY;
-          cardTouchStartTime = Date.now();
-          cardMoved = false;
-        }
-      }, { passive: true });
-
-      card.addEventListener('touchmove', function (e) {
-        if (e.touches && e.touches.length === 1) {
-          const dx = Math.abs(e.touches[0].clientX - cardTouchStartX);
-          const dy = Math.abs(e.touches[0].clientY - cardTouchStartY);
-          if (Math.hypot(dx, dy) > 18 || (dx > 20 && dx > dy * 1.5)) {
-            cardMoved = true;
-          }
-        }
-      }, { passive: true });
-
-      card.addEventListener('touchend', function (e) {
-        if (cardMoved || hasSwipedHorizontally) {
-          cardMoved = false;
-          return;
-        }
-        const touchDuration = Date.now() - cardTouchStartTime;
-        if (touchDuration < 500 && e.changedTouches && e.changedTouches.length === 1) {
-          const touch = e.changedTouches[0];
-          const dx = Math.abs(touch.clientX - cardTouchStartX);
-          const dy = Math.abs(touch.clientY - cardTouchStartY);
-          if (Math.hypot(dx, dy) < 18) {
-            lastCardTapTimestamp = Date.now();
-            openActionSheet(item.id);
-          }
-        }
-        cardMoved = false;
-      }, { passive: true });
-
-      card.addEventListener('click', function (e) {
-        if (Date.now() - lastCardTapTimestamp < 450) {
-          e.stopPropagation();
-          return;
-        }
-        if (hasSwipedHorizontally || cardMoved) {
-          cardMoved = false;
-          return;
-        }
-        e.stopPropagation();
-        openActionSheet(item.id);
-      });
-
+      bindItemCardActivation(card, item.id);
       grid.appendChild(card);
     });
   }
@@ -12337,61 +12368,7 @@ var CapacitorBridgeBundle = (() => {
       }
     });
 
-    let cardTouchStartX = 0;
-    let cardTouchStartY = 0;
-    let cardTouchStartTime = 0;
-    let cardMoved = false;
-
-    card.addEventListener('touchstart', function (e) {
-      if (e.touches && e.touches.length === 1) {
-        cardTouchStartX = e.touches[0].clientX;
-        cardTouchStartY = e.touches[0].clientY;
-        cardTouchStartTime = Date.now();
-        cardMoved = false;
-      }
-    }, { passive: true });
-
-    card.addEventListener('touchmove', function (e) {
-      if (e.touches && e.touches.length === 1) {
-        const dx = Math.abs(e.touches[0].clientX - cardTouchStartX);
-        const dy = Math.abs(e.touches[0].clientY - cardTouchStartY);
-        if (Math.hypot(dx, dy) > 18 || (dx > 20 && dx > dy * 1.5)) {
-          cardMoved = true;
-        }
-      }
-    }, { passive: true });
-
-    card.addEventListener('touchend', function (e) {
-      if (cardMoved || hasSwipedHorizontally) {
-        cardMoved = false;
-        return;
-      }
-      const touchDuration = Date.now() - cardTouchStartTime;
-      if (touchDuration < 500 && e.changedTouches && e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const dx = Math.abs(touch.clientX - cardTouchStartX);
-        const dy = Math.abs(touch.clientY - cardTouchStartY);
-        if (Math.hypot(dx, dy) < 18) {
-          lastCardTapTimestamp = Date.now();
-          openActionSheet(item.id);
-        }
-      }
-      cardMoved = false;
-    }, { passive: true });
-
-    card.addEventListener('click', function (e) {
-      if (Date.now() - lastCardTapTimestamp < 450) {
-        e.stopPropagation();
-        return;
-      }
-      if (hasSwipedHorizontally || cardMoved) {
-        cardMoved = false;
-        return;
-      }
-      e.stopPropagation();
-      openActionSheet(item.id);
-    });
-
+    bindItemCardActivation(card, item.id);
     return card;
     } catch (createErr) {
       console.error('[createCardElement] Error rendering card for item:', item, createErr);
@@ -15116,7 +15093,7 @@ var CapacitorBridgeBundle = (() => {
     }
 
     const started = performance.now();
-    const duration = 240;
+    const duration = document.documentElement.dataset.motionProfile === 'one-ui' ? 260 : 240;
     const tick = now => {
       const elapsed = now - started;
       const progress = Math.min(1, elapsed / duration);
@@ -16305,6 +16282,11 @@ var CapacitorBridgeBundle = (() => {
       }
     }, { passive: true });
 
+    viewsSliderViewport.addEventListener('touchcancel', () => {
+      touchActive = false;
+      scheduleCheckSettled();
+    }, { passive: true });
+
     viewsSliderViewport.addEventListener('touchend', () => {
       touchActive = false;
       scheduleCheckSettled();
@@ -16312,6 +16294,8 @@ var CapacitorBridgeBundle = (() => {
 
     viewsSliderViewport.addEventListener('scroll', () => {
       if (isAnyModalOpen()) return;
+      // The rAF animator owns completion. Avoid a timer and layout checks per frame.
+      if (navigationAnimationFrame) return;
       if (!navigationInProgress) {
         prepareIncomingPanelForSwipe();
       }
@@ -16444,6 +16428,23 @@ var CapacitorBridgeBundle = (() => {
     if (dockTabPending) dockTabPending.addEventListener('click', () => floatingIslandDock.classList.remove('dock-hidden'));
   }
 
+  const inventorySearchField = document.getElementById('inventorySearchField');
+  const btnToggleInventorySearch = document.getElementById('btnToggleInventorySearch');
+  document.getElementById('categoryActionBar').after(inventorySearchField);
+  function toggleInventorySearch(open) {
+    inventorySearchField.hidden = !open;
+    btnToggleInventorySearch.setAttribute('aria-expanded', String(open));
+    if (open) inventorySearch.focus();
+    else {
+      inventorySearch.value = ''; searchQuery = '';
+      btnClearInventorySearch.style.display = 'none';
+      renderCards(); btnToggleInventorySearch.focus();
+    }
+  }
+  btnToggleInventorySearch.addEventListener('click', () => toggleInventorySearch(inventorySearchField.hidden));
+  inventorySearch.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); toggleInventorySearch(false); }
+  });
   inventorySearch.addEventListener('input', function () {
     searchQuery = this.value.trim();
     btnClearInventorySearch.style.display = searchQuery ? 'block' : 'none';
@@ -18568,12 +18569,6 @@ function extractCleanName(rawText) {
   let isCameraProcessing = false;
   async function processCapturedImage(source) {
     if (isCameraProcessing || (window.isCloudCameraBusy && window.isCloudCameraBusy())) return;
-    const quotaInfo = getSmartLensQuotaInfo();
-    if (quotaInfo.remaining <= 0) {
-      showToast('今日智慧鏡頭辨識額度已達上限（200次），請明天再試或手動填寫。');
-      closeCameraScanModal();
-      return;
-    }
     isCameraProcessing = true;
     if (window.setCloudCameraBusy) window.setCloudCameraBusy(true);
     let photoDataUrl = null, parsed = null, notice = '', isAborted = false;
@@ -18597,7 +18592,6 @@ function extractCleanName(rawText) {
       thumbnail.getContext('2d').drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
       photoDataUrl = thumbnail.toDataURL('image/jpeg',0.75);
       thumbnail.width = thumbnail.height = 1;
-      consumeSmartLensQuota();
       closeCameraScanModal();
       showAiScanLoading(photoDataUrl);
       if (typeof window.recognizeCloudCamera !== 'function') throw new Error(location.protocol === 'file:' ? '目前是直接開啟 HTML 檔案，無法載入辨識功能。請關閉此頁，雙擊「啟動期效管家.bat」，從 http://localhost:8080/ 使用 APP。' : '辨識程式未載入。請重新整理；若仍失敗，請確認網站包含 cloud-camera.js。');
@@ -18730,144 +18724,10 @@ function extractCleanName(rawText) {
   }
 
   // ==========================================
-  // iOS & 行動裝置全域極速觸控響應引擎 (Universal Fast-Tap Touch Engine)
-  // 徹底解決 iOS Safari / WebKit 點按按鈕無反應、延遲 300ms 與幽靈點擊 (Ghost Click)
+  // Native click activation works with CSS touch-action: manipulation.
+  // Do not synthesize touchend clicks or suppress unrelated taps globally.
   // ==========================================
-  (function initUniversalFastTapEngine() {
-    let fastTapTarget = null;
-    let fastTapStartX = 0;
-    let fastTapStartY = 0;
-    let fastTapStartTime = 0;
-    let fastTapMoved = false;
-    let lastFastTapElement = null;
-    let lastFastTapTime = 0;
-
-    const CLICKABLE_SELECTOR = [
-      'button',
-      '[role="button"]',
-      'a[href]',
-      'input[type="button"]',
-      'input[type="submit"]',
-      'input[type="reset"]',
-      '.dock-tab',
-      '.category-chip',
-      '.home-filter-btn',
-      '.btn-sheet-action',
-      '.sheet-action-btn',
-      '.btn-circle-dark',
-      '.btn-modal-close',
-      '.ios-fab-btn',
-      '.fab-add-btn',
-      '.floating-btn',
-      '.history-header-toggle',
-      '.settings-row-btn',
-      '.tag-chip',
-      '.quick-tag-chip',
-      '.mode-pill',
-      '.batch-item-checkbox',
-      '.cat-chip-add',
-      '.custom-cat-row-btn',
-      '[data-tab]',
-      '[data-filter]',
-      '[data-cat]'
-    ].join(',');
-
-    window.addEventListener('touchstart', function (e) {
-      if (!e.touches || e.touches.length !== 1) {
-        fastTapTarget = null;
-        return;
-      }
-      const touch = e.touches[0];
-      const el = e.target;
-      if (!el) return;
-
-      // 排除物品卡片 (物品卡片由 card.addEventListener('touchend') 專屬處理)
-      if (el.closest && el.closest('.ios-item-card')) {
-        fastTapTarget = null;
-        return;
-      }
-
-      // 排除非按鈕的文字輸入框、下拉選單等，保持其原生 focus 與鍵盤行為
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) && !['button', 'submit', 'reset', 'checkbox', 'radio'].includes(el.type)) {
-        fastTapTarget = null;
-        return;
-      }
-
-      const targetBtn = el.closest ? el.closest(CLICKABLE_SELECTOR) : null;
-      if (!targetBtn) {
-        fastTapTarget = null;
-        return;
-      }
-
-      // 檢查是否被禁用
-      if (targetBtn.disabled || targetBtn.getAttribute('aria-disabled') === 'true') {
-        fastTapTarget = null;
-        return;
-      }
-
-      fastTapTarget = targetBtn;
-      fastTapStartX = touch.clientX;
-      fastTapStartY = touch.clientY;
-      fastTapStartTime = Date.now();
-      fastTapMoved = false;
-    }, { passive: true, capture: true });
-
-    window.addEventListener('touchmove', function (e) {
-      if (!fastTapTarget || !e.touches || e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      const dx = Math.abs(touch.clientX - fastTapStartX);
-      const dy = Math.abs(touch.clientY - fastTapStartY);
-
-      // 位移超過容許半徑 18px 即視為滾動或滑動手勢，取消按鈕觸發
-      if (Math.hypot(dx, dy) > 18) {
-        fastTapMoved = true;
-        fastTapTarget = null;
-      }
-    }, { passive: true });
-
-    window.addEventListener('touchend', function (e) {
-      if (!fastTapTarget || fastTapMoved) {
-        fastTapTarget = null;
-        fastTapMoved = false;
-        return;
-      }
-
-      const touchDuration = Date.now() - fastTapStartTime;
-      if (touchDuration < 500 && e.changedTouches && e.changedTouches.length === 1) {
-        const touch = e.changedTouches[0];
-        const dx = Math.abs(touch.clientX - fastTapStartX);
-        const dy = Math.abs(touch.clientY - fastTapStartY);
-
-        if (Math.hypot(dx, dy) < 18) {
-          const btn = fastTapTarget;
-          lastFastTapElement = btn;
-          lastFastTapTime = Date.now();
-
-          // 立即同步觸發按鈕點擊，零延遲響應！
-          btn.click();
-        }
-      }
-
-      fastTapTarget = null;
-      fastTapMoved = false;
-    }, { passive: true, capture: true });
-
-    window.addEventListener('touchcancel', function () {
-      fastTapTarget = null;
-      fastTapMoved = false;
-    }, { passive: true });
-
-    // 攔截並消除 WebKit / Safari 在 300ms 後發送的延遲合成點擊 (Ghost Click)
-    window.addEventListener('click', function (e) {
-      const isRecentFastTap = (Date.now() - lastFastTapTime < 450);
-      const isRecentCardTap = (typeof lastCardTapTimestamp !== 'undefined') && (Date.now() - lastCardTapTimestamp < 450);
-      if (e.isTrusted && (isRecentFastTap || isRecentCardTap)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        return;
-      }
-    }, { capture: true });
-  })();
+  // Use native clicks; manipulation removes tap delay without global click suppression.
 
   function initApp() {
     try { renderCategoryChips(); } catch (e) { console.error(e); }
@@ -19044,8 +18904,8 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.14"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.14"></script>
+  <script type="module" src="app.js?v=1.9.16"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.16"></script>
 
 <script>
 // Native selects retain mobile accessibility; a shared SVG identifies the selection.

@@ -1,9 +1,23 @@
-// 1.9.14 — public endpoint only; no API key or developer password in the app.
+// 1.9.16 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
 const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
 
 let activeRecognitionController = null;
 let isRecognizing = false;
+// Session-only exact-image cache. Never stores photographs or uses fuzzy matches
+// which might confuse identical packaging with a different expiry date.
+const recognitionCache = new Map();
+const CACHE_TTL = 10 * 60 * 1000;
+let cacheGeneration = 0;
+export function clearRecognitionCache() {
+  recognitionCache.clear();
+  cacheGeneration++;
+}
+async function imageFingerprint(blob) {
+  if (!globalThis.crypto?.subtle) return null;
+  const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+  return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export function isCloudCameraBusy() {
   return isRecognizing || !!activeRecognitionController;
@@ -52,14 +66,15 @@ export function cancelCurrentRecognition() {
   }
 }
 
-async function consent() {
+async function consent(signal) {
   try { if (localStorage.getItem(CONSENT_KEY) === 'yes') return true; } catch {}
   return new Promise(resolve => {
     const dialog = document.createElement('dialog');
     dialog.style.cssText = 'max-width:360px;width:calc(100% - 32px);border:0;border-radius:22px;padding:24px;background:#fff;color:#222;font:16px/1.6 system-ui;';
     dialog.innerHTML = '<h2 style="font-size:20px;margin-top:0">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 Google Gemini，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept style="font:inherit;padding:12px;border:0;border-radius:12px;background:#205f40;color:white;width:100%">同意並辨識</button><button type="button" data-cancel style="font:inherit;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:12px;background:white;width:100%">改用手動填寫</button>';
     let finished = false;
-    const finish = value => { if (finished) return; finished = true; dialog.close(); dialog.remove(); resolve(value); };
+    const onAbort = () => finish(false);
+    const finish = value => { if (finished) return; finished = true; signal?.removeEventListener('abort', onAbort); dialog.close(); dialog.remove(); resolve(value); };
     const acceptBtn = dialog.querySelector('[data-accept]');
     const cancelBtn = dialog.querySelector('[data-cancel]');
     acceptBtn.onclick = () => {
@@ -72,6 +87,8 @@ async function consent() {
     cancelBtn.onclick = () => finish(false);
     dialog.addEventListener('cancel', e => { e.preventDefault(); finish(false); });
     document.body.append(dialog); dialog.showModal();
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) finish(false);
   });
 }
 
@@ -101,24 +118,21 @@ export async function resizeCanvasToBlob(canvas, maxDimension = 1024, quality = 
 }
 
 export async function recognizeCanvas(canvas, photoDataUrl) {
-  if (activeRecognitionController) {
-    try { activeRecognitionController.abort(); } catch {}
-    activeRecognitionController = null;
-  }
+  if (isCloudCameraBusy()) throw new Error('正在辨識，請稍候。');
   activeRecognitionController = new AbortController();
   const controller = activeRecognitionController;
+  const generation = cacheGeneration;
   isRecognizing = true;
   setCloudCameraBusy(true);
   const timer = setTimeout(() => controller.abort(), 55000);
   try {
-    if (!await consent()) throw new Error('已選擇手動填寫，照片未上傳。');
+    if (!await consent(controller.signal)) throw new Error('已選擇手動填寫，照片未上傳。');
     if (controller.signal.aborted) {
       const abortErr = new Error('辨識已取消');
       abortErr.name = 'AbortError';
       throw abortErr;
     }
     setCloudCameraBusy(true);
-    if (!navigator.onLine) throw new Error('目前沒有網路，請手動填寫或連線後重新拍照。');
     const blob = await resizeCanvasToBlob(canvas, 1024, 0.7);
     if (controller.signal.aborted) {
       const abortErr = new Error('辨識已取消');
@@ -126,28 +140,41 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
       throw abortErr;
     }
     if (!blob || blob.size > 2 * 1024 * 1024) throw new Error('照片太大，請靠近單一商品再拍一次。');
-    const response = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, signal: controller.signal, credentials: 'omit' });
+    const fingerprint = await imageFingerprint(blob);
+    if (controller.signal.aborted) throw new DOMException('辨識已取消', 'AbortError');
+    for (const [key, value] of recognitionCache) if (Date.now() - value.at >= CACHE_TTL) recognitionCache.delete(key);
+    const cached = fingerprint && recognitionCache.get(fingerprint);
     let payload;
-    try {
-      payload = await response.json();
-    } catch {
-      if (controller.signal.aborted) {
-        const abortErr = new Error('辨識已取消');
-        abortErr.name = 'AbortError';
-        throw abortErr;
+    if (cached) {
+      payload = { success: true, result: structuredClone(cached.result) };
+    } else {
+      if (!navigator.onLine) throw new Error('目前沒有網路，請手動填寫或連線後重新拍照。');
+      if (window.getSmartLensQuotaInfo?.().remaining <= 0) throw new Error('今日智慧鏡頭辨識額度已達上限，請明天再試或手動填寫。');
+      window.consumeSmartLensQuota?.();
+      const response = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, signal: controller.signal, credentials: 'omit' });
+      try {
+        payload = await response.json();
+      } catch {
+        if (controller.signal.aborted) throw new DOMException('辨識已取消', 'AbortError');
+        throw new Error('辨識服務尚未就緒，請先手動填寫。');
       }
-      throw new Error('辨識服務尚未就緒，請先手動填寫。');
+      if (!response.ok || !payload.success) throw new Error(payload.message || '辨識暫時無法完成，請手動填寫。');
     }
-    if (!response.ok || !payload.success) throw new Error(payload.message || '辨識暫時無法完成，請手動填寫。');
+    if (controller.signal.aborted) throw new DOMException('辨識已取消', 'AbortError');
     const result = payload.result;
     if (!result || typeof result.recognized !== 'boolean' || typeof result.name !== 'string') throw new Error('辨識結果不完整，請手動確認。');
+    if (!cached && fingerprint && generation === cacheGeneration && result.recognized && result.name.trim()) {
+      // Keep only small validated results, never errors or unrecognized images.
+      if (recognitionCache.size >= 8) recognitionCache.delete(recognitionCache.keys().next().value);
+      recognitionCache.set(fingerprint, { at: Date.now(), result: structuredClone(result) });
+    }
     const matched = window.matchCategoryAndSubCategory?.(result.name || '');
     const category = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category) ? result.category : (matched?.category || 'other');
     const expiryDate = dateOrNull(result.expiryDate, result.expiryEvidence);
     const name = result.recognized ? result.name.trim().slice(0, 100) : '';
     const subCategory = (matched && matched.category === category) ? (matched.subCategory || '') : '';
     const autoInferred = window.inferItemLifespanOrUsageDate?.(name, category, subCategory);
-    return { success: true, source: 'cloud', name, category, subCategory, autoInferred,
+    return { success: true, source: cached ? 'cloud-cache' : 'cloud', name, category, subCategory, autoInferred,
       emoji: window.DEFAULT_CATEGORIES?.[category]?.emoji || matched?.emoji || '📦', expiryDate, hasEndDate: !!expiryDate, remindDaysBefore: 3, remindTime: '09:00', image: photoDataUrl,
       recognitionNotice: [result.recognized ? '' : '無法確認商品，請填入名稱。', expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : (autoInferred?.hasEndDate ? `未讀到包裝到期日，已為您準備建議使用期限（約 ${autoInferred.durationDays} 天）。` : '此物品未讀到效期，可記錄使用日期或手動填寫。'), typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
       notes: typeof result.expiryEvidence === 'string' && expiryDate ? '日期原文：' + result.expiryEvidence.slice(0, 300) : '' };
@@ -162,9 +189,11 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     throw error;
   } finally {
     clearTimeout(timer);
-    activeRecognitionController = null;
-    isRecognizing = false;
-    setCloudCameraBusy(false);
+    if (activeRecognitionController === controller) {
+      activeRecognitionController = null;
+      isRecognizing = false;
+      setCloudCameraBusy(false);
+    }
   }
 }
 
@@ -175,6 +204,8 @@ if (typeof window !== 'undefined') {
   window.setCloudCameraBusy = setCloudCameraBusy;
   window.cancelCurrentRecognition = cancelCurrentRecognition;
   window.revokeCloudPhotoConsent = () => {
+    cancelCurrentRecognition();
+    clearRecognitionCache();
     try { localStorage.removeItem(CONSENT_KEY); } catch {}
     alert('已撤回雲端照片同意。下次拍照辨識會重新詢問。');
   };
