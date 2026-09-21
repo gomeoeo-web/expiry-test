@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=1.9.17">
+  <link rel="stylesheet" href="style.css?v=1.9.18">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -101,18 +101,28 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --ios-bg: #f2f2f7;
-  --ios-surface: #ffffff;
-  --ios-surface-elevated: #e5e5ea;
-  --ios-surface-secondary: #ebebeb;
-  --ios-dock-bg: rgba(255, 255, 255, 0.92);
-  --ios-border: rgba(0, 0, 0, 0.06);
-  --ios-border-strong: rgba(0, 0, 0, 0.12);
+  --ios-bg: #f8f6f0;               /* 溫潤紙質米白，取代冷灰死白 */
+  --ios-surface: #ffffff;          /* 卡片純白透亮 */
+  --ios-surface-elevated: #f0ece1; /* 溫和燕麥卡其微反白 */
+  --ios-surface-secondary: #f4f0e6;/* 柔和米麻副背景 */
+  --ios-dock-bg: rgba(248, 246, 240, 0.94);
+  --ios-border: rgba(140, 125, 110, 0.12);
+  --ios-border-strong: rgba(140, 125, 110, 0.22);
 
-  --ios-text-primary: #000000;
-  --ios-text-secondary: #8e8e93;
-  --ios-text-muted: #aeaeb2;
+  /* 墨炭褐字體 */
+  --ios-text-primary: #2d2a26;     /* 暖調深褐灰 */
+  --ios-text-secondary: #7d756d;   /* 陶土暖灰 */
+  --ios-text-muted: #aba298;       /* 淺麻灰 */
   --ios-text-inverse: #ffffff;
+
+  /* 低飽和微文青強調色 */
+  --ios-green: #52796f;            /* 鼠尾草灰綠（正常週期） */
+  --ios-green-bg: rgba(82, 121, 111, 0.12);
+  --ios-orange: #c87d55;           /* 暖杏陶土橘（即將到期） */
+  --ios-orange-bg: rgba(200, 125, 85, 0.12);
+  --ios-red: #b85d58;              /* 乾燥玫瑰粉紅（已過期警示） */
+  --ios-red-bg: rgba(184, 93, 88, 0.12);
+  --ios-blue: #5b7c8d;             /* 霧灰藍 */
 }
 
 /* ==========================================================================
@@ -2153,7 +2163,17 @@ body {
 }
 
 [data-theme="light"] .card-metric-sub.status-normal {
-  color: rgba(0, 0, 0, 0.65) !important;
+  color: #52796f !important;
+}
+
+[data-theme="light"] .card-metric-sub.status-expired,
+[data-theme="light"] .card-metric-sub.expired {
+  color: #b85d58 !important;
+}
+
+[data-theme="light"] .card-metric-sub.status-warning,
+[data-theme="light"] .card-metric-sub.urgent {
+  color: #c87d55 !important;
 }
 
 /* Card Note Preview on Home Page */
@@ -4990,24 +5010,24 @@ input[type="time"]::-webkit-date-and-time-value {
 
 [data-theme="light"] .progress-bar-container,
 [data-theme="light"] .card-progress-bar {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: rgba(140, 125, 110, 0.12);
 }
 
 [data-theme="light"] .progress-bar-fill.status-normal,
 [data-theme="light"] .card-progress-fill.status-normal {
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: #52796f;
 }
 
 [data-theme="light"] .progress-bar-fill.status-expired,
 [data-theme="light"] .card-progress-fill.status-expired,
 [data-theme="light"] .card-progress-fill.expired {
-  background-color: #FF453A;
+  background-color: #b85d58;
 }
 
 [data-theme="light"] .progress-bar-fill.status-warning,
 [data-theme="light"] .card-progress-fill.status-warning,
 [data-theme="light"] .card-progress-fill.urgent {
-  background-color: #FF9F0A;
+  background-color: #c87d55;
 }
 
 /* 5. Sort Toolbar and Sort Modal */
@@ -7445,7 +7465,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 </style>
-<script src="icons.js?v=1.9.17"></script>
+<script src="icons.js?v=1.9.18"></script>
 <style>
 /* Flat icon system: consistent silhouettes, no gradients, highlights or shadows. */
 .flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);width:24px;height:24px;flex-shrink:0;vertical-align:middle;filter:none!important;}
@@ -8348,7 +8368,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.17</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.18</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9865,7 +9885,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.17';
+  const APP_VERSION = '1.9.18';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -10883,7 +10903,8 @@ var CapacitorBridgeBundle = (() => {
   // 系統級本地通知管理 (Capacitor Local Notifications)
   // ==========================================
   const PUSH_NOTIFICATION_KEY = 'lifespan_push_notification_enabled';
-  const NOTIFICATION_CHANNEL_ID = 'expiration-reminders';
+  // 新頻道 ID 可讓既有安裝套用高優先級設定（Android 不允許程式變更舊頻道的重要性）。
+  const NOTIFICATION_CHANNEL_ID = 'expiration-reminders-v2';
 
   function getCapacitorNotifications() {
     if (typeof window !== 'undefined') {
@@ -10903,7 +10924,7 @@ var CapacitorBridgeBundle = (() => {
         await plugin.createChannel({
           id: NOTIFICATION_CHANNEL_ID,
           name: '物品到期提醒',
-          description: '提醒物品即將到期與維護保固通知',
+          description: '物品到期提醒',
           importance: 5, // 5 = HIGH (heads-up banner 系統橫幅)
           visibility: 1, // 1 = PUBLIC
           vibration: true,
@@ -10999,8 +11020,8 @@ var CapacitorBridgeBundle = (() => {
     const notifId = getItemNotificationId(item.id);
     const plugin = getCapacitorNotifications();
 
-    const title = `🔔 期效管家提醒：${item.name}`;
-    const body = `${item.name} 即將到期 (到期日：${item.endDate})，請留意！`;
+    const title = `🔔 ${item.name} 即將到期`;
+    const body = `到期日：${item.endDate}`;
 
     if (plugin && typeof plugin.schedule === 'function') {
       try {
@@ -11079,6 +11100,30 @@ var CapacitorBridgeBundle = (() => {
     }
   }
 
+  // Android 首次安裝時主動請求通知權限；已開啟提醒的舊使用者若權限遺失，也會再次請求。
+  async function initializeNotificationPermission() {
+    const capacitor = window.Capacitor;
+    const isNative = !!(capacitor && (
+      (typeof capacitor.isNativePlatform === 'function' && capacitor.isNativePlatform()) ||
+      (typeof capacitor.getPlatform === 'function' && capacitor.getPlatform() !== 'web')
+    ));
+    if (!isNative) return;
+
+    await ensureNotificationChannel();
+    const savedPreference = localStorage.getItem(PUSH_NOTIFICATION_KEY);
+    let granted = await checkNotificationPermission();
+    if (!granted && (savedPreference === null || savedPreference === 'true')) {
+      granted = await requestNotificationPermission();
+    }
+
+    if (savedPreference === null) {
+      localStorage.setItem(PUSH_NOTIFICATION_KEY, granted ? 'true' : 'false');
+    }
+    if (granted && localStorage.getItem(PUSH_NOTIFICATION_KEY) === 'true') {
+      await syncAllItemNotifications();
+    }
+  }
+
   // 發送即時測試通知（立即彈出系統橫幅通知）
   async function sendImmediateTestNotification() {
     const hasPerm = await checkNotificationPermission();
@@ -11100,8 +11145,8 @@ var CapacitorBridgeBundle = (() => {
           notifications: [
             {
               id: testId,
-              title: '⚡ 期效管家測試通知',
-              body: '系統級本機通知運作正常！即將到期的物品將準時彈出橫幅提醒。',
+              title: '⚡ 測試通知',
+              body: '通知功能正常',
               schedule: {
                 at: fireAt,
                 allowWhileIdle: true,
@@ -11119,8 +11164,8 @@ var CapacitorBridgeBundle = (() => {
 
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        new Notification('⚡ 期效管家測試通知', {
-          body: '系統級本機通知運作正常！即將到期的物品將準時彈出橫幅提醒。',
+        new Notification('⚡ 測試通知', {
+          body: '通知功能正常',
         });
         showToast('已發送測試通知！');
         return;
@@ -12152,20 +12197,22 @@ var CapacitorBridgeBundle = (() => {
   function renderProgressBar(progressBarFill, item) {
     if (!item) return null;
 
+    const isLight = typeof document !== 'undefined' && document.documentElement && document.documentElement.getAttribute('data-theme') === 'light';
     const expDateStr = item.expiryDate || item.endDate;
     const isCountUp = item.trackingType === 'count_up' || !expDateStr || item.hasEndDate === false;
 
     // 1. 排除無到期日／僅記使用天數的項目
     if (isCountUp) {
+      const defaultColor = isLight ? 'rgba(140, 125, 110, 0.18)' : 'rgba(255, 255, 255, 0.15)';
       if (progressBarFill && progressBarFill.style) {
-        progressBarFill.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-        progressBarFill.style.setProperty('background-color', 'rgba(255, 255, 255, 0.15)', 'important');
+        progressBarFill.style.backgroundColor = defaultColor;
+        progressBarFill.style.setProperty('background-color', defaultColor, 'important');
         progressBarFill.style.width = '100%';
       }
       return {
         status: 'count_up',
         diffDays: null,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        backgroundColor: defaultColor,
         width: '100%'
       };
     }
@@ -12177,19 +12224,19 @@ var CapacitorBridgeBundle = (() => {
     exp.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
 
-    let bgColor = 'rgba(255, 255, 255, 0.25)';
+    let bgColor = isLight ? 'rgba(140, 125, 110, 0.28)' : 'rgba(255, 255, 255, 0.25)';
     let fillWidth = '100%';
     let status = 'normal';
 
     if (diffDays < 0) {
       // 【情況 A：已過期】diffDays < 0
       status = 'expired';
-      bgColor = '#FF453A'; // 純紅
+      bgColor = isLight ? '#b85d58' : '#FF453A'; // 淺色：乾燥玫瑰粉紅；深色：純紅
       fillWidth = '100%';
     } else if (diffDays >= 0 && diffDays <= 3) {
       // 【情況 B：即將到期】diffDays >= 0 且 diffDays <= 3（3天內，包含今天與第3天）
       status = 'warning';
-      bgColor = '#FF9F0A'; // 警告橘
+      bgColor = isLight ? '#c87d55' : '#FF9F0A'; // 淺色：暖杏陶土橘；深色：警告橘
       let percent = 100;
       if (item.startDate) {
         const start = new Date(item.startDate);
@@ -12200,9 +12247,9 @@ var CapacitorBridgeBundle = (() => {
       }
       fillWidth = `${percent > 0 ? percent : 20}%`;
     } else {
-      // 【情況 C：安全正常】diffDays > 3（4天、6天、100天以上，絕不可出現 #FF453A 或 #FF9F0A！）
+      // 【情況 C：安全正常】diffDays > 3（4天、6天、100天以上）
       status = 'normal';
-      bgColor = 'rgba(255, 255, 255, 0.25)'; // 中性低調白
+      bgColor = isLight ? '#52796f' : 'rgba(255, 255, 255, 0.25)'; // 淺色：鼠尾草灰綠；深色：微透白
       let percent = 100;
       if (item.startDate) {
         const start = new Date(item.startDate);
@@ -12248,20 +12295,21 @@ var CapacitorBridgeBundle = (() => {
     const expDateStr = item.expiryDate || item.endDate;
     const isCountUp = item.trackingType === 'count_up' || !expDateStr || item.hasEndDate === false;
 
+    const isLight = typeof document !== 'undefined' && document.documentElement && document.documentElement.getAttribute('data-theme') === 'light';
     let subMetricText = '';
     let subMetricClass = '';
     let statusClass = 'status-normal';
-    let progressBgColor = 'rgba(255, 255, 255, 0.25)';
+    let progressBgColor = isLight ? 'rgba(140, 125, 110, 0.28)' : 'rgba(255, 255, 255, 0.25)';
     let progressWidth = '100%';
-    let metricTextColor = 'rgba(255, 255, 255, 0.7)';
+    let metricTextColor = isLight ? '#7d756d' : 'rgba(255, 255, 255, 0.7)';
 
     if (isCountUp) {
       subMetricText = '持續使用中 ⏳';
       subMetricClass = 'ongoing status-normal';
       statusClass = 'status-normal';
-      progressBgColor = 'rgba(255, 255, 255, 0.15)';
+      progressBgColor = isLight ? 'rgba(140, 125, 110, 0.18)' : 'rgba(255, 255, 255, 0.15)';
       progressWidth = '100%';
-      metricTextColor = 'rgba(255, 255, 255, 0.7)';
+      metricTextColor = isLight ? '#7d756d' : 'rgba(255, 255, 255, 0.7)';
     } else {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -12274,25 +12322,25 @@ var CapacitorBridgeBundle = (() => {
         subMetricText = `已超過 ${Math.abs(diffDays)} 天`;
         subMetricClass = 'expired status-expired';
         statusClass = 'status-expired';
-        progressBgColor = '#FF453A'; // 純紅
+        progressBgColor = isLight ? '#b85d58' : '#FF453A'; // 乾燥玫瑰粉紅 / 純紅
         progressWidth = '100%';
-        metricTextColor = '#FF453A';
+        metricTextColor = isLight ? '#b85d58' : '#FF453A';
       } else if (diffDays >= 0 && diffDays <= 3) {
         // 【情況 B：即將到期】diffDays >= 0 且 diffDays <= 3（3天內，包含今天與第3天）
         subMetricText = diffDays === 0 ? '今天到期' : `還有 ${formatNumber(diffDays)} 天`;
         subMetricClass = 'urgent status-warning';
         statusClass = 'status-warning';
-        progressBgColor = '#FF9F0A'; // 警告橘
+        progressBgColor = isLight ? '#c87d55' : '#FF9F0A'; // 暖杏陶土橘 / 警告橘
         progressWidth = `${m.percent > 0 ? m.percent : 20}%`;
-        metricTextColor = '#FF9F0A';
+        metricTextColor = isLight ? '#c87d55' : '#FF9F0A';
       } else {
-        // 【情況 C：安全正常】diffDays > 3（4天、6天、100天以上，絕不可出現 #FF453A 或 #FF9F0A！）
+        // 【情況 C：安全正常】diffDays > 3（4天、6天、100天以上）
         subMetricText = `還有 ${formatNumber(diffDays)} 天`;
         subMetricClass = 'status-normal';
         statusClass = 'status-normal';
-        progressBgColor = 'rgba(255, 255, 255, 0.25)'; // 中性低調白
+        progressBgColor = isLight ? '#52796f' : 'rgba(255, 255, 255, 0.25)'; // 淺色：鼠尾草灰綠；深色：微透白
         progressWidth = `${m.percent > 0 ? m.percent : 15}%`;
-        metricTextColor = 'rgba(255, 255, 255, 0.7)';
+        metricTextColor = isLight ? '#52796f' : 'rgba(255, 255, 255, 0.7)';
       }
     }
 
@@ -14397,13 +14445,16 @@ var CapacitorBridgeBundle = (() => {
     const metaThemeColor = document.getElementById('metaThemeColor');
     if (metaThemeColor) {
       if (validTheme === 'amoled') metaThemeColor.setAttribute('content', '#000000');
-      else if (validTheme === 'light') metaThemeColor.setAttribute('content', '#f2f2f7');
+      else if (validTheme === 'light') metaThemeColor.setAttribute('content', '#f8f6f0');
       else metaThemeColor.setAttribute('content', '#121212');
     }
     if (settingsThemeText) {
       if (validTheme === 'amoled') settingsThemeText.textContent = '目前為 OLED純黑 模式';
-      else if (validTheme === 'light') settingsThemeText.textContent = '目前為明亮淺色模式';
+      else if (validTheme === 'light') settingsThemeText.textContent = '目前為暖調微文青淺色模式';
       else settingsThemeText.textContent = '目前為深色灰黑模式';
+    }
+    if (typeof renderCards === 'function') {
+      renderCards();
     }
   }
 
@@ -14541,7 +14592,7 @@ var CapacitorBridgeBundle = (() => {
     setTheme(next, true);
 
     if (next === 'amoled') showToast('已切換為 OLED純黑 模式');
-    else if (next === 'light') showToast('已切換為明亮淺色模式');
+    else if (next === 'light') showToast('已切換為暖調微文青淺色模式');
     else showToast('已切換為深色灰黑模式');
   });
 
@@ -18771,11 +18822,8 @@ function extractCleanName(rawText) {
     });
   }
 
-  // 初始化 Capacitor 系統通知頻道與排程檢查
-  ensureNotificationChannel();
-  if (localStorage.getItem(PUSH_NOTIFICATION_KEY) === 'true') {
-    syncAllItemNotifications();
-  }
+  // 初始化 Android 通知權限、通知頻道與排程。
+  initializeNotificationPermission();
 
   // 首次開起的頁面預設為首頁
   if (urlParams.get('tab') === 'inventory') {
@@ -18917,8 +18965,8 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.17"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.17"></script>
+  <script type="module" src="app.js?v=1.9.18"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.18"></script>
 
 <script>
 // Native selects retain mobile accessibility; a shared SVG identifies the selection.

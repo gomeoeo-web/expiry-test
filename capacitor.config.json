@@ -1,6 +1,6 @@
 {
   "appId": "com.myapp.tracker",
-  "appName": "我的APP",
+  "appName": "期效管家",
   "webDir": "www",
   "server": {
     "androidScheme": "https"
