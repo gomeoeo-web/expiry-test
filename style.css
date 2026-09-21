@@ -93,9 +93,9 @@
 [data-theme="light"] {
   color-scheme: light;
   --ios-bg: #f8f6f0;               /* 溫潤紙質米白，取代冷灰死白 */
-  --ios-surface: #ffffff;          /* 卡片純白透亮 */
-  --ios-surface-elevated: #f0ece1; /* 溫和燕麥卡其微反白 */
-  --ios-surface-secondary: #f4f0e6;/* 柔和米麻副背景 */
+  --ios-surface: #fffaf0;          /* 暖紙卡片 */
+  --ios-surface-elevated: #eee5d5; /* 燕麥卡其 */
+  --ios-surface-secondary: #f3ecdf;/* 米麻副背景 */
   --ios-dock-bg: rgba(248, 246, 240, 0.94);
   --ios-border: rgba(140, 125, 110, 0.12);
   --ios-border-strong: rgba(140, 125, 110, 0.22);
@@ -117,6 +117,26 @@
   --progress-normal: #52796f;
   --progress-warning: #c87d55;
   --progress-expired: #b85d58;
+}
+
+/* 淺色模式：統一暖紙、陶土、墨褐文青色 */
+[data-theme="light"] .ios-item-card,
+[data-theme="light"] .status-notice-card,
+[data-theme="light"] .category-create-card,
+[data-theme="light"] .cat-manage-item,
+[data-theme="light"] .btn,
+[data-theme="light"] button,
+[data-theme="light"] .pill-segment,
+[data-theme="light"] .home-filter-btn {
+  background-color: var(--ios-surface);
+  color: var(--ios-text-primary);
+  border-color: var(--ios-border);
+}
+
+[data-theme="light"] .progress-bar-fill.status-expired,
+[data-theme="light"] .card-progress-fill.status-expired,
+[data-theme="light"] .card-progress-fill.expired {
+  background-color: #ff453a;
 }
 
 /* ==========================================================================
