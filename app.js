@@ -1830,7 +1830,7 @@ function renderProgressBar(progressBarFill, item) {
 
   if (progressBarFill && progressBarFill.style) {
     progressBarFill.style.backgroundColor = bgColor;
-    progressBarFill.style.setProperty('background-color', bgColor, 'important');
+    progressBarFill.style.setProperty('background-color', status === 'expired' ? '#ff453a' : bgColor, 'important');
     progressBarFill.style.width = fillWidth;
   }
 

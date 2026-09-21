@@ -1,4 +1,10 @@
-/* ==========================================================================
+@font-face {
+  font-family: 'jf-openhuninn';
+  src: url('./jf-openhuninn-2.1.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* ============================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
    ========================================================================== */
 
@@ -150,7 +156,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-family: 'jf-openhuninn', 'Noto Sans TC', sans-serif;
   background-color: var(--ios-bg);
   color: var(--ios-text-primary);
   min-height: 100vh;
@@ -6252,6 +6258,27 @@ body.modal-open .view-panel {
   color: #ff6b22;
   text-shadow: 0 1px 8px rgba(255, 107, 34, 0.4);
 }
+
+/* 參考圖：暖米白文青配色；過期進度條固定純紅 */
+[data-theme="light"] {
+  --ios-bg: #f7f4ec;
+  --ios-surface: #fffdf8;
+  --ios-surface-elevated: #eee9dc;
+  --ios-surface-secondary: #f1ede3;
+  --ios-text-primary: #38332f;
+  --ios-text-secondary: #81776d;
+  --ios-text-muted: #aaa095;
+  --ios-border: rgba(125, 105, 85, .16);
+}
+[data-theme="light"] .ios-item-card,
+[data-theme="light"] .status-notice-card { background: #fffdf8; }
+[data-theme="light"] .home-filter-btn,
+[data-theme="light"] .pill-segment,
+[data-theme="light"] .btn-sort-menu-trigger,
+[data-theme="light"] .btn-move-order { background: #eee9dc; color: #38332f; }
+[data-theme="light"] .progress-bar-fill.status-expired,
+[data-theme="light"] .card-progress-fill.status-expired,
+[data-theme="light"] .card-progress-fill.expired { background-color: #ff453a !important; }
 
 [data-theme="amoled"] .notice-num.urgent {
   color: #ff9f0a;
