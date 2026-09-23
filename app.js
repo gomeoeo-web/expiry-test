@@ -1759,12 +1759,9 @@ function renderProgressBar(progressBarFill, item) {
   if (!item) return null;
 
   const theme = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : 'dark';
-  const isLight = theme === 'light';
-  const colors = theme === 'light'
-    ? { normal: '#52796f', warning: '#c87d55', expired: '#ff453a', muted: 'rgba(140,125,110,.18)' }
-    : theme === 'amoled'
-      ? { normal: '#9eb8aa', warning: '#e0a477', expired: '#ff453a', muted: 'rgba(158,184,170,.18)' }
-      : { normal: '#8fa89d', warning: '#d99a6c', expired: '#ff453a', muted: 'rgba(143,168,157,.16)' };
+  const inkGreen = typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#355c50' : '#355c50';
+  const dueAmber = typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--due-amber').trim() || '#a65b10' : '#a65b10';
+  const colors = { normal: inkGreen, warning: dueAmber, expired: '#ff453a', muted: inkGreen };
   const expDateStr = item.expiryDate || item.endDate;
   const isCountUp = item.trackingType === 'count_up' || !expDateStr || item.hasEndDate === false;
 
@@ -1845,11 +1842,13 @@ function renderProgressBar(progressBarFill, item) {
 function getItemStatusConfig(item, todayStr) {
   const theme = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : 'dark';
   const isLight = theme === 'light';
+  const inkGreen = typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#355c50' : '#355c50';
+  const dueAmber = typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--due-amber').trim() || '#a65b10' : '#a65b10';
   const colors = theme === 'light'
-    ? { normal: '#52796f', warning: '#c87d55', expired: '#ff453a', muted: 'rgba(140,125,110,.18)', text: '#7d756d' }
+    ? { normal: inkGreen, warning: dueAmber, expired: '#ff453a', muted: inkGreen, text: '#7d756d' }
     : theme === 'amoled'
-      ? { normal: '#9eb8aa', warning: '#e0a477', expired: '#ff453a', muted: 'rgba(158,184,170,.18)', text: '#b6c5bd' }
-      : { normal: '#8fa89d', warning: '#d99a6c', expired: '#ff453a', muted: 'rgba(143,168,157,.16)', text: 'rgba(255,255,255,.72)' };
+      ? { normal: inkGreen, warning: dueAmber, expired: '#ff453a', muted: inkGreen, text: '#b6c5bd' }
+      : { normal: inkGreen, warning: dueAmber, expired: '#ff453a', muted: inkGreen, text: 'rgba(255,255,255,.72)' };
   const expDateStr = item ? (item.expiryDate || item.endDate) : null;
   const isCountUp = !item || item.trackingType === 'count_up' || !expDateStr || item.hasEndDate === false;
 
@@ -1918,7 +1917,7 @@ function getItemStatusConfig(item, todayStr) {
   return {
     statusMark: 'status-normal',
     color: colors.normal,
-    textColor: colors.text,
+    textColor: colors.normal,
     text: `還有 ${diffDays.toLocaleString()} 天`,
     subMetricClass: 'status-normal',
     progressClass: 'progress-bar-fill status-normal',

@@ -513,9 +513,19 @@ function svg(category,sub='',className='') {
  const cls=String(className).replace(/[^a-zA-Z0-9 _-]/g,'');
  return `<svg class="flat-item-icon ${cls}" data-icon="${key}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="--icon-color:${COLORS[cat]||COLORS.other}" fill="none" stroke="${painted.outline}" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"><g>${artwork}</g></svg>`;
 }
-root.getCategoryIcon=(category,className='')=>{const cat=CATEGORIES[category]?category:(ALIAS_MAP[category]||'other');return svg(cat,'',className);};
-root.getItemIcon=item=>svg(CATEGORIES[item.category]?item.category:(item.iconHint||item.category),item.subCategory||item.subCat||item.name||'');
-root.getSubCategoryIcon=(category,sub)=>svg(category,sub);
+root.getCategoryIcon=(category,className='')=>{
+ category=root.getCustomCategoryIconHint?.(category)||category;
+ if (/\p{Extended_Pictographic}/u.test(String(category))) {
+  const label=String(category).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return `<span class="custom-category-emoji" aria-hidden="true">${label}</span>`;
+ }
+ const cat=CATEGORIES[category]?category:(ALIAS_MAP[category]||'other');return svg(cat,'',className);
+};
+root.getItemIcon=item=>root.getCustomCategoryIconHint?.(item.category)
+ ?root.getCategoryIcon(item.category)
+ :svg(CATEGORIES[item.category]?item.category:(item.iconHint||item.category),item.subCategory||item.subCat||item.name||'');
+root.getSubCategoryIcon=(category,sub)=>root.getCustomCategoryIconHint?.(category)
+ ?root.getCategoryIcon(category):svg(category,sub);
 root.CATEGORY_ICONS=Object.fromEntries(Object.keys(CATEGORIES).map(key=>[key,svg(key)]));
 root.SUBTYPE_ART=SUBTYPE_ART;
 root.ITEM_ICON_SHAPES=SHAPES;

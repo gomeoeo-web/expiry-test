@@ -1,0 +1,600 @@
+@font-face {
+  font-family: 'jf-openhuninn';
+  src: url('./jf-openhuninn-2.1.ttf') format('truetype');
+  font-display: swap;
+}
+
+body, button, input, textarea, select {
+  font-family: 'jf-openhuninn', 'Noto Sans TC', sans-serif;
+}
+
+.card-metric-main .metric-highlight-number { font-size: 1.75rem; }
+.card-metric-main { flex-wrap: wrap; }
+.card-metric-main .metric-pretext { white-space: nowrap; flex-shrink: 0; }
+.card-metric-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .25rem;
+  white-space: nowrap;
+}
+
+#rowScreenFit .settings-title,
+#rowScreenFit .settings-desc { grid-column: 2; }
+#rowScreenFit .screen-fit-select-wrap {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  justify-self: end;
+  align-self: center;
+  width: auto;
+  margin: 0;
+}
+#rowScreenFit .screen-fit-select { width: auto; font-size: .85rem; }
+
+/* 將裁切邊界移到內容外，為卡片與篩選按鈕陰影保留空間。 */
+.views-slider-viewport {
+  width: calc(100% + 24px);
+  margin-inline: -12px;
+}
+.views-slider-viewport .view-panel { padding-inline: 12px; }
+[data-theme="light"] .home-filter-btn.active {
+  box-shadow: 0 4px 8px rgba(45, 42, 38, .14) !important;
+}
+
+/* 留白放在捲動區外，避免靠左對齊時露出上一個膠囊。 */
+#categoryChipRow {
+  width: calc(100% - 24px);
+  margin-inline: 12px;
+  padding-inline: 6px;
+  scroll-padding-inline: 6px;
+  gap: 12px;
+}
+#categoryChipRow .category-chip { scroll-margin-inline: 0; }
+#categoryChipRow .category-chip {
+  flex: 0 0 auto;
+  font-weight: 700;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+#segmentedPillsBar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 12px 2px;
+}
+#segmentedPillsBar .home-filter-btn {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding-inline: .3rem;
+  gap: .25rem;
+}
+
+:root {
+  --ink-green: #49c775;
+  --button-green: #383838;
+  --button-gray: #303033;
+  --button-selected: #303033;
+  --button-border: #4d4d51;
+  --button-selected-border: #707074;
+  --button-text: #f3f5ef;
+  --delete-border: #694343;
+  --due-amber: #e6b553;
+  --expired-red: #ff453a;
+}
+[data-theme="light"] {
+  --ink-green: #52796f;
+  --button-green: #24473c;
+  --button-gray: #f7f3eb;
+  --button-selected: #dfe7e0;
+  --button-border: #d5dcd6;
+  --button-selected-border: #aebfb0;
+  --button-text: #38332f;
+  --delete-border: #f0d5cf;
+  --due-amber: #d66a16;
+  --ios-bg: #f8f6f0;
+  --ios-surface: #ffffff;
+  --ios-surface-elevated: #f1ece2;
+  --ios-surface-secondary: #f7f3eb;
+  --ios-dock-bg: rgba(247, 244, 236, .94);
+  --ios-border: rgba(125, 105, 85, .16);
+  --ios-text-primary: #38332f;
+  --ios-text-secondary: #776f66;
+  --ios-text-muted: #968c81;
+  --ios-green: #355c50;
+}
+[data-theme="amoled"] {
+  --ink-green: #39dc72;
+  --button-green: #282828;
+  --button-gray: #303033;
+  --button-selected: #303033;
+  --button-border: #4d4d51;
+  --button-selected-border: #707074;
+  --button-text: #f5f7f2;
+  --delete-border: #623838;
+}
+[data-theme="light"] body {
+  background-color: #f8f6f0;
+  background-image: linear-gradient(155deg, #fffdf9 0%, #f8f5ee 58%, #f4f0e7 100%);
+}
+:root:not([data-theme="light"]) button:where(:not(.danger,.confirm-active,.btn-clean-expired,.btn-modal-delete-item,.settings-row-btn,#btnSheetStart)) {
+  background: var(--button-gray) !important;
+  background-image: none !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+
+[data-theme="light"] .ios-item-card,
+[data-theme="light"] .status-notice-card,
+[data-theme="light"] .ios-action-sheet { background: var(--ios-surface); border-color: var(--ios-border); }
+[data-theme="light"] .card-icon-box,
+[data-theme="light"] .sheet-emoji { background: #f4efe5; border-color: var(--ios-border); }
+[data-theme="light"] .home-filter-btn:not(.active),
+[data-theme="light"] .category-chip:not(.active),
+[data-theme="light"] .pill-segment:not(.active),
+[data-theme="light"] .btn-sort-menu-trigger { background: var(--button-gray); color: var(--button-text); border-color: var(--button-border); }
+
+.home-filter-btn.active,
+:root .home-filter-btn[data-filter="all"].active,
+.pill-segment.active,
+.category-chip.active,
+.dock-tab.active,
+[data-theme="light"] .btn-group-settings-main,
+.btn-ios-primary,
+.ios-fab-btn,
+.fab-add-btn,
+#fabAddBtn,
+.floating-btn,
+.btn-add-items-to-cat,
+.btn-empty-add-to-cat,
+.btn-picker-quick,
+.btn-cat-order,
+.btn-move-order,
+.btn-circle-dark,
+.btn-circle-white,
+.btn-modal-close,
+.btn-switch-theme,
+.btn-sort-menu-trigger,
+.settings-row > button,
+.mode-pill.active,
+[data-theme="light"] .home-filter-btn[data-filter="all"].active,
+[data-theme="light"] #pillAll.active,
+[data-theme="light"] .home-filter-btn[data-filter="urgent"].active,
+[data-theme="light"] #pillUrgent.active,
+[data-theme="light"] .home-filter-btn[data-filter="expired"].active,
+[data-theme="light"] #pillExpired.active,
+[data-theme="light"] .dock-tab.active {
+  background: var(--button-gray) !important;
+  background-image: none !important;
+  border-color: var(--button-border) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+.home-filter-btn.active .filter-btn-text,
+:root .home-filter-btn[data-filter="all"].active .filter-btn-text,
+.category-chip.active .chip-label,
+.dock-tab.active .dock-label {
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+.dock-tab.active .dock-icon svg { stroke: var(--button-text) !important; }
+[data-theme="light"] .btn-group-settings-main span { color: var(--button-text) !important; }
+.dock-tab,
+[data-theme="light"] .dock-tab {
+  background: var(--button-gray) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+.dock-tab.active,
+[data-theme="light"] .dock-tab.active {
+  background: var(--button-selected) !important;
+  box-shadow: inset 0 0 0 1px var(--button-selected-border) !important;
+}
+#fabAddBtn svg, #fabAddBtn line {
+  fill: none !important;
+  stroke: var(--button-text) !important;
+}
+.dock-tab .dock-label,
+.dock-tab .dock-icon svg,
+[data-theme="light"] .dock-tab .dock-label,
+[data-theme="light"] .dock-tab .dock-icon svg {
+  color: var(--button-text) !important;
+  stroke: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+
+.progress-bar-fill.status-normal,
+.card-progress-fill.status-normal { background-color: var(--ink-green) !important; }
+.progress-bar-fill.status-warning,
+.card-progress-fill.status-warning,
+.card-progress-fill.urgent { background-color: var(--due-amber) !important; }
+[data-theme="amoled"] .progress-bar-fill.status-warning,
+[data-theme="amoled"] .card-progress-fill.status-warning { box-shadow: none; }
+.progress-bar-fill.status-expired,
+.card-progress-fill.status-expired,
+.card-progress-fill.expired { background-color: var(--expired-red) !important; }
+
+#pillCountUrgent, #pillUrgent.active #pillCountUrgent,
+.pill-counter.urgent {
+  background: #fff4e5 !important;
+  background-image: none !important;
+  color: var(--due-amber) !important;
+  -webkit-text-fill-color: var(--due-amber) !important;
+  border: 1px solid currentColor !important;
+}
+#pillCountExpired, #pillExpired.active #pillCountExpired,
+.pill-counter.expired {
+  background: #fff0ed !important;
+  background-image: none !important;
+  color: var(--expired-red) !important;
+  -webkit-text-fill-color: var(--expired-red) !important;
+  border: 1px solid currentColor !important;
+}
+#pillCountUrgent, #pillCountExpired { font-size: .88rem; font-weight: 900; }
+:root:not([data-theme="light"]) #pillCountUrgent,
+:root:not([data-theme="light"]) #pillCountExpired {
+  background: var(--button-gray) !important;
+  background-image: none !important;
+}
+:root:not([data-theme="light"]) #pillAll.active #pillCountAll {
+  background: #4b4b4b !important;
+  background-image: none !important;
+  border-color: #777 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #968c81 !important; opacity: .8; }
+[data-theme="light"] .card-note-preview,
+[data-theme="light"] .card-note-text { color: #81776d !important; opacity: .85; }
+
+[data-screen-fit="tablet"] .card-summary:has(.card-note-preview) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: .65rem;
+}
+[data-screen-fit="tablet"] .card-summary > .card-top-row,
+[data-screen-fit="tablet"] .card-summary > .card-item-title { grid-column: 1 / -1; }
+[data-screen-fit="tablet"] .card-summary > .card-metric-main,
+[data-screen-fit="tablet"] .card-summary > .card-metric-sub { grid-column: 1; }
+[data-screen-fit="tablet"] .card-summary > .card-note-preview {
+  grid-column: 2;
+  grid-row: 3 / 5;
+  align-self: center;
+  min-width: 0;
+  align-items: flex-start;
+}
+[data-screen-fit="tablet"] .card-note-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* 物品操作：暖紙白底、簡潔分組，保留確認操作的辨識色。 */
+[data-theme="light"] .ios-action-sheet {
+  background: #faf7f0;
+  border-color: #e5dfd3;
+  box-shadow: 0 12px 36px rgba(65, 54, 38, .13);
+}
+[data-theme="light"] .sheet-metrics-row,
+[data-theme="light"] .sheet-history-block { background: #f1eadf; }
+.sheet-actions-group {
+  gap: .1rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--ios-border);
+}
+.sheet-actions-group .btn-sheet-action,
+[data-theme="light"] .sheet-actions-group .btn-sheet-action,
+[data-theme="amoled"] .sheet-actions-group .btn-sheet-action {
+  justify-content: flex-start;
+  min-height: 46px;
+  padding: .6rem .75rem;
+  border: 1px solid var(--button-border) !important;
+  border-radius: 8px;
+  background: var(--button-gray) !important;
+  background-image: none !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+  box-shadow: none !important;
+  animation: none !important;
+  font-size: .9rem;
+  font-weight: 500;
+}
+.sheet-actions-group .btn-sheet-action svg { flex: 0 0 18px; stroke: currentColor; }
+.sheet-actions-group .btn-sheet-action:focus-visible { outline: 2px solid var(--ink-green); outline-offset: 2px; }
+.sheet-actions-group #btnSheetPending,
+.sheet-actions-group #btnSheetDelete { margin-top: .35rem; }
+.sheet-actions-group #btnSheetReset.confirm-active {
+  border-color: var(--due-amber) !important;
+  color: var(--due-amber) !important;
+  -webkit-text-fill-color: var(--due-amber) !important;
+}
+.sheet-actions-group #btnSheetStart {
+  background: var(--button-selected) !important;
+  border-color: var(--button-selected-border) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.sheet-actions-group #btnSheetStart span { color: #fff !important; -webkit-text-fill-color: #fff !important; }
+.sheet-actions-group #btnSheetDelete,
+.sheet-actions-group #btnSheetDelete.delete-confirm-active {
+  border-color: var(--delete-border) !important;
+  color: var(--expired-red) !important;
+  -webkit-text-fill-color: var(--expired-red) !important;
+}
+.sheet-actions-group #btnSheetDelete span { color: var(--expired-red) !important; -webkit-text-fill-color: var(--expired-red) !important; }
+.btn-clean-expired, .btn-modal-delete-item {
+  background: var(--button-gray) !important;
+  background-image: none !important;
+  color: var(--expired-red) !important;
+  -webkit-text-fill-color: var(--expired-red) !important;
+}
+
+/* 明亮模式：主要操作與上下選單的選中按鈕使用深灰。 */
+[data-theme="light"] .home-filter-btn.active,
+[data-theme="light"] .home-filter-btn[data-filter="all"].active,
+[data-theme="light"] #pillAll.active,
+[data-theme="light"] #pillUrgent.active,
+[data-theme="light"] #pillExpired.active,
+[data-theme="light"] .category-chip.active,
+[data-theme="light"] .pill-segment.active,
+[data-theme="light"] .mode-pill.active,
+[data-theme="light"] .dock-tab.active,
+[data-theme="light"] .btn-group-settings-main,
+[data-theme="light"] .btn-ios-primary,
+[data-theme="light"] #fabAddBtn,
+[data-theme="light"] #btnCameraScan,
+[data-theme="light"] .sheet-actions-group .btn-sheet-action.primary,
+[data-theme="light"] .sheet-actions-group #btnSheetStart {
+  background: #38383c !important;
+  background-image: none !important;
+  border-color: #38383c !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+[data-theme="light"] .home-filter-btn.active .filter-btn-text,
+[data-theme="light"] .home-filter-btn[data-filter="all"].active .filter-btn-text,
+[data-theme="light"] .category-chip.active .chip-label,
+[data-theme="light"] .dock-tab.active .dock-label,
+[data-theme="light"] .btn-group-settings-main span,
+[data-theme="light"] .sheet-actions-group .btn-sheet-action.primary span,
+[data-theme="light"] .sheet-actions-group #btnSheetStart span {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+[data-theme="light"] .dock-tab.active .dock-icon svg,
+[data-theme="light"] #fabAddBtn svg,
+[data-theme="light"] #fabAddBtn line { stroke: #fff !important; }
+[data-theme="light"] .dock-tab.active {
+  box-shadow: 0 6px 18px rgba(0,0,0,.16) !important;
+}
+[data-theme="light"] .dock-tab:not(.active) {
+  background: transparent !important;
+  color: #85878c !important;
+  -webkit-text-fill-color: #85878c !important;
+}
+[data-theme="light"] .dock-tab:not(.active) .dock-label,
+[data-theme="light"] .dock-tab:not(.active) .dock-icon svg {
+  color: #85878c !important;
+  stroke: #85878c !important;
+  -webkit-text-fill-color: #85878c !important;
+}
+[data-theme="light"] .floating-island-dock {
+  background: rgba(255,255,255,.96) !important;
+  border-color: #e5e0d8 !important;
+  box-shadow: 0 7px 26px rgba(62,54,40,.09);
+}
+[data-theme="light"] .btn-circle-dark,
+[data-theme="light"] .btn-circle-white,
+[data-theme="light"] .btn-modal-close {
+  background: #fff !important;
+  border-color: #ebe5db !important;
+  color: #38332f !important;
+  -webkit-text-fill-color: #38332f !important;
+}
+[data-theme="light"] #pillAll.active #pillCountAll {
+  background: #383838 !important;
+  background-image: none !important;
+  border-color: #686868 !important;
+}
+
+/* 深色與純黑：設定區塊比頁面底色稍亮，呈現層次。 */
+:root:not([data-theme="light"]) #btnOpenSettings {
+  background: var(--button-gray) !important;
+  border-color: var(--button-border) !important;
+}
+[data-theme="dark"] #settingsModal .ios-modal-card,
+[data-theme="dark"] #settingsModal .ios-settings-list { background: #151515 !important; }
+[data-theme="amoled"] #settingsModal .ios-modal-card,
+[data-theme="amoled"] #settingsModal .ios-settings-list { background: #000 !important; }
+:root:not([data-theme="light"]) .settings-group {
+  background: #272729 !important;
+  border-color: var(--button-border) !important;
+}
+[data-theme="amoled"] #settingsModal .settings-group { background: #202022 !important; }
+:root:not([data-theme="light"]) .settings-group .settings-row,
+:root:not([data-theme="light"]) .settings-group .settings-row-btn {
+  background: transparent !important;
+  border-bottom-color: var(--button-border) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+:root:not([data-theme="light"]) .settings-group .settings-row > button {
+  background: var(--button-gray) !important;
+  border-color: var(--button-border) !important;
+}
+:root:not([data-theme="light"]) .settings-group .settings-row-btn.text-danger,
+:root:not([data-theme="light"]) .settings-group .settings-row-btn.text-danger .settings-title {
+  color: var(--expired-red) !important;
+  -webkit-text-fill-color: var(--expired-red) !important;
+}
+:root:not([data-theme="light"]) .ios-switch input:checked + .ios-switch-slider {
+  background: #696969 !important;
+  border-color: #898989 !important;
+}
+
+/* 深色按鈕：按壓與選中狀態使用淺灰底、深色文字。 */
+:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan) {
+  --button-text: #202124;
+  background: #d4d4d8 !important;
+  background-image: none !important;
+  border-color: #e4e4e7 !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+  box-shadow: none !important;
+}
+:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan) :is(.dock-label, .filter-btn-text, .chip-label),
+:root:not([data-theme="light"]) body .btn-sheet-action:active:not(#btnCameraScan) span,
+:root:not([data-theme="light"]) body .settings-row-btn:active :is(.settings-title, .settings-subtitle) {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
+:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan) svg {
+  color: #202124 !important;
+  stroke: #202124 !important;
+}
+
+/* 智慧鏡頭固定藍色，所有主題保持白色圖示。 */
+#btnCameraScan,
+[data-theme="light"] #btnCameraScan {
+  background: #287ce8 !important;
+  background-image: none !important;
+  border-color: #287ce8 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+#btnCameraScan svg { stroke: #fff !important; }
+
+:root body .sheet-actions-group #btnSheetStart,
+:root body .sheet-actions-group button#btnSheetStart:active {
+  --button-text: #fff;
+  background: #237be8 !important;
+  border-color: #237be8 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+:root body .sheet-actions-group #btnSheetStart span,
+:root body .sheet-actions-group #btnSheetStart svg,
+:root:not([data-theme="light"]) body .sheet-actions-group #btnSheetStart:active span,
+:root:not([data-theme="light"]) body .sheet-actions-group #btnSheetStart:active svg {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  stroke: currentColor !important;
+}
+
+#pendingEmpty::before { content: none; }
+#btnAddPendingEmpty {
+  display: block;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  border: 1px solid var(--button-border);
+  border-radius: 18px;
+  background: var(--button-gray);
+  color: var(--button-text);
+  font-size: 28px;
+  cursor: pointer;
+}
+.custom-category-emoji { display: inline-block; line-height: 1.2; }
+
+#cameraScanModal {
+  --camera-panel: #252527;
+  --camera-control: #3b3b3e;
+  --camera-text: #f5f5f7;
+  --camera-muted: #b9b9c0;
+  --camera-accent: #8ec5ff;
+  --camera-accent-bg: #203b55;
+}
+[data-theme="light"] #cameraScanModal {
+  --camera-panel: #faf7f0;
+  --camera-control: #e8e4dc;
+  --camera-text: #38332f;
+  --camera-muted: #776f66;
+  --camera-accent: #185a9d;
+  --camera-accent-bg: #e0edfa;
+}
+[data-theme="amoled"] #cameraScanModal { --camera-panel: #141414; }
+#cameraScanModal .camera-scan-card,
+#cameraScanModal .camera-modal-header,
+#cameraScanModal .camera-bottom-controls {
+  background: var(--camera-panel);
+  color: var(--camera-text);
+  border-color: var(--ios-border);
+}
+#cameraScanModal .camera-title-text { color: var(--camera-text); }
+#cameraScanModal .camera-subtitle-text { color: var(--camera-muted); }
+#cameraScanModal :is(.camera-control-btn, .camera-btn-close) {
+  background: var(--camera-control) !important;
+  color: var(--camera-text) !important;
+  -webkit-text-fill-color: var(--camera-text) !important;
+  border-radius: 50%;
+}
+#cameraScanModal .control-label { color: var(--camera-text); }
+#cameraScanModal .camera-quota-pill {
+  background: var(--camera-accent-bg);
+  color: var(--camera-accent);
+  border-color: var(--camera-accent);
+}
+#cameraScanModal .camera-quota-pill.quota-depleted { color: #ff453a; border-color: #ff453a; }
+#cameraScanModal .camera-zoom-btn {
+  background: #303033 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+:root #cameraScanModal .camera-zoom-btn.active {
+  background: #dceaff !important;
+  color: #153b66 !important;
+  -webkit-text-fill-color: #153b66 !important;
+  box-shadow: none;
+}
+#cameraScanModal #btnCameraShutter { background: transparent !important; border-color: var(--camera-muted); }
+#cameraScanModal .shutter-inner { background: var(--camera-text); }
+
+/* 物品操作採用兩欄緊湊方格。 */
+:root .sheet-actions-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 10px;
+}
+:root .sheet-actions-group button.btn-sheet-action {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 6px;
+  margin: 0;
+  border-radius: 14px;
+  gap: 6px;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.35;
+  font-size: .86rem;
+}
+:root .sheet-actions-group button.btn-sheet-action svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+:root .sheet-actions-group button.btn-sheet-action:not(#btnSheetStart) {
+  border: 1px solid var(--ios-border) !important;
+  margin: 0;
+}
+:root .sheet-actions-group button.btn-sheet-action:not(#btnSheetStart):not(:active) {
+  background: var(--button-gray) !important;
+}
+:root[data-theme="light"] .sheet-actions-group button.btn-sheet-action:not(#btnSheetStart):not(:active) {
+  background: #fffdf9 !important;
+}
+:root .sheet-actions-group #btnSheetEdit:not(:active),
+:root .sheet-actions-group #btnSheetEdit:not(:active) span {
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
+}
+:root .sheet-actions-group #btnSheetDelete {
+  border-color: var(--delete-border) !important;
+  border-radius: 14px;
+}

@@ -34,7 +34,7 @@
   --ios-blue: #0a84ff;
 
   /* 文青進度色：深色模式也維持低飽和 */
-  --progress-normal: #8fa89d;
+  --progress-normal: #355c50;
   --progress-warning: #d99a6c;
   --progress-expired: #d87870;
 
@@ -75,7 +75,7 @@
   --ios-red: #ff453a;
   --ios-red-bg: rgba(255, 69, 58, 0.25);
   --ios-blue: #0a84ff;
-  --progress-normal: #9eb8aa;
+  --progress-normal: #416b5d;
   --progress-warning: #e0a477;
   --progress-expired: #e1847b;
 }
@@ -120,7 +120,7 @@
   --ios-red: #b85d58;              /* 乾燥玫瑰粉紅（已過期警示） */
   --ios-red-bg: rgba(184, 93, 88, 0.12);
   --ios-blue: #5b7c8d;             /* 霧灰藍 */
-  --progress-normal: #52796f;
+  --progress-normal: #3f6859;
   --progress-warning: #c87d55;
   --progress-expired: #b85d58;
 }
@@ -6279,6 +6279,14 @@ body.modal-open .view-panel {
 [data-theme="light"] .progress-bar-fill.status-expired,
 [data-theme="light"] .card-progress-fill.status-expired,
 [data-theme="light"] .card-progress-fill.expired { background-color: #ff453a !important; }
+
+/* 墨深綠選單、正常進度；輸入提示與註解降低存在感 */
+.home-filter-btn.active, .pill-segment.active, .subcat-pill.active,
+.mode-pill.active, .btn-sort-menu-trigger.active { background: #355c50 !important; color: #fffdf8 !important; }
+.home-filter-btn.active *, .pill-segment.active *, .subcat-pill.active *, .mode-pill.active * { color: inherit !important; }
+.progress-bar-fill.status-normal, .card-progress-fill.status-normal { background: #355c50 !important; }
+input::placeholder, textarea::placeholder, .card-note-preview, .card-note-text,
+.ios-search-field input::placeholder, .header-smart-input::placeholder { color: #aaa095 !important; opacity: .72; }
 
 [data-theme="amoled"] .notice-num.urgent {
   color: #ff9f0a;

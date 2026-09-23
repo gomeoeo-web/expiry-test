@@ -10,9 +10,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=1.9.18">
   <style>
 /* ==========================================================================
@@ -7465,7 +7462,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 }
 
 </style>
-<script src="icons.js?v=1.9.18"></script>
+<script src="icons.js?v=1.9.32"></script>
 <style>
 /* Flat icon system: consistent silhouettes, no gradients, highlights or shadows. */
 .flat-item-icon {color:color-mix(in srgb,var(--icon-color) 70%,white);width:24px;height:24px;flex-shrink:0;vertical-align:middle;filter:none!important;}
@@ -7667,7 +7664,9 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important; }
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
-</style></head>
+</style>
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.36">
+</head>
 <body>
   <div class="ios-app-container">
     <!-- Top Header -->
@@ -7837,7 +7836,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
           <div class="view-panel" id="viewPanelPending" style="visibility:hidden;">
             <section class="pending-intro"><h2>待用物品 <span id="pendingCount">0</span></h2><p>暫存物品，啟用時移回主頁。</p><button type="button" class="btn-ios-primary" id="btnAddPending">＋ 新增待用物品</button></section>
-            <div class="items-compact-grid" id="pendingItemsGrid"></div><p id="pendingEmpty">尚無待用物品</p>
+            <div class="items-compact-grid" id="pendingItemsGrid"></div><div id="pendingEmpty"><button type="button" id="btnAddPendingEmpty" aria-label="新增待用物品">＋</button><p>尚無待用物品</p></div>
           </div>
         </div>
       </div>
@@ -7845,9 +7844,9 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
     <!-- Floating Action Button (FAB 右下角懸浮新增按鈕) -->
     <button type="button" id="fabAddBtn" class="ios-fab-btn fab-add-btn floating-btn" title="手動新增物品" aria-label="新增物品">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="stroke: #000000 !important; color: #000000 !important;">
-        <line x1="12" y1="5" x2="12" y2="19" stroke="#000000" style="stroke: #000000 !important;"></line>
-        <line x1="5" y1="12" x2="19" y2="12" stroke="#000000" style="stroke: #000000 !important;"></line>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
     </button>
 
@@ -8196,37 +8195,37 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
             <span>編輯物品資訊</span>
           </button>
 
-          <!-- 2. Duplicate Action (複製此物品) -->
-          <button type="button" class="btn-sheet-action" id="btnSheetDuplicate" title="複製此物品" aria-label="複製此物品">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>複製此物品</span>
-          </button>
-
-          <!-- 3. Reset Action (重設週期) -->
+          <!-- 2. Reset Action (重設週期) -->
           <button type="button" class="btn-sheet-action highlight" id="btnSheetReset" title="重設週期" aria-label="重設週期">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
             <span id="btnSheetResetText">重設週期</span>
           </button>
 
-          <!-- 3. Remove from Group Action (移出此群組) -->
-          <button type="button" class="btn-sheet-action" id="btnSheetRemoveGroup" style="display:none;" title="自此群組中移出" aria-label="移出此群組">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            <span>移出此群組</span>
+          <!-- 3. Duplicate Action (複製此物品) -->
+          <button type="button" class="btn-sheet-action" id="btnSheetDuplicate" title="複製此物品" aria-label="複製此物品">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>複製此物品</span>
           </button>
 
-          <!-- 3. Move to Pending Action (移入待用物品) -->
+          <!-- 4. Move to Pending Action (移入待用物品) -->
           <button type="button" class="btn-sheet-action" id="btnSheetPending">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18v13H3zM2 3h20v5H2zM9 12h6"/></svg>
             <span>移入待用物品</span>
           </button>
 
-          <!-- 3. Archive Action (封存) -->
+          <!-- 5. Remove from Group Action (移出此群組) -->
+          <button type="button" class="btn-sheet-action" id="btnSheetRemoveGroup" style="display:none;" title="自此群組中移出" aria-label="移出此群組">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>移出此群組</span>
+          </button>
+
+          <!-- 6. Archive Action (封存) -->
           <button type="button" class="btn-sheet-action" id="btnSheetArchive">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
             <span>封存此物品</span>
           </button>
 
-          <!-- 4. Delete Action (待用或現有物品刪除選項 class="pending-delete") -->
+          <!-- 7. Delete Action (待用或現有物品刪除選項 class="pending-delete") -->
           <button type="button" class="btn-sheet-action danger pending-delete" id="btnSheetDelete">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             <span>刪除此物品</span>
@@ -8282,14 +8281,14 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
             <div class="settings-icon">📐</div>
             <div class="settings-info">
               <span class="settings-title">視窗寬度與比例</span>
-              <span class="settings-desc" id="settingsScreenFitText">大螢幕 440px</span>
+              <span class="settings-desc" id="settingsScreenFitText">大螢幕</span>
             </div>
             <div class="screen-fit-select-wrap">
               <select id="selectScreenFit" class="screen-fit-select" title="選擇視窗寬度與比例">
-                <option value="standard">標準手機 390px</option>
-                <option value="plus" selected>大螢幕 440px</option>
-                <option value="tablet">平板寬幅 680px</option>
-                <option value="full">滿版自適應 100%</option>
+                <option value="standard">標準手機</option>
+                <option value="plus" selected>大螢幕</option>
+                <option value="tablet">平板寬幅</option>
+                <option value="full">滿版自適應</option>
               </select>
               <span class="select-arrow">▾</span>
             </div>
@@ -8308,9 +8307,9 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
             <div class="settings-icon">📷</div>
             <div class="settings-info">
               <span class="settings-title">今日辨識剩餘次數</span>
-              <span class="settings-desc">每日智慧鏡頭辨識上限 200 次，每日零點自動重置</span>
+              <span class="settings-desc">每日智慧鏡頭辨識上限 50 次，每日零點自動重置</span>
             </div>
-            <span class="settings-quota-pill" id="settingsSmartCameraQuota">剩餘 200 次</span>
+            <span class="settings-quota-pill" id="settingsSmartCameraQuota">剩餘 50 次</span>
           </div>
           <button type="button" class="settings-row-btn" onclick="window.revokeCloudPhotoConsent && window.revokeCloudPhotoConsent()">撤回照片上傳同意</button>
         </div>
@@ -8385,7 +8384,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
         <div class="camera-header-title">
           <div class="camera-title-row">
             <span class="camera-title-text">📷 掃描辨識</span>
-            <span class="camera-quota-pill" id="cameraShootingQuotaBadge">今日剩餘 200 次</span>
+            <span class="camera-quota-pill" id="cameraShootingQuotaBadge">今日剩餘 50 次</span>
           </div>
           <span class="camera-subtitle-text">智慧鏡頭商品與效期辨識</span>
         </div>
@@ -8760,7 +8759,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
           <div class="ios-field" style="margin-top: 0.75rem;">
             <label>群組圖示</label>
             <div class="emoji-select-row">
-              <input type="text" id="newCatEmoji" class="emoji-input-box" value="🏷️" maxlength="4">
+              <input type="text" id="newCatEmoji" class="emoji-input-box" value="🏷️" maxlength="32" aria-label="自訂群組圖標">
               <div class="emoji-quick-pills" id="emojiQuickPills">
                 <button type="button" class="quick-emoji-btn" data-emoji="⛺">⛺</button>
                 <button type="button" class="quick-emoji-btn" data-emoji="🐱">🐱</button>
@@ -8826,7 +8825,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
         <div class="ios-field" style="margin-top: 0.85rem;">
           <label>群組圖示</label>
           <div class="emoji-select-row">
-            <input type="text" id="editCatEmoji" class="emoji-input-box" value="🏷️" maxlength="4">
+            <input type="text" id="editCatEmoji" class="emoji-input-box" value="🏷️" maxlength="32" aria-label="自訂群組圖標">
             <div class="emoji-quick-pills" id="editEmojiQuickPills">
               <button type="button" class="quick-emoji-btn" data-emoji="⛺">⛺</button>
               <button type="button" class="quick-emoji-btn" data-emoji="🐱">🐱</button>
@@ -10635,6 +10634,11 @@ var CapacitorBridgeBundle = (() => {
     return combined;
   }
 
+  window.getCustomCategoryIconHint = key => {
+    const category = getAllCategories()[key];
+    return category?.isCustom ? category.emoji || '🏷️' : '';
+  };
+
   function getCustomCategoryOrder() {
     try {
       const stored = localStorage.getItem(CATEGORY_ORDER_KEY);
@@ -10846,10 +10850,10 @@ var CapacitorBridgeBundle = (() => {
   // 螢幕比例與視窗大小適配狀態
   const SCREEN_FIT_KEY = 'lifespan_screen_fit';
   const SCREEN_FIT_LABELS = {
-    standard: '標準手機 390px',
-    plus: '大螢幕 440px',
-    tablet: '平板寬幅 680px',
-    full: '滿版自適應 100%'
+    standard: '標準手機',
+    plus: '大螢幕',
+    tablet: '平板寬幅',
+    full: '滿版自適應'
   };
 
   function setScreenFit(fitMode, save = true) {
@@ -10859,7 +10863,7 @@ var CapacitorBridgeBundle = (() => {
     const selectScreenFit = document.getElementById('selectScreenFit');
     const settingsScreenFitText = document.getElementById('settingsScreenFitText');
     if (selectScreenFit) selectScreenFit.value = mode;
-    if (settingsScreenFitText) settingsScreenFitText.textContent = SCREEN_FIT_LABELS[mode] || '大螢幕 440px';
+    if (settingsScreenFitText) settingsScreenFitText.textContent = SCREEN_FIT_LABELS[mode] || '大螢幕';
     if (save) {
       localStorage.setItem(SCREEN_FIT_KEY, mode);
       showToast(`已套用視窗比例：${SCREEN_FIT_LABELS[mode]}`);
@@ -11921,7 +11925,7 @@ var CapacitorBridgeBundle = (() => {
 
   function renderApp() {
     renderPendingItems();
-    document.querySelectorAll('.dock-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab===currentNavTab));
+    updateDockSelection(pendingNavTab || currentNavTab);
     if(currentNavTab==='pending') {
       if(headerSublabel) headerSublabel.textContent='待用物品';
       if(headerMainTitle) headerMainTitle.textContent='待用物品';
@@ -12198,12 +12202,14 @@ var CapacitorBridgeBundle = (() => {
     if (!item) return null;
 
     const isLight = typeof document !== 'undefined' && document.documentElement && document.documentElement.getAttribute('data-theme') === 'light';
+    const inkGreen = getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#355c50';
+    const dueAmber = getComputedStyle(document.documentElement).getPropertyValue('--due-amber').trim() || '#a65b10';
     const expDateStr = item.expiryDate || item.endDate;
     const isCountUp = item.trackingType === 'count_up' || !expDateStr || item.hasEndDate === false;
 
     // 1. 排除無到期日／僅記使用天數的項目
     if (isCountUp) {
-      const defaultColor = isLight ? 'rgba(140, 125, 110, 0.18)' : 'rgba(255, 255, 255, 0.15)';
+      const defaultColor = inkGreen;
       if (progressBarFill && progressBarFill.style) {
         progressBarFill.style.backgroundColor = defaultColor;
         progressBarFill.style.setProperty('background-color', defaultColor, 'important');
@@ -12231,12 +12237,12 @@ var CapacitorBridgeBundle = (() => {
     if (diffDays < 0) {
       // 【情況 A：已過期】diffDays < 0
       status = 'expired';
-      bgColor = isLight ? '#b85d58' : '#FF453A'; // 淺色：乾燥玫瑰粉紅；深色：純紅
+      bgColor = '#ff453a';
       fillWidth = '100%';
     } else if (diffDays >= 0 && diffDays <= 3) {
       // 【情況 B：即將到期】diffDays >= 0 且 diffDays <= 3（3天內，包含今天與第3天）
       status = 'warning';
-      bgColor = isLight ? '#c87d55' : '#FF9F0A'; // 淺色：暖杏陶土橘；深色：警告橘
+      bgColor = dueAmber;
       let percent = 100;
       if (item.startDate) {
         const start = new Date(item.startDate);
@@ -12249,7 +12255,7 @@ var CapacitorBridgeBundle = (() => {
     } else {
       // 【情況 C：安全正常】diffDays > 3（4天、6天、100天以上）
       status = 'normal';
-      bgColor = isLight ? '#52796f' : 'rgba(255, 255, 255, 0.25)'; // 淺色：鼠尾草灰綠；深色：微透白
+      bgColor = inkGreen;
       let percent = 100;
       if (item.startDate) {
         const start = new Date(item.startDate);
@@ -12299,7 +12305,7 @@ var CapacitorBridgeBundle = (() => {
     let subMetricText = '';
     let subMetricClass = '';
     let statusClass = 'status-normal';
-    let progressBgColor = isLight ? 'rgba(140, 125, 110, 0.28)' : 'rgba(255, 255, 255, 0.25)';
+    let progressBgColor = getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#355c50';
     let progressWidth = '100%';
     let metricTextColor = isLight ? '#7d756d' : 'rgba(255, 255, 255, 0.7)';
 
@@ -12307,7 +12313,7 @@ var CapacitorBridgeBundle = (() => {
       subMetricText = '持續使用中 ⏳';
       subMetricClass = 'ongoing status-normal';
       statusClass = 'status-normal';
-      progressBgColor = isLight ? 'rgba(140, 125, 110, 0.18)' : 'rgba(255, 255, 255, 0.15)';
+      progressBgColor = getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#355c50';
       progressWidth = '100%';
       metricTextColor = isLight ? '#7d756d' : 'rgba(255, 255, 255, 0.7)';
     } else {
@@ -12322,7 +12328,7 @@ var CapacitorBridgeBundle = (() => {
         subMetricText = `已超過 ${Math.abs(diffDays)} 天`;
         subMetricClass = 'expired status-expired';
         statusClass = 'status-expired';
-        progressBgColor = isLight ? '#b85d58' : '#FF453A'; // 乾燥玫瑰粉紅 / 純紅
+        progressBgColor = '#ff453a';
         progressWidth = '100%';
         metricTextColor = isLight ? '#b85d58' : '#FF453A';
       } else if (diffDays >= 0 && diffDays <= 3) {
@@ -12330,17 +12336,17 @@ var CapacitorBridgeBundle = (() => {
         subMetricText = diffDays === 0 ? '今天到期' : `還有 ${formatNumber(diffDays)} 天`;
         subMetricClass = 'urgent status-warning';
         statusClass = 'status-warning';
-        progressBgColor = isLight ? '#c87d55' : '#FF9F0A'; // 暖杏陶土橘 / 警告橘
+        progressBgColor = getComputedStyle(document.documentElement).getPropertyValue('--due-amber').trim() || '#a65b10';
         progressWidth = `${m.percent > 0 ? m.percent : 20}%`;
-        metricTextColor = isLight ? '#c87d55' : '#FF9F0A';
+        metricTextColor = getComputedStyle(document.documentElement).getPropertyValue('--due-amber').trim() || '#a65b10';
       } else {
         // 【情況 C：安全正常】diffDays > 3（4天、6天、100天以上）
         subMetricText = `還有 ${formatNumber(diffDays)} 天`;
         subMetricClass = 'status-normal';
         statusClass = 'status-normal';
-        progressBgColor = isLight ? '#52796f' : 'rgba(255, 255, 255, 0.25)'; // 淺色：鼠尾草灰綠；深色：微透白
+        progressBgColor = getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#355c50';
         progressWidth = `${m.percent > 0 ? m.percent : 15}%`;
-        metricTextColor = isLight ? '#52796f' : 'rgba(255, 255, 255, 0.7)';
+        metricTextColor = getComputedStyle(document.documentElement).getPropertyValue('--ink-green').trim() || '#49c775';
       }
     }
 
@@ -12352,7 +12358,7 @@ var CapacitorBridgeBundle = (() => {
     }
 
     card.innerHTML = `
-      <div>
+      <div class="card-summary">
         <!-- Top Row: Icon/Photo container + Category label -->
         <div class="card-top-row">
           <div class="card-icon-box">
@@ -12367,8 +12373,7 @@ var CapacitorBridgeBundle = (() => {
         <!-- Main Metric: 已使用 12 天 -->
         <div class="card-metric-main">
           <span class="metric-pretext">已使用</span>
-          <span class="metric-highlight-number">${m.elapsedDays}</span>
-          <span class="metric-unit">天</span>
+          <span class="card-metric-value"><span class="metric-highlight-number">${m.elapsedDays}</span><span class="metric-unit">天</span></span>
         </div>
 
         <!-- Sub Metric: 還有 1,085 天 或 持續使用中 -->
@@ -14293,6 +14298,7 @@ var CapacitorBridgeBundle = (() => {
     });
   });
   document.getElementById('btnAddPending').onclick=()=>openAddModal();
+  document.getElementById('btnAddPendingEmpty').onclick=()=>openAddModal();
   const btnSheetStart = document.getElementById('btnSheetStart');
   if (btnSheetStart) {
     btnSheetStart.onclick = () => {
@@ -15018,7 +15024,6 @@ var CapacitorBridgeBundle = (() => {
   let pendingNavTab = null;
   let navigationInProgress = false;
   let navigationStartTab = 'today';
-  let navigationScrollY = 0;
   let navigationAnimationFrame = 0;
 
   function setPanelsSwipingState(swiping) {
@@ -15037,18 +15042,22 @@ var CapacitorBridgeBundle = (() => {
     }
   }
 
+  function updateDockSelection(tab) {
+    document.querySelectorAll('.dock-tab').forEach(button => {
+      const active = button.dataset.tab === tab;
+      button.classList.toggle('active', active);
+      if (active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    });
+  }
+
   function setActivePanel(tab) {
     navTabs.forEach(key => {
       const active = key === tab;
       navPanels[key].classList.toggle('active-panel', active);
       navPanels[key].style.visibility = active ? 'visible' : 'hidden';
-      const button = document.querySelector('.dock-tab[data-tab="' + key + '"]');
-      if (button) {
-        button.classList.toggle('active', active);
-        if (active) button.setAttribute('aria-current', 'page');
-        else button.removeAttribute('aria-current');
-      }
     });
+    updateDockSelection(tab);
     syncContainerHeight(tab);
   }
 
@@ -15063,7 +15072,6 @@ var CapacitorBridgeBundle = (() => {
     if (navigationInProgress) return;
     navigationInProgress = true;
     navigationStartTab = currentNavTab;
-    navigationScrollY = window.scrollY || window.pageYOffset || 0;
     viewsSliderViewport.style.height = '';
     setPanelsSwipingState(true);
     navTabs.forEach(key => {
@@ -15095,10 +15103,6 @@ var CapacitorBridgeBundle = (() => {
     setActivePanel(tab);
     clearIncomingPanelTransform();
 
-    if (tab !== navigationStartTab && navigationScrollY > 0) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-
     setPanelsSwipingState(false);
     navigationInProgress = false;
     pendingNavTab = null;
@@ -15110,6 +15114,10 @@ var CapacitorBridgeBundle = (() => {
 
   function switchViewTab(tab, smooth = true, isUserClick = false) {
     if (!navTabs.includes(tab)) return;
+    if (isUserClick && navigationInProgress && pendingNavTab === tab) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (tab === currentNavTab && !navigationInProgress) {
       viewsSliderViewport.scrollTo({ left: navTabs.indexOf(tab) * viewsSliderViewport.clientWidth, behavior: 'instant' });
       if (isUserClick) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -15120,10 +15128,8 @@ var CapacitorBridgeBundle = (() => {
     clearTimeout(panelSwitchSettleTimer);
     panelSwitchSettleTimer = null;
 
-    if (isUserClick && (window.scrollY || window.pageYOffset || 0) > 0) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-
+    updateDockSelection(tab);
+    updateNavigationLabels(tab);
     prepareIncomingPanelForSwipe();
     pendingNavTab = tab;
     hasSwipedHorizontally = true;
@@ -15241,7 +15247,7 @@ var CapacitorBridgeBundle = (() => {
         if (chipIdx === 0) {
           categoryChipRow.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          const targetLeft = Math.max(0, this.getBoundingClientRect().left - categoryChipRow.getBoundingClientRect().left + categoryChipRow.scrollLeft - 12);
+          const targetLeft = Math.max(0, Math.floor(this.getBoundingClientRect().left - categoryChipRow.getBoundingClientRect().left + categoryChipRow.scrollLeft - 6));
           categoryChipRow.scrollTo({ left: targetLeft, behavior: 'smooth' });
         }
         updateCategoryActionBar();
@@ -15260,7 +15266,7 @@ var CapacitorBridgeBundle = (() => {
           if (activeChip === categoryChipRow.firstElementChild) {
             categoryChipRow.scrollTo({ left: 0, behavior: 'instant' });
           } else {
-            const targetLeft = Math.max(0, activeChip.getBoundingClientRect().left - categoryChipRow.getBoundingClientRect().left + categoryChipRow.scrollLeft - 12);
+            const targetLeft = Math.max(0, Math.floor(activeChip.getBoundingClientRect().left - categoryChipRow.getBoundingClientRect().left + categoryChipRow.scrollLeft - 6));
             categoryChipRow.scrollTo({ left: targetLeft, behavior: 'smooth' });
           }
         }
@@ -18466,9 +18472,9 @@ function extractCleanName(rawText) {
   }
 
   // ==========================================
-  // 智慧鏡頭每日額度管理 (每日上限 200 次 v1.9.4)
+  // 智慧鏡頭每日額度管理 (每日上限 50 次)
   // ==========================================
-  const SMART_LENS_DAILY_LIMIT = 200;
+  const SMART_LENS_DAILY_LIMIT = 50;
   const SMART_LENS_QUOTA_KEY = 'expiry_smart_lens_quota_v1';
 
   function getSmartLensTodayKey() {
@@ -18965,7 +18971,7 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.18"></script>
+  <script type="module" src="app.js?v=1.9.20"></script>
   <script type="module" src="cloud-camera.js?v=1.9.18"></script>
 
 <script>
