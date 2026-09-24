@@ -15061,6 +15061,57 @@ var CapacitorBridgeBundle = (() => {
     switchViewTab('inventory', true, true);
   });
 
+  let dockDrag = null;
+  let suppressDockClick = false;
+  dockMotionElement.addEventListener('pointerdown', event => {
+    if (!event.isPrimary || event.button !== 0 || !event.target.closest('.dock-tab')) return;
+    dockDrag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false };
+  });
+  window.addEventListener('pointermove', event => {
+    if (!dockDrag || event.pointerId !== dockDrag.id) return;
+    const dx = event.clientX - dockDrag.startX;
+    const dy = event.clientY - dockDrag.startY;
+    if (!dockDrag.moved) {
+      if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+      dockDrag.moved = true;
+      cancelAnimationFrame(navigationAnimationFrame);
+      navigationAnimationFrame = 0;
+      clearTimeout(panelSwitchSettleTimer);
+      panelSwitchSettleTimer = null;
+      pendingNavTab = null;
+      prepareIncomingPanelForSwipe();
+      viewsSliderViewport.style.scrollSnapType = 'none';
+      dockMotionElement.setPointerCapture(event.pointerId);
+    }
+    if (event.cancelable) event.preventDefault();
+    const first = dockMotionButtons[0].getBoundingClientRect();
+    const last = dockMotionButtons[dockMotionButtons.length - 1].getBoundingClientRect();
+    const min = first.left + first.width / 2;
+    const max = last.left + last.width / 2;
+    const progress = Math.max(0, Math.min(1, (event.clientX - min) / Math.max(1, max - min)));
+    viewsSliderViewport.scrollTo({ left: progress * (navTabs.length - 1) * viewsSliderViewport.clientWidth, behavior: 'instant' });
+    syncDockMotion();
+  }, { passive: false });
+  function finishDockDrag() {
+    if (!dockDrag) return;
+    const moved = dockDrag.moved;
+    dockDrag = null;
+    if (!moved) return;
+    viewsSliderViewport.style.scrollSnapType = '';
+    const width = viewsSliderViewport.clientWidth;
+    const index = Math.max(0, Math.min(navTabs.length - 1, Math.round(viewsSliderViewport.scrollLeft / width)));
+    suppressDockClick = true;
+    setTimeout(() => { suppressDockClick = false; }, 0);
+    switchViewTab(navTabs[index], true);
+  }
+  window.addEventListener('pointerup', finishDockDrag);
+  window.addEventListener('pointercancel', finishDockDrag);
+  dockMotionElement.addEventListener('click', event => {
+    if (!suppressDockClick || !event.target.closest('.dock-tab')) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+
   // 動態渲染分類膠囊標籤, 僅顯示主頁物品庫中實際已有物品的分類, 第一個群組預設在最左側, 支援群組狀態記憶與平滑對齊
   function renderCategoryChips() {
     const categoryChipRow = document.getElementById('categoryChipRow');

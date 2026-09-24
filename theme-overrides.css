@@ -18,9 +18,9 @@ body, button, input, textarea, select {
    the home-indicator inset inside the sheet so no backdrop-colored strip
    remains at the bottom of the screen. */
 #actionSheet.ios-action-backdrop {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(10px) saturate(115%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(115%) !important;
   padding-bottom: 0.75rem;
 }
 
@@ -901,6 +901,11 @@ body::before {
   background: #38383c;
   box-shadow: 0 3px 12px rgba(0, 0, 0, .16);
   pointer-events: none;
+}
+.floating-island-dock.dock-motion-ready {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 :root body .floating-island-dock.dock-motion-ready .dock-tab {
   z-index: 1;
