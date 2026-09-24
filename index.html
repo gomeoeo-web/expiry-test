@@ -14882,6 +14882,7 @@ var CapacitorBridgeBundle = (() => {
   let navigationInProgress = false;
   let navigationStartTab = 'today';
   let navigationAnimationFrame = 0;
+  let dockDrag = null;
 
   const dockMotionElement = document.querySelector('.floating-island-dock');
   const dockMotionButtons = navTabs.map(tab => dockMotionElement.querySelector(`[data-tab="${tab}"]`));
@@ -15061,7 +15062,6 @@ var CapacitorBridgeBundle = (() => {
     switchViewTab('inventory', true, true);
   });
 
-  let dockDrag = null;
   let suppressDockClick = false;
   dockMotionElement.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0 || !event.target.closest('.dock-tab')) return;
@@ -16191,7 +16191,7 @@ var CapacitorBridgeBundle = (() => {
     }
 
     function checkSettled() {
-      if (touchActive || isMouseDragging || navigationAnimationFrame) {
+      if (touchActive || isMouseDragging || dockDrag?.moved || navigationAnimationFrame) {
         settleAttempts = 0;
         return;
       }
