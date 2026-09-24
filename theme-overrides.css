@@ -164,7 +164,7 @@ body::before {
 
 /* Keep the search field and settings control crisp against the solid header. */
 @media (max-width: 600px) {
-  .ios-header { margin-top: 10px; }
+  .ios-header { margin-top: 25px; }
 }
 .ios-header,
 .ios-header * {
