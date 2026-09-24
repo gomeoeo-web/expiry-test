@@ -113,8 +113,8 @@ body, button, input, textarea, select {
   --delete-border: #623838;
 }
 [data-theme="light"] body {
-  background-color: #eeece5;
-  background-image: linear-gradient(180deg, #57534d 0%, #aaa69d 4.5rem, #eeece5 9rem);
+  background-color: #f3efe6;
+  background-image: linear-gradient(180deg, #1e3856 0%, #8090a2 4.5rem, #c9c9c2 7rem, #f3efe6 9rem);
 }
 
 /* 手機頂部狀態列與頁面共用背景，頂端加深以襯托白色系系統圖示。 */
@@ -123,8 +123,8 @@ body, button, input, textarea, select {
   background-image: none;
 }
 [data-theme="light"] body {
-  background-color: #eeece5;
-  background-image: linear-gradient(180deg, #57534d 0%, #aaa69d 4.5rem, #eeece5 9rem);
+  background-color: #f3efe6;
+  background-image: linear-gradient(180deg, #1e3856 0%, #8090a2 4.5rem, #c9c9c2 7rem, #f3efe6 9rem);
 }
 [data-theme="amoled"] body {
   background-color: #000;
@@ -142,11 +142,15 @@ body::before {
   height: env(safe-area-inset-top, 0px);
   z-index: 999;
   pointer-events: none;
-  background: #eeece5;
+  background: #1e3856;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 :root:not([data-theme="light"]) body::before { background: #111; }
+[data-theme="light"] body::before {
+  background: linear-gradient(180deg, #1e3856 0%, #8090a2 4.5rem, #c9c9c2 7rem, #f3efe6 9rem);
+  background-size: 100% 9rem;
+}
 [data-theme="amoled"] body::before { background: #000; }
 
 /* App-owned consent layer avoids native dialog placement bugs in mobile WebViews. */
