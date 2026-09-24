@@ -68,6 +68,15 @@ body, button, input, textarea, select {
   padding-inline: .3rem;
   gap: .25rem;
 }
+#segmentedPillsBar .filter-btn-badge {
+  box-sizing: border-box;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 .42rem .16rem;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+}
 
 :root {
   --ink-green: #49c775;
@@ -112,11 +121,6 @@ body, button, input, textarea, select {
   --button-text: #f5f7f2;
   --delete-border: #623838;
 }
-[data-theme="light"] body {
-  background-color: #f3efe6;
-  background-image: linear-gradient(180deg, #1e3856 0%, #8090a2 4.5rem, #c9c9c2 7rem, #f3efe6 9rem);
-}
-
 /* 手機頂部狀態列與頁面共用背景，頂端加深以襯托白色系系統圖示。 */
 :root body {
   background-color: #111111;
@@ -124,7 +128,7 @@ body, button, input, textarea, select {
 }
 [data-theme="light"] body {
   background-color: #f3efe6;
-  background-image: linear-gradient(180deg, #1e3856 0%, #8090a2 4.5rem, #c9c9c2 7rem, #f3efe6 9rem);
+  background-image: linear-gradient(180deg, #8fa68a 0 10rem, #b8c8af 17rem, #e2e5d8 24rem, #f3efe6 31rem);
 }
 [data-theme="amoled"] body {
   background-color: #000;
@@ -142,16 +146,40 @@ body::before {
   height: env(safe-area-inset-top, 0px);
   z-index: 999;
   pointer-events: none;
-  background: #1e3856;
+  background: #8fa68a;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 :root:not([data-theme="light"]) body::before { background: #111; }
 [data-theme="light"] body::before {
-  background: linear-gradient(180deg, #1e3856 0%, #8090a2 4.5rem, #c9c9c2 7rem, #f3efe6 9rem);
-  background-size: 100% 9rem;
+  background: #8fa68a;
 }
 [data-theme="amoled"] body::before { background: #000; }
+
+/* Keep the search field and settings control crisp against the solid header. */
+.ios-header,
+.ios-header * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+.ios-header .header-smart-input,
+.ios-header .header-smart-camera,
+.ios-header #btnOpenSettings,
+.ios-header .app-version-badge { box-shadow: none !important; }
+.ios-header .header-smart-input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+[data-theme="light"] .ios-header .header-smart-input,
+[data-theme="light"] .ios-header #btnOpenSettings {
+  background: #fff !important;
+  border: 1.5px solid #d6d8dc !important;
+}
+[data-theme="light"] .ios-header .header-smart-input::placeholder {
+  color: #5f6268 !important;
+  opacity: 1 !important;
+}
 
 /* App-owned consent layer avoids native dialog placement bugs in mobile WebViews. */
 .cloud-consent-overlay {
