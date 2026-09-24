@@ -113,9 +113,110 @@ body, button, input, textarea, select {
   --delete-border: #623838;
 }
 [data-theme="light"] body {
-  background-color: #f8f6f0;
-  background-image: linear-gradient(155deg, #fffdf9 0%, #f8f5ee 58%, #f4f0e7 100%);
+  background-color: #eeece5;
+  background-image: linear-gradient(180deg, #57534d 0%, #aaa69d 4.5rem, #eeece5 9rem);
 }
+
+/* 手機頂部狀態列與頁面共用背景，頂端加深以襯托白色系系統圖示。 */
+:root body {
+  background-color: #111111;
+  background-image: none;
+}
+[data-theme="light"] body {
+  background-color: #eeece5;
+  background-image: linear-gradient(180deg, #57534d 0%, #aaa69d 4.5rem, #eeece5 9rem);
+}
+[data-theme="amoled"] body {
+  background-color: #000;
+  background-image: none;
+}
+
+/* 群組管理：暖紙色與鼠尾草綠，降低表單與控制項的視覺負擔。 */
+#customCategoryModal,
+#editCategoryModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10050 !important;
+  align-items: center;
+  justify-content: center;
+}
+#customCategoryModal .ios-modal-card {
+  background: linear-gradient(180deg, #f2efe8 0%, #e8e5dd 100%);
+  color: #3d3a35;
+  border: 1px solid rgba(110, 103, 91, .18);
+  box-shadow: 0 22px 60px rgba(55, 49, 38, .2);
+}
+#customCategoryModal .ios-modal-header { border-bottom-color: rgba(108, 119, 91, .14); }
+#customCategoryModal .ios-modal-header h2,
+#customCategoryModal .category-create-title,
+#customCategoryModal .category-list-title { color: #3f5145; }
+#customCategoryModal .category-create-card,
+#customCategoryModal .cat-manage-item {
+  background: rgba(255, 253, 247, .78);
+  border-color: rgba(108, 119, 91, .2);
+  box-shadow: 0 3px 12px rgba(67, 62, 49, .045);
+}
+#customCategoryModal .category-create-card { padding: .95rem 1rem; }
+#customCategoryModal .category-create-card > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+}
+#customCategoryModal .category-create-card > summary::-webkit-details-marker { display: none; }
+#customCategoryModal .category-create-card > summary span,
+#customCategoryModal .category-list-title span {
+  color: #8a897b;
+  font-size: .75rem;
+  font-weight: 400;
+}
+#customCategoryModal .category-create-card[open] > summary { margin-bottom: .9rem; }
+#customCategoryModal .cat-manage-item { border-radius: 15px; padding: .72rem .82rem; }
+#customCategoryModal .category-list-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
+#customCategoryModal .category-list-title span { display:none; }
+#customCategoryModal .btn-category-reorder { border:0; border-radius:999px; padding:.48rem .9rem; background:#dfe5d7; color:#46584b; font:inherit; font-size:.82rem; font-weight:700; }
+#customCategoryModal .cat-manage-info { min-height:36px; }
+#customCategoryModal .cat-manage-actions { display:flex; align-items:center; justify-content:flex-end; gap:.5rem; }
+#customCategoryModal .cat-reorder-controls { display:flex; gap:.3rem; }
+#customCategoryModal .cat-reorder-controls[hidden] { display:none; }
+#customCategoryModal .cat-manage-item .btn-cat-order { width:34px; height:34px; border-radius:50%; font-size:1rem; }
+#customCategoryModal .cat-manage-item .btn-edit-cat { min-width:64px; justify-content:center; padding:.45rem .75rem; }
+#customCategoryModal .cat-manage-item .cat-badge-default { display:none; }
+#customCategoryModal .category-manage-list.reorder-mode::before { content:'使用箭頭調整順序，第一列會成為首頁'; display:block; margin-bottom:.25rem; color:#8a897b; font-size:.78rem; }
+#customCategoryModal .edit-category-utilities { display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-top:1rem; padding-top:.8rem; border-top:1px solid rgba(108,119,91,.14); }
+#customCategoryModal .edit-category-utilities button { font:inherit; font-size:.78rem; }
+#customCategoryModal #btnEditCategoryMakeFirst:disabled { opacity:.6; }
+#customCategoryModal .btn-set-first-page,
+#customCategoryModal .btn-edit-cat,
+#customCategoryModal .btn-cat-order,
+#customCategoryModal .group-page-select {
+  background: #e8e9dc !important;
+  border-color: rgba(108, 119, 91, .2) !important;
+  color: #46584b !important;
+}
+#customCategoryModal .btn-set-first-page:hover,
+#customCategoryModal .btn-edit-cat:hover { background: #dce4d6 !important; color: #344b3d !important; }
+#customCategoryModal .btn-delete-custom-cat { background: #f4e6df; border-color: #ead2c7; color: #a75d4b; }
+#customCategoryModal .badge-first-page { background: #e8ead8; color: #68754e; border-color: #d7ddc2; }
+#customCategoryModal .btn-reset-default-cats { color: #8a897b; border-color: rgba(108, 119, 91, .3); }
+[data-theme="dark"] #customCategoryModal .ios-modal-card,
+[data-theme="amoled"] #customCategoryModal .ios-modal-card {
+  background: linear-gradient(180deg, #35332f 0%, #292824 100%);
+  color: #efeee5;
+}
+[data-theme="dark"] #customCategoryModal .category-create-card,
+[data-theme="dark"] #customCategoryModal .cat-manage-item,
+[data-theme="amoled"] #customCategoryModal .category-create-card,
+[data-theme="amoled"] #customCategoryModal .cat-manage-item { background: rgba(255,255,255,.035); }
+[data-theme="dark"] #customCategoryModal .ios-modal-header h2,
+[data-theme="dark"] #customCategoryModal .category-create-title,
+[data-theme="dark"] #customCategoryModal .category-list-title,
+[data-theme="amoled"] #customCategoryModal .ios-modal-header h2,
+[data-theme="amoled"] #customCategoryModal .category-create-title,
+[data-theme="amoled"] #customCategoryModal .category-list-title { color: #d7dfcf; }
+[data-theme="dark"] #customCategoryModal .btn-category-reorder,
+[data-theme="amoled"] #customCategoryModal .btn-category-reorder { background:#39443a; color:#d7dfcf; }
 :root:not([data-theme="light"]) button:where(:not(.danger,.confirm-active,.btn-clean-expired,.btn-modal-delete-item,.settings-row-btn,#btnSheetStart)) {
   background: var(--button-gray) !important;
   background-image: none !important;

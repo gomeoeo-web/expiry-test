@@ -8742,14 +8742,14 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
     <div class="ios-modal-card ios-modal-sm">
       <div class="sheet-drag-handle" style="margin-top: 0.65rem; margin-bottom: 0.25rem;"></div>
       <div class="ios-modal-header" style="padding-top: 0.35rem;">
-        <h2>自訂群組與分頁順序</h2>
+        <h2>群組設定</h2>
         <button id="btnCloseCustomCategoryModal" class="btn-modal-close" aria-label="關閉">✕</button>
       </div>
 
-      <div class="ios-modal-scroll" style="padding: 1.25rem 1.25rem 3.5rem 1.25rem;">
+      <div class="ios-modal-scroll group-settings-scroll" style="padding: 1.25rem 1.25rem 3.5rem 1.25rem;">
         <!-- Add New Category Card -->
-        <div class="category-create-card">
-          <h3 class="category-create-title">➕ 新增自訂群組</h3>
+        <details class="category-create-card">
+          <summary class="category-create-title">＋ 新增自訂群組 <span>展開設定</span></summary>
           
           <div class="ios-field" style="margin-top: 0.75rem;">
             <label for="newCatName">群組名稱</label>
@@ -8789,11 +8789,14 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
           <button type="button" id="btnSaveNewCategory" class="btn-ios-primary" style="margin-top: 1rem; width: 100%;">
             建立自訂群組
           </button>
-        </div>
+        </details>
 
         <!-- Existing Categories List -->
-        <div class="existing-categories-section" style="margin-top: 1.5rem;">
-          <h3 class="category-list-title">現有群組清單 第一頁至第二十頁</h3>
+        <div class="existing-categories-section" style="margin-top: 1rem;">
+          <div class="category-list-heading">
+            <h3 class="category-list-title">我的群組</h3>
+            <button type="button" id="btnToggleCategoryReorder" class="btn-category-reorder">排序</button>
+          </div>
           <div class="category-manage-list" id="categoryManageList">
             <!-- Rendered by JS -->
           </div>
@@ -8843,6 +8846,11 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
         <div class="ios-field" style="margin-top: 0.85rem;">
           <label for="editCatSubItems">常用細項項目, 以逗號分隔</label>
           <input type="text" id="editCatSubItems" placeholder="例如：帳篷, 睡袋, 充氣墊, 營燈">
+        </div>
+
+        <div class="edit-category-utilities">
+          <button type="button" id="btnEditCategoryMakeFirst" class="btn-set-first-page">設為第一頁</button>
+          <button type="button" id="btnEditCategoryDelete" class="btn-delete-custom-cat">刪除此群組</button>
         </div>
 
         <div style="display: flex; gap: 0.65rem; margin-top: 1.35rem;">
@@ -9869,7 +9877,7 @@ var CapacitorBridgeBundle = (() => {
 */
 
 </script>
-  <script id="appLogicInline">
+  <script id="appLogicInline" type="module">
 /**
  * 期效管家 (LifeSpan Tracker) - 極簡 iOS 邏輯控制器
  * 支援：
@@ -15320,6 +15328,14 @@ var CapacitorBridgeBundle = (() => {
   // 自訂分類項目 Modal 控制器 (Custom Category Modal)
   // ==========================================
   const customCategoryModal = document.getElementById('customCategoryModal');
+  // 群組視窗必須放在 app 主容器外，避免滑動面板的 containment/visibility 規則裁切整個彈窗。
+  if (customCategoryModal && customCategoryModal.parentElement !== document.body) {
+    document.body.appendChild(customCategoryModal);
+  }
+  const editCategoryModalElement = document.getElementById('editCategoryModal');
+  if (editCategoryModalElement && editCategoryModalElement.parentElement !== document.body) {
+    document.body.appendChild(editCategoryModalElement);
+  }
   const btnCloseCustomCategoryModal = document.getElementById('btnCloseCustomCategoryModal');
   const firstPageCategorySelect = document.getElementById('firstPageCategorySelect');
   const newCatNameInput = document.getElementById('newCatName');
@@ -15521,7 +15537,11 @@ var CapacitorBridgeBundle = (() => {
     populateFirstPageCategorySelect();
     renderItemsPicker(newCatItemsPickerList, '', true);
     renderCategoryManageList();
-    customCategoryModal.style.display = 'flex';
+    customCategoryModal.classList.remove('modal-closing');
+    customCategoryModal.style.setProperty('display', 'flex', 'important');
+    customCategoryModal.style.visibility = 'visible';
+    customCategoryModal.style.opacity = '1';
+    customCategoryModal.style.pointerEvents = 'auto';
     lockBodyScroll();
   }
 
@@ -15531,7 +15551,20 @@ var CapacitorBridgeBundle = (() => {
 
   const btnOpenGroupSettings = document.getElementById('btnOpenGroupSettings');
   if (btnOpenGroupSettings) {
-    btnOpenGroupSettings.addEventListener('click', openCustomCategoryModal);
+    btnOpenGroupSettings.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openCustomCategoryModal();
+    });
+  }
+
+  const btnToggleCategoryReorder = document.getElementById('btnToggleCategoryReorder');
+  if (btnToggleCategoryReorder) {
+    btnToggleCategoryReorder.addEventListener('click', function () {
+      if (!categoryManageList) return;
+      categoryManageList.classList.toggle('reorder-mode');
+      renderCategoryManageList();
+    });
   }
 
   if (btnCloseCustomCategoryModal) {
@@ -15710,6 +15743,7 @@ var CapacitorBridgeBundle = (() => {
   function renderCategoryManageList() {
     if (!categoryManageList) return;
     categoryManageList.innerHTML = '';
+    const reorderMode = categoryManageList.classList.contains('reorder-mode');
     const allCats = getAllCategories();
     const firstPageKey = getFirstPageCategory();
     const catKeys = Object.keys(allCats);
@@ -15734,74 +15768,26 @@ var CapacitorBridgeBundle = (() => {
       const subCount = cat.items ? cat.items.length : 0;
       const isFirstPage = key === firstPageKey;
       const isFirst = idx === 0;
-      const isLast = idx === orderedKeys.length - 1;
       const pageName = PAGE_NAMES[idx] || `第 ${idx + 1} 頁`;
-
-      // 構建第一頁到第二十頁下拉選項
-      let pageOptions = '';
-      const totalPagesToShow = Math.min(20, Math.max(orderedKeys.length, 20));
-      for (let p = 0; p < totalPagesToShow; p++) {
-        const pLabel = PAGE_NAMES[p] || `第 ${p + 1} 頁`;
-        pageOptions += `<option value="${p}" ${p === idx ? 'selected' : ''}>${pLabel}</option>`;
-      }
-
       itemEl.innerHTML = `
         <div class="cat-manage-info">
           <div class="cat-manage-title-wrap">
             <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function') ? getCategoryIcon(cat.isCustom ? cat.emoji : key) : cat.emoji}</span>
             <span class="group-page-badge">${pageName}</span>
             <span class="cat-manage-label" title="${escapeHtml(cat.label)}">${escapeHtml(cat.label)}</span>
-            ${isPreset ? `<span class="cat-badge-default" style="font-size:0.7rem;padding:0.15rem 0.4rem;">預設</span>` : ''}
           </div>
           <span class="cat-manage-subcount">${subCount} 項細項</span>
         </div>
-        <div class="cat-actions-group">
-          <div class="cat-actions-left">
-            <div class="group-page-select-wrap" title="快速指定頁面">
-              <select class="group-page-select" data-cat-id="${key}">
-                ${pageOptions}
-              </select>
-              <span class="select-arrow">▾</span>
-            </div>
-            <div class="cat-order-btn-group">
-              <button type="button" class="btn-cat-order btn-cat-up" data-cat-id="${key}" ${isFirst ? 'disabled' : ''} title="群組順序上移一頁">▲</button>
-              <button type="button" class="btn-cat-order btn-cat-down" data-cat-id="${key}" ${isLast ? 'disabled' : ''} title="群組順序下移一頁">▼</button>
-            </div>
+        <div class="cat-manage-actions">
+          <div class="cat-reorder-controls" ${reorderMode ? '' : 'hidden'}>
+            <button type="button" class="btn-cat-order btn-cat-up" data-cat-id="${key}" ${isFirst ? 'disabled' : ''} aria-label="${escapeHtml(cat.label)} 上移">↑</button>
+            <button type="button" class="btn-cat-order btn-cat-down" data-cat-id="${key}" ${idx === orderedKeys.length - 1 ? 'disabled' : ''} aria-label="${escapeHtml(cat.label)} 下移">↓</button>
           </div>
-          <div class="cat-actions-right">
-            ${isFirstPage 
-              ? `<span class="badge-first-page">⭐️ 第一頁預設</span>` 
-              : `<button type="button" class="btn-set-first-page" data-cat-id="${key}">設為第一頁</button>`}
-            <button type="button" class="btn-edit-cat" data-cat-id="${key}" title="編輯此群組名稱、圖示與細項">✏️ 編輯</button>
-            <button type="button" class="btn-delete-custom-cat" data-cat-id="${key}" title="刪除此群組">🗑️ 刪除</button>
-          </div>
+          <button type="button" class="btn-edit-cat" data-cat-id="${key}" title="編輯群組">編輯</button>
         </div>
       `;
 
       categoryManageList.appendChild(itemEl);
-    });
-
-    // 綁定頁面下拉快速指定事件
-    categoryManageList.querySelectorAll('.group-page-select').forEach(sel => {
-      sel.addEventListener('change', function () {
-        const key = this.dataset.catId;
-        const targetIdx = parseInt(this.value, 10);
-        const keys = [...orderedKeys];
-        const fromIdx = keys.indexOf(key);
-        if (fromIdx !== -1 && fromIdx !== targetIdx && targetIdx < keys.length) {
-          keys.splice(fromIdx, 1);
-          keys.splice(targetIdx, 0, key);
-          saveCustomCategoryOrder(keys);
-          if (targetIdx === 0) {
-            setFirstPageCategory(key);
-          }
-          renderCategoryManageList();
-          renderCategoryChips();
-          renderCards();
-          const targetName = PAGE_NAMES[targetIdx] || `第 ${targetIdx + 1} 頁`;
-          showToast(`已將群組指定為 ${targetName}`);
-        }
-      });
     });
 
     // 綁定群組上移一頁與下移一頁事件
@@ -15845,6 +15831,11 @@ var CapacitorBridgeBundle = (() => {
         }
       });
     });
+
+    if (btnToggleCategoryReorder) {
+      btnToggleCategoryReorder.textContent = reorderMode ? '完成' : '排序';
+      btnToggleCategoryReorder.setAttribute('aria-pressed', String(reorderMode));
+    }
 
     categoryManageList.querySelectorAll('.btn-set-first-page').forEach(btn => {
       btn.addEventListener('click', function () {
@@ -16004,6 +15995,8 @@ var CapacitorBridgeBundle = (() => {
   const editCatSubItems = document.getElementById('editCatSubItems');
   const btnCancelEditCategory = document.getElementById('btnCancelEditCategory');
   const btnSaveEditCategory = document.getElementById('btnSaveEditCategory');
+  const btnEditCategoryMakeFirst = document.getElementById('btnEditCategoryMakeFirst');
+  const btnEditCategoryDelete = document.getElementById('btnEditCategoryDelete');
 
   function openEditCategoryModal(catId) {
     const allCats = getAllCategories();
@@ -16019,6 +16012,12 @@ var CapacitorBridgeBundle = (() => {
       subItemNames = cat.items.map(it => it.subCat || it.name).filter(Boolean);
     }
     if (editCatSubItems) editCatSubItems.value = subItemNames.join(', ');
+
+    if (btnEditCategoryMakeFirst) {
+      const isFirst = catId === getFirstPageCategory();
+      btnEditCategoryMakeFirst.disabled = isFirst;
+      btnEditCategoryMakeFirst.textContent = isFirst ? '目前是第一頁' : '設為第一頁';
+    }
 
     if (editCategoryModalTitle) {
       editCategoryModalTitle.textContent = `編輯「${cat.label}」群組`;
@@ -16041,6 +16040,29 @@ var CapacitorBridgeBundle = (() => {
   if (editCategoryModal) {
     editCategoryModal.addEventListener('click', function (e) {
       if (e.target === editCategoryModal) closeEditCategoryModal();
+    });
+  }
+
+  if (btnEditCategoryMakeFirst) {
+    btnEditCategoryMakeFirst.addEventListener('click', function () {
+      const catId = editCatId ? editCatId.value : '';
+      const keys = getCustomCategoryOrder();
+      const nextKeys = [...keys.filter(key => key !== catId)];
+      if (catId) nextKeys.unshift(catId);
+      saveCustomCategoryOrder(nextKeys);
+      setFirstPageCategory(catId);
+      closeEditCategoryModal();
+      renderCategoryManageList();
+      renderCategoryChips();
+      renderCards();
+      showToast('已設為第一頁');
+    });
+  }
+  if (btnEditCategoryDelete) {
+    btnEditCategoryDelete.addEventListener('click', function () {
+      const catId = editCatId ? editCatId.value : '';
+      closeEditCategoryModal();
+      if (catId) deleteCategory(catId);
     });
   }
 
