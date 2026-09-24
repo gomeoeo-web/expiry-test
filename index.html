@@ -16400,9 +16400,11 @@ var CapacitorBridgeBundle = (() => {
   // ==========================================
   if (viewsSliderViewport) {
     let touchStartX = 0, touchStartY = 0, touchActive = false;
-    let isMouseDragging = false, mouseStartX = 0, mouseStartScrollLeft = 0, mouseMoved = false;
+    let isMouseDragging = false, mouseStartX = 0, mouseStartScrollLeft = 0, mouseStartPage = 0, mouseMoved = false;
 
     let settleAttempts = 0;
+    let settleLastScrollLeft = 0;
+    let settleStableSince = 0;
     function scheduleCheckSettled() {
       clearTimeout(panelSwitchSettleTimer);
       panelSwitchSettleTimer = setTimeout(checkSettled, 50);
@@ -16421,12 +16423,24 @@ var CapacitorBridgeBundle = (() => {
       const dist = Math.abs(scrollLeft - targetLeft);
       if (dist < 1.5) {
         settleAttempts = 0;
+        settleStableSince = 0;
         finishNavigation(navTabs[index]);
       } else {
-        settleAttempts++;
-        if (settleAttempts >= 3) {
+        const now = performance.now();
+        if (Math.abs(scrollLeft - settleLastScrollLeft) > 0.5) {
+          settleLastScrollLeft = scrollLeft;
+          settleStableSince = now;
           settleAttempts = 0;
-          switchViewTab(navTabs[index], true);
+        } else {
+          settleAttempts++;
+        }
+        // Wait for scroll position to stop changing, using elapsed time rather
+        // than a frame count so 60/90/120/144 Hz displays behave consistently.
+        if (settleStableSince && now - settleStableSince >= 80) {
+          settleAttempts = 0;
+          settleStableSince = 0;
+          viewsSliderViewport.scrollTo({ left: targetLeft, behavior: 'instant' });
+          finishNavigation(navTabs[index]);
         } else {
           scheduleCheckSettled();
         }
@@ -16439,6 +16453,8 @@ var CapacitorBridgeBundle = (() => {
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
       touchActive = true;
+      settleAttempts = 0;
+      settleStableSince = 0;
       if (!navigationInProgress) {
         hasSwipedHorizontally = false;
       }
@@ -16456,17 +16472,18 @@ var CapacitorBridgeBundle = (() => {
       if (dx > 20 && dx > dy * 1.5) {
         hasSwipedHorizontally = true;
         prepareIncomingPanelForSwipe();
-        viewsSliderViewport.style.scrollSnapType = '';
       }
     }, { passive: true });
 
     viewsSliderViewport.addEventListener('touchcancel', () => {
       touchActive = false;
+      viewsSliderViewport.style.scrollSnapType = '';
       scheduleCheckSettled();
     }, { passive: true });
 
     viewsSliderViewport.addEventListener('touchend', () => {
       touchActive = false;
+      viewsSliderViewport.style.scrollSnapType = '';
       scheduleCheckSettled();
     }, { passive: true });
 
@@ -16495,6 +16512,9 @@ var CapacitorBridgeBundle = (() => {
       mouseMoved = false;
       mouseStartX = event.pageX;
       mouseStartScrollLeft = viewsSliderViewport.scrollLeft;
+      mouseStartPage = Math.max(0, Math.min(navTabs.length - 1, Math.round(mouseStartScrollLeft / Math.max(1, viewsSliderViewport.clientWidth))));
+      settleAttempts = 0;
+      settleStableSince = 0;
       cancelAnimationFrame(navigationAnimationFrame);
       navigationAnimationFrame = 0;
       pendingNavTab = null;
@@ -16509,7 +16529,9 @@ var CapacitorBridgeBundle = (() => {
         hasSwipedHorizontally = true;
         prepareIncomingPanelForSwipe();
         viewsSliderViewport.style.scrollSnapType = 'none';
-        viewsSliderViewport.scrollTo({ left: mouseStartScrollLeft - dx, behavior: 'instant' });
+        const width = viewsSliderViewport.clientWidth;
+        const maxLeft = Math.max(0, (navTabs.length - 1) * width);
+        viewsSliderViewport.scrollTo({ left: Math.max(0, Math.min(maxLeft, mouseStartScrollLeft - dx)), behavior: 'instant' });
       }
     });
 
@@ -16520,12 +16542,8 @@ var CapacitorBridgeBundle = (() => {
       if (!mouseMoved) return;
       const dx = event.pageX - mouseStartX;
       const width = viewsSliderViewport.clientWidth;
-      let targetIndex = navTabs.indexOf(navigationStartTab);
-      if (Math.abs(dx) > 40) {
-        targetIndex = targetIndex + (dx < 0 ? 1 : -1);
-      } else {
-        targetIndex = Math.round(viewsSliderViewport.scrollLeft / width);
-      }
+      let targetIndex = mouseStartPage;
+      if (Math.abs(dx) > Math.max(40, width * 0.2)) targetIndex += dx < 0 ? 1 : -1;
       targetIndex = Math.max(0, Math.min(navTabs.length - 1, targetIndex));
       switchViewTab(navTabs[targetIndex], true);
     });
