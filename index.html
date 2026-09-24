@@ -14460,11 +14460,11 @@ var CapacitorBridgeBundle = (() => {
     const appleStatusBarStyle = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (metaThemeColor) {
       if (validTheme === 'amoled') metaThemeColor.setAttribute('content', '#000000');
-      else if (validTheme === 'light') metaThemeColor.setAttribute('content', '#8fa68a');
+      else if (validTheme === 'light') metaThemeColor.setAttribute('content', '#c8d9c3');
       else metaThemeColor.setAttribute('content', '#121212');
     }
     if (appleStatusBarStyle) {
-      appleStatusBarStyle.setAttribute('content', validTheme === 'light' ? 'black-translucent' : 'black');
+      appleStatusBarStyle.setAttribute('content', 'black');
     }
     if (settingsThemeText) {
       if (validTheme === 'amoled') settingsThemeText.textContent = '目前為 OLED純黑 模式';
