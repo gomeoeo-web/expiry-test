@@ -46,11 +46,16 @@ body, button, input, textarea, select {
   box-shadow: 0 4px 8px rgba(45, 42, 38, .14) !important;
 }
 
+/* Tighten the vertical rhythm above the item lists without shrinking controls. */
+#statusNoticeCard { margin-bottom: 14px; }
+#inventoryControls { gap: 11px; margin-bottom: 15px; }
+
 /* 留白放在捲動區外，避免靠左對齊時露出上一個膠囊。 */
 #categoryChipRow {
   width: calc(100% - 24px);
   margin-inline: 12px;
   padding-inline: 6px;
+  padding-block: 8px 10px;
   scroll-padding-inline: 6px;
   gap: 12px;
 }
@@ -65,7 +70,8 @@ body, button, input, textarea, select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   box-sizing: border-box;
   min-width: 0;
-  padding: 12px 2px;
+  padding: 10px 2px;
+  margin-bottom: 17px;
 }
 #segmentedPillsBar .home-filter-btn {
   box-sizing: border-box;

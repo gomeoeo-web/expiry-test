@@ -2378,7 +2378,7 @@ body {
   z-index: 1000;
   animation: fadeIn 0.2s ease;
   overscroll-behavior: contain;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .ios-modal-card {
@@ -2402,7 +2402,7 @@ body {
 .ios-modal-backdrop.modal-closing,
 .ios-action-backdrop.modal-closing {
   animation: fadeOutModalBackdrop 0.22s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .ios-modal-backdrop.modal-closing .ios-modal-card {
@@ -5608,9 +5608,32 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 /* Modal & Action Sheet Background Scroll Lock (彈出選單背景鎖定) */
+html.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 body.modal-open {
   overflow: hidden !important;
-  touch-action: none !important;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+}
+
+.ios-modal-backdrop.modal-closing,
+.ios-action-backdrop.modal-closing {
+  pointer-events: none;
+}
+
+/* The gesture controller owns transform until the sheet is hidden. */
+.ios-modal-backdrop .ios-modal-card.sheet-gesture-controlled,
+.ios-action-backdrop .ios-action-sheet.sheet-gesture-controlled {
+  animation: none !important;
+  transition: none !important;
+  will-change: transform;
+}
+
+.ios-modal-header {
+  touch-action: none;
 }
 
 body.modal-open .ios-modal-card,

@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-theme="dark" data-screen-fit="plus">
+<html lang="zh-TW" data-theme="light" data-screen-fit="plus">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>期效管家</title>
   <meta name="description" content="極簡物品生命週期與保固管家：更換濾網耗材、食品效期、保固時間、日化開封天數。">
-  <meta name="theme-color" content="#121212" id="metaThemeColor">
+  <meta name="theme-color" content="#d9e8d5" id="metaThemeColor">
   <meta name="color-scheme" content="dark light">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="stylesheet" href="style.css?v=1.9.20">
+  <link rel="stylesheet" href="style.css?v=1.9.21">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -2511,7 +2511,7 @@ body {
   z-index: 1000;
   animation: fadeIn 0.2s ease;
   overscroll-behavior: contain;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .ios-modal-card {
@@ -2535,7 +2535,7 @@ body {
 .ios-modal-backdrop.modal-closing,
 .ios-action-backdrop.modal-closing {
   animation: fadeOutModalBackdrop 0.22s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .ios-modal-backdrop.modal-closing .ios-modal-card {
@@ -5684,9 +5684,32 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 
 /* Modal & Action Sheet Background Scroll Lock (彈出選單背景鎖定) */
+html.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 body.modal-open {
   overflow: hidden !important;
-  touch-action: none !important;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+}
+
+.ios-modal-backdrop.modal-closing,
+.ios-action-backdrop.modal-closing {
+  pointer-events: none;
+}
+
+/* The gesture controller owns transform until the sheet is hidden. */
+.ios-modal-backdrop .ios-modal-card.sheet-gesture-controlled,
+.ios-action-backdrop .ios-action-sheet.sheet-gesture-controlled {
+  animation: none !important;
+  transition: none !important;
+  will-change: transform;
+}
+
+.ios-modal-header {
+  touch-action: none;
 }
 
 body.modal-open .ios-modal-card,
@@ -7650,7 +7673,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
 </style>
-  <link rel="stylesheet" href="theme-overrides.css?v=1.9.20">
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.21">
 </head>
 <body>
   <div class="ios-app-container">
@@ -7740,7 +7763,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
             <!-- Home Sort Toolbar (彈出式菜單) -->
             <div class="home-sort-toolbar" id="homeSortToolbar">
-              <span class="sort-toolbar-count" id="sortToolbarCount">共 1 項物品</span>
+              <span class="sort-toolbar-count" id="sortToolbarCount">共 0 項物品</span>
               <button type="button" class="btn-sort-menu-trigger" id="btnOpenCustomSort" title="選擇排序方式與自訂物品順序">
                 <span class="sort-trigger-icon">⇅</span>
                 <span class="sort-trigger-label" id="sortPillLabel">到期日 升冪</span>
@@ -8352,7 +8375,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.20</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.21</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9865,7 +9888,16 @@ var CapacitorBridgeBundle = (() => {
 */
 
 </script>
-  <script id="appLogicInline" type="module">
+  <script src="sheet-gestures.js?v=1.9.21"></script>
+  <script id="appLogicInline">
+  const { bindSheetDrag, animateModalClose, containModalScroll } = window.SheetGestures || {
+    bindSheetDrag() {},
+    animateModalClose(modal, onClosed) {
+      if (modal) modal.style.display = 'none';
+      onClosed?.();
+    },
+    containModalScroll() {}
+  };
 /**
  * 期效管家 (LifeSpan Tracker) - 極簡 iOS 邏輯控制器
  * 支援：
@@ -9880,7 +9912,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.20';
+  const APP_VERSION = '1.9.21';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -11454,29 +11486,10 @@ var CapacitorBridgeBundle = (() => {
   // 通用功能彈窗平滑關閉動畫控制器 (各項功能關閉特效)
   // ==========================================
   function closeModalWithAnimation(modalEl, onClosed) {
-    if (!modalEl || modalEl.style.display === 'none') {
+    animateModalClose(modalEl, () => {
       if (typeof onClosed === 'function') onClosed();
-      return;
-    }
-    if (modalEl.classList.contains('modal-closing')) return;
-
-    modalEl.classList.add('modal-closing');
-    const isSheet = modalEl.classList.contains('ios-action-backdrop');
-    const duration = isSheet ? 240 : 220;
-
-    setTimeout(() => {
-      modalEl.style.display = 'none';
-      modalEl.classList.remove('modal-closing');
-      const card = modalEl.querySelector('.ios-modal-card, .ios-action-sheet');
-      if (card) {
-        card.style.transform = '';
-        card.style.transition = '';
-      }
-      if (typeof onClosed === 'function') {
-        onClosed();
-      }
       unlockBodyScroll();
-    }, duration);
+    });
   }
 
   function closeRecentlyDeletedModal() {
@@ -14342,84 +14355,7 @@ var CapacitorBridgeBundle = (() => {
     if (e.target === itemModal) closeModal();
   });
 
-  // Item Modal 下滑關閉支援：全卡片支援跟手拖曳向下滑動極速關閉
-  const itemModalCard = itemModal ? itemModal.querySelector('.ios-modal-card') : null;
-  const itemModalScroll = itemModal ? itemModal.querySelector('.ios-modal-scroll') : null;
-
-  if (itemModalCard) {
-    let itemTouchStartY = 0;
-    let itemTouchStartX = 0;
-    let itemTouchStartTime = 0;
-    let isDraggingItemModal = false;
-    let currentItemDy = 0;
-
-    itemModalCard.addEventListener('touchstart', function (e) {
-      if (e.touches.length === 1 && !itemModal.classList.contains('modal-closing')) {
-        itemTouchStartY = e.touches[0].clientY;
-        itemTouchStartX = e.touches[0].clientX;
-        itemTouchStartTime = Date.now();
-        isDraggingItemModal = false;
-        currentItemDy = 0;
-      }
-    }, { passive: true });
-
-    itemModalCard.addEventListener('touchmove', function (e) {
-      if (e.touches.length === 1 && !itemModal.classList.contains('modal-closing')) {
-        const touchY = e.touches[0].clientY;
-        const dy = touchY - itemTouchStartY;
-        const dx = Math.abs(e.touches[0].clientX - itemTouchStartX);
-        const isNearTop = !itemModalScroll || itemModalScroll.scrollTop <= 2;
-        const isHeaderArea = !!e.target.closest('.sheet-drag-handle, .ios-modal-header');
-
-        // 當處於頂部手把/標頭，或內容滾動至頂端向下滑動時，觸發拖曳跟手下滑關閉
-        if ((isHeaderArea || isNearTop) && dy > 6 && dy > dx * 0.7) {
-          isDraggingItemModal = true;
-          currentItemDy = dy;
-          if (e.cancelable) e.preventDefault();
-          itemModalCard.style.transform = `translateY(${Math.max(0, dy)}px)`;
-          itemModalCard.style.transition = 'none';
-        }
-      }
-    }, { passive: false });
-
-    function handleItemTouchEnd() {
-      if (isDraggingItemModal && !itemModal.classList.contains('modal-closing')) {
-        isDraggingItemModal = false;
-        const dt = Math.max(1, Date.now() - itemTouchStartTime);
-        const velocityY = currentItemDy / dt;
-
-        if (currentItemDy > 35 || (velocityY > 0.22 && currentItemDy > 15)) {
-          itemModalCard.style.transition = 'transform 0.18s cubic-bezier(0.32, 0.72, 0, 1)';
-          itemModalCard.style.transform = 'translateY(100%)';
-          setTimeout(() => {
-            closeModal();
-            itemModalCard.style.transform = '';
-            itemModalCard.style.transition = '';
-          }, 180);
-        } else {
-          itemModalCard.style.transition = 'transform 0.2s cubic-bezier(0.32, 0.72, 0, 1)';
-          itemModalCard.style.transform = 'translateY(0)';
-          setTimeout(() => {
-            itemModalCard.style.transform = '';
-            itemModalCard.style.transition = '';
-          }, 200);
-        }
-      }
-    }
-
-    itemModalCard.addEventListener('touchend', handleItemTouchEnd, { passive: true });
-    itemModalCard.addEventListener('touchcancel', handleItemTouchEnd, { passive: true });
-
-    // 半透明遮罩層向下滑動快速關閉
-    itemModal.addEventListener('touchmove', function (e) {
-      if (e.target === itemModal && e.touches.length === 1 && !itemModal.classList.contains('modal-closing')) {
-        const dy = e.touches[0].clientY - itemTouchStartY;
-        if (dy > 25) {
-          closeModal();
-        }
-      }
-    }, { passive: true });
-  }
+  bindSheetDrag(itemModal, closeModal, itemModal.querySelector('.ios-modal-scroll'));
 
   // ==========================================
   // 7. 設定 Modal (Settings)
@@ -14507,85 +14443,7 @@ var CapacitorBridgeBundle = (() => {
     if (e.target === settingsModal) closeSettingsModal();
   });
 
-  // Settings Modal 滑動支援：全卡片支援上下流暢滑動與拖曳向下滑動極速關閉
-  const settingsModalCard = settingsModal ? settingsModal.querySelector('.ios-modal-card') : null;
-  const settingsScrollList = settingsModal ? settingsModal.querySelector('.ios-settings-list') : null;
-
-  if (settingsModalCard) {
-    let settingsTouchStartY = 0;
-    let settingsTouchStartX = 0;
-    let settingsTouchStartTime = 0;
-    let isDraggingSettings = false;
-    let currentSettingsDy = 0;
-
-    settingsModalCard.addEventListener('touchstart', function (e) {
-      if (e.touches.length === 1 && !settingsModal.classList.contains('modal-closing')) {
-        settingsTouchStartY = e.touches[0].clientY;
-        settingsTouchStartX = e.touches[0].clientX;
-        settingsTouchStartTime = Date.now();
-        isDraggingSettings = false;
-        currentSettingsDy = 0;
-      }
-    }, { passive: true });
-
-    settingsModalCard.addEventListener('touchmove', function (e) {
-      if (e.touches.length === 1 && !settingsModal.classList.contains('modal-closing')) {
-        if (e.target.closest('button, [role="button"], a, input, select, textarea, .btn-modal-close, .settings-row-btn, .ios-btn')) return;
-        const touchY = e.touches[0].clientY;
-        const dy = touchY - settingsTouchStartY;
-        const dx = Math.abs(e.touches[0].clientX - settingsTouchStartX);
-        const isNearTop = !settingsScrollList || settingsScrollList.scrollTop <= 2;
-        const isHeaderArea = !!e.target.closest('.sheet-drag-handle, .ios-modal-header');
-
-        // 當處於頂部手把/標頭向下滑動時，觸發拖曳跟手下滑關閉（門檻提升至 16px，避免點按手指顫動誤觸）
-        if ((isHeaderArea || isNearTop) && dy > 16 && dy > dx * 0.8) {
-          isDraggingSettings = true;
-          currentSettingsDy = dy;
-          if (e.cancelable) e.preventDefault();
-          settingsModalCard.style.transform = `translateY(${Math.max(0, dy)}px)`;
-          settingsModalCard.style.transition = 'none';
-        }
-      }
-    }, { passive: false });
-
-    function handleSettingsTouchEnd() {
-      if (isDraggingSettings && !settingsModal.classList.contains('modal-closing')) {
-        isDraggingSettings = false;
-        const dt = Math.max(1, Date.now() - settingsTouchStartTime);
-        const velocityY = currentSettingsDy / dt;
-
-        if (currentSettingsDy > 35 || (velocityY > 0.22 && currentSettingsDy > 15)) {
-          settingsModalCard.style.transition = 'transform 0.18s cubic-bezier(0.32, 0.72, 0, 1)';
-          settingsModalCard.style.transform = 'translateY(100%)';
-          setTimeout(() => {
-            closeSettingsModal();
-            settingsModalCard.style.transform = '';
-            settingsModalCard.style.transition = '';
-          }, 180);
-        } else {
-          settingsModalCard.style.transition = 'transform 0.2s cubic-bezier(0.32, 0.72, 0, 1)';
-          settingsModalCard.style.transform = 'translateY(0)';
-          setTimeout(() => {
-            settingsModalCard.style.transform = '';
-            settingsModalCard.style.transition = '';
-          }, 200);
-        }
-      }
-    }
-
-    settingsModalCard.addEventListener('touchend', handleSettingsTouchEnd, { passive: true });
-    settingsModalCard.addEventListener('touchcancel', handleSettingsTouchEnd, { passive: true });
-
-    // 半透明遮罩層向下滑動快速關閉
-    settingsModal.addEventListener('touchmove', function (e) {
-      if (e.target === settingsModal && e.touches.length === 1 && !settingsModal.classList.contains('modal-closing')) {
-        const dy = e.touches[0].clientY - settingsTouchStartY;
-        if (dy > 25) {
-          closeSettingsModal();
-        }
-      }
-    }, { passive: true });
-  }
+  bindSheetDrag(settingsModal, closeSettingsModal, settingsModal.querySelector('.ios-settings-list'));
 
   btnToggleThemeSetting.addEventListener('click', function () {
     const current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -15628,83 +15486,7 @@ var CapacitorBridgeBundle = (() => {
       if (e.target === customCategoryModal) closeCustomCategoryModal();
     });
 
-    // 群組設定彈窗 (customCategoryModal) 下滑關閉支援：支援手把與頂部跟手下滑與快速關閉
-    const customCatModalCard = customCategoryModal.querySelector('.ios-modal-card');
-    const customCatModalScroll = customCategoryModal.querySelector('.ios-modal-scroll');
-
-    if (customCatModalCard) {
-      let catTouchStartY = 0;
-      let catTouchStartX = 0;
-      let catTouchStartTime = 0;
-      let isDraggingCatModal = false;
-      let currentCatDy = 0;
-
-      customCatModalCard.addEventListener('touchstart', function (e) {
-        if (e.touches.length === 1 && !customCategoryModal.classList.contains('modal-closing')) {
-          catTouchStartY = e.touches[0].clientY;
-          catTouchStartX = e.touches[0].clientX;
-          catTouchStartTime = Date.now();
-          isDraggingCatModal = false;
-          currentCatDy = 0;
-        }
-      }, { passive: true });
-
-      customCatModalCard.addEventListener('touchmove', function (e) {
-        if (e.touches.length === 1 && !customCategoryModal.classList.contains('modal-closing')) {
-          if (e.target.closest('button, [role="button"], a, input, select, textarea, .btn-modal-close, .category-chip, .ios-btn')) return;
-          const touchY = e.touches[0].clientY;
-          const dy = touchY - catTouchStartY;
-          const dx = Math.abs(e.touches[0].clientX - catTouchStartX);
-          const isNearTop = !customCatModalScroll || customCatModalScroll.scrollTop <= 2;
-          const isHeaderArea = !!e.target.closest('.sheet-drag-handle, .ios-modal-header');
-
-          if ((isHeaderArea || isNearTop) && dy > 16 && dy > dx * 0.8) {
-            isDraggingCatModal = true;
-            currentCatDy = dy;
-            if (e.cancelable) e.preventDefault();
-            customCatModalCard.style.transform = `translateY(${Math.max(0, dy)}px)`;
-            customCatModalCard.style.transition = 'none';
-          }
-        }
-      }, { passive: false });
-
-      function handleCatTouchEnd() {
-        if (isDraggingCatModal && !customCategoryModal.classList.contains('modal-closing')) {
-          isDraggingCatModal = false;
-          const dt = Math.max(1, Date.now() - catTouchStartTime);
-          const velocityY = currentCatDy / dt;
-
-          if (currentCatDy > 35 || (velocityY > 0.22 && currentCatDy > 15)) {
-            customCatModalCard.style.transition = 'transform 0.18s cubic-bezier(0.32, 0.72, 0, 1)';
-            customCatModalCard.style.transform = 'translateY(100%)';
-            setTimeout(() => {
-              closeCustomCategoryModal();
-              customCatModalCard.style.transform = '';
-              customCatModalCard.style.transition = '';
-            }, 180);
-          } else {
-            customCatModalCard.style.transition = 'transform 0.2s cubic-bezier(0.32, 0.72, 0, 1)';
-            customCatModalCard.style.transform = 'translateY(0)';
-            setTimeout(() => {
-              customCatModalCard.style.transform = '';
-              customCatModalCard.style.transition = '';
-            }, 200);
-          }
-        }
-      }
-
-      customCatModalCard.addEventListener('touchend', handleCatTouchEnd, { passive: true });
-      customCatModalCard.addEventListener('touchcancel', handleCatTouchEnd, { passive: true });
-
-      customCategoryModal.addEventListener('touchmove', function (e) {
-        if (e.target === customCategoryModal && e.touches.length === 1 && !customCategoryModal.classList.contains('modal-closing')) {
-          const dy = e.touches[0].clientY - catTouchStartY;
-          if (dy > 25) {
-            closeCustomCategoryModal();
-          }
-        }
-      }, { passive: true });
-    }
+    bindSheetDrag(customCategoryModal, closeCustomCategoryModal, customCategoryModal.querySelector('.ios-modal-scroll'));
   }
 
   if (emojiQuickPills) {
@@ -16245,37 +16027,46 @@ var CapacitorBridgeBundle = (() => {
   // 徹底修正彈出式菜單拖動或滾動時影響到底層背景內容或觸發跨分頁滑動 (滾動穿透問題)
   // ==========================================
   function isAnyModalOpen() {
-    const modals = document.querySelectorAll('.ios-modal-backdrop, .ios-action-backdrop');
-    for (const el of modals) {
-      if ((el.style.display === 'flex' || el.style.display === 'block' || el.classList.contains('active')) && !el.classList.contains('modal-closing')) {
-        return true;
-      }
-    }
-    const actionSheetEl = document.getElementById('actionSheet');
-    if (actionSheetEl && actionSheetEl.style.display !== 'none' && actionSheetEl.style.display !== '' && !actionSheetEl.classList.contains('modal-closing')) {
-      return true;
-    }
-    return false;
+    // Closing overlays still cover the page and must keep the background locked.
+    return Array.from(document.querySelectorAll('.ios-modal-backdrop, .ios-action-backdrop'))
+      .some(el => el.style.display === 'flex' || el.style.display === 'block' || el.classList.contains('active'));
   }
 
+  let bodyScrollLock = null;
   function lockBodyScroll() {
-    document.body.style.overflow = 'hidden';
-    document.body.classList.add('modal-open');
-    if (viewsSliderViewport) {
-      viewsSliderViewport.style.overflowX = 'hidden';
-    }
+    if (bodyScrollLock) return;
+    const body = document.body;
+    const properties = ['position', 'top', 'left', 'width', 'overflow'];
+    bodyScrollLock = {
+      x: window.scrollX, y: window.scrollY,
+      styles: properties.map(name => [name, body.style.getPropertyValue(name), body.style.getPropertyPriority(name)])
+    };
+    cancelAnimationFrame(navigationAnimationFrame);
+    navigationAnimationFrame = 0;
+    clearTimeout(panelSwitchSettleTimer);
+    panelSwitchSettleTimer = null;
+    // A fixed body holds the visual page position during iOS rubber-banding too.
+    body.style.position = 'fixed';
+    body.style.top = `-${bodyScrollLock.y}px`;
+    body.style.left = `-${bodyScrollLock.x}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    document.documentElement.classList.add('modal-open');
+    body.classList.add('modal-open');
   }
 
   function unlockBodyScroll() {
-    if (!isAnyModalOpen() && document.body.classList.contains('modal-open')) {
-      document.body.style.overflow = '';
-      document.body.classList.remove('modal-open');
-      if (viewsSliderViewport) {
-        viewsSliderViewport.style.overflowX = 'auto';
-        viewsSliderViewport.scrollTo({left:navTabs.indexOf(currentNavTab)*viewsSliderViewport.clientWidth,behavior:'instant'});
-        setActivePanel(currentNavTab);
-      }
+    if (isAnyModalOpen() || !bodyScrollLock) return;
+    const saved = bodyScrollLock;
+    bodyScrollLock = null;
+    for (const [name, value, priority] of saved.styles) {
+      if (value) document.body.style.setProperty(name, value, priority);
+      else document.body.style.removeProperty(name);
     }
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
+    window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' });
+    if (navigationInProgress) switchViewTab(pendingNavTab || currentNavTab, true);
   }
 
   function updateBodyScrollLock() {
@@ -16294,105 +16085,10 @@ var CapacitorBridgeBundle = (() => {
     modalObserver.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
   });
 
-  // 攔截遮罩層上的觸摸滑動事件, 避免拖曳穿透至底層
-  document.querySelectorAll('.ios-modal-backdrop, .ios-action-backdrop').forEach(backdrop => {
-    backdrop.addEventListener('touchmove', function (e) {
-      if (e.target === backdrop) {
-        if (e.cancelable) e.preventDefault();
-      }
-    }, { passive: false });
-  });
+  // Contain edge overscroll while allowing scrolling inside each menu.
+  document.querySelectorAll('.ios-modal-backdrop, .ios-action-backdrop').forEach(containModalScroll);
 
-  // Action Sheet 支援拖曳把手與標頭向下滑動極速關閉, 靈敏順暢且完全不卡頓
-  const actionSheetCard = actionSheet.querySelector('.ios-action-sheet');
-  if (actionSheetCard) {
-    let sheetStartY = 0;
-    let sheetStartX = 0;
-    let sheetStartTime = 0;
-    let isDraggingSheet = false;
-    let currentSheetDy = 0;
-    let isClosingSheet = false;
-
-    function smoothlyCloseActionSheet() {
-      if (isClosingSheet) return;
-      isClosingSheet = true;
-      actionSheetCard.style.transition = 'transform 0.18s cubic-bezier(0.32, 0.72, 0, 1)';
-      actionSheetCard.style.transform = 'translateY(100%)';
-      actionSheet.classList.add('modal-closing');
-      setTimeout(() => {
-        actionSheetCard.style.transform = '';
-        actionSheetCard.style.transition = '';
-        actionSheet.classList.remove('modal-closing');
-        closeActionSheet(true);
-        isClosingSheet = false;
-      }, 180);
-    }
-
-    actionSheetCard.addEventListener('touchstart', function (e) {
-      if (e.touches.length === 1 && !isClosingSheet) {
-        sheetStartY = e.touches[0].clientY;
-        sheetStartX = e.touches[0].clientX;
-        sheetStartTime = Date.now();
-        isDraggingSheet = false;
-        currentSheetDy = 0;
-      }
-    }, { passive: true });
-
-    actionSheetCard.addEventListener('touchmove', function (e) {
-      if (e.touches.length === 1 && !isClosingSheet) {
-        if (e.target.closest('button, [role="button"], a, input, select, textarea, .btn-sheet-action, .sheet-action-btn, .btn-modal-close, .category-chip, .history-header-toggle')) return;
-        const touchY = e.touches[0].clientY;
-        const dy = touchY - sheetStartY;
-        const dx = Math.abs(e.touches[0].clientX - sheetStartX);
-        const isNearTop = actionSheetCard.scrollTop <= 4;
-        const isHeaderArea = !!e.target.closest('.sheet-drag-handle, .sheet-header');
-
-        // 當處於頂部手把或標頭頂端向下滑動，觸發拖曳關閉（門檻提升至 16px，避免點按手指顫動誤觸）
-        if ((isHeaderArea || isNearTop) && dy > 16 && dy > dx * 0.8) {
-          isDraggingSheet = true;
-          currentSheetDy = dy;
-          if (e.cancelable) e.preventDefault();
-          actionSheetCard.style.transform = `translateY(${Math.max(0, dy)}px)`;
-          actionSheetCard.style.transition = 'none';
-        }
-      }
-    }, { passive: false });
-
-    function handleSheetTouchEnd() {
-      if (isDraggingSheet && !isClosingSheet) {
-        isDraggingSheet = false;
-        const dt = Math.max(1, Date.now() - sheetStartTime);
-        const velocityY = currentSheetDy / dt;
-
-        // 位移超過 30px 或具備向下滑動速度時立即順暢關閉
-        if (currentSheetDy > 30 || (velocityY > 0.22 && currentSheetDy > 15)) {
-          smoothlyCloseActionSheet();
-        } else {
-          actionSheetCard.style.transition = 'transform 0.2s cubic-bezier(0.32, 0.72, 0, 1)';
-          actionSheetCard.style.transform = 'translateY(0)';
-          setTimeout(() => {
-            if (!isDraggingSheet) {
-              actionSheetCard.style.transform = '';
-              actionSheetCard.style.transition = '';
-            }
-          }, 200);
-        }
-      }
-    }
-
-    actionSheetCard.addEventListener('touchend', handleSheetTouchEnd, { passive: true });
-    actionSheetCard.addEventListener('touchcancel', handleSheetTouchEnd, { passive: true });
-
-    // 支援在上方半透明遮罩層向下滑動關閉
-    actionSheet.addEventListener('touchmove', function (e) {
-      if (e.target === actionSheet && e.touches.length === 1 && !isClosingSheet) {
-        const dy = e.touches[0].clientY - sheetStartY;
-        if (dy > 20) {
-          smoothlyCloseActionSheet();
-        }
-      }
-    }, { passive: true });
-  }
+  bindSheetDrag(actionSheet, closeActionSheet);
 
   // ==========================================
   // 主頁與物品分類 原生 CSS Scroll Snap 與滑動切換分頁
@@ -18155,85 +17851,7 @@ function extractCleanName(rawText) {
       });
     }
 
-    // NLP Confirm Modal（確認新增物品菜單）下滑關閉支援：全卡片支援跟手拖曳向下滑動極速關閉
-    const nlpConfirmCard = modal ? modal.querySelector('.ios-modal-card') : null;
-    const nlpConfirmScroll = modal ? modal.querySelector('.ios-modal-scroll') : null;
-
-    if (nlpConfirmCard) {
-      let nlpTouchStartY = 0;
-      let nlpTouchStartX = 0;
-      let nlpTouchStartTime = 0;
-      let isDraggingNlpModal = false;
-      let currentNlpDy = 0;
-
-      nlpConfirmCard.addEventListener('touchstart', function (e) {
-        if (e.touches.length === 1 && !modal.classList.contains('modal-closing')) {
-          nlpTouchStartY = e.touches[0].clientY;
-          nlpTouchStartX = e.touches[0].clientX;
-          nlpTouchStartTime = Date.now();
-          isDraggingNlpModal = false;
-          currentNlpDy = 0;
-        }
-      }, { passive: true });
-
-      nlpConfirmCard.addEventListener('touchmove', function (e) {
-        if (e.touches.length === 1 && !modal.classList.contains('modal-closing')) {
-          if (e.target.closest('button, [role="button"], a, input, select, textarea, .btn-modal-close, .ios-btn')) return;
-          const touchY = e.touches[0].clientY;
-          const dy = touchY - nlpTouchStartY;
-          const dx = Math.abs(e.touches[0].clientX - nlpTouchStartX);
-          const isNearTop = !nlpConfirmScroll || nlpConfirmScroll.scrollTop <= 2;
-          const isHeaderArea = !!e.target.closest('.sheet-drag-handle, .ios-modal-header');
-
-          // 當處於頂部手把/標頭向下滑動時，觸發拖曳跟手下滑關閉（門檻提升至 16px，避免點按手指顫動誤觸）
-          if ((isHeaderArea || isNearTop) && dy > 16 && dy > dx * 0.8) {
-            isDraggingNlpModal = true;
-            currentNlpDy = dy;
-            if (e.cancelable) e.preventDefault();
-            nlpConfirmCard.style.transform = `translateY(${Math.max(0, dy)}px)`;
-            nlpConfirmCard.style.transition = 'none';
-          }
-        }
-      }, { passive: false });
-
-      function handleNlpTouchEnd() {
-        if (isDraggingNlpModal && !modal.classList.contains('modal-closing')) {
-          isDraggingNlpModal = false;
-          const dt = Math.max(1, Date.now() - nlpTouchStartTime);
-          const velocityY = currentNlpDy / dt;
-
-          if (currentNlpDy > 35 || (velocityY > 0.22 && currentNlpDy > 15)) {
-            nlpConfirmCard.style.transition = 'transform 0.18s cubic-bezier(0.32, 0.72, 0, 1)';
-            nlpConfirmCard.style.transform = 'translateY(100%)';
-            setTimeout(() => {
-              closeNlpConfirmModal();
-              nlpConfirmCard.style.transform = '';
-              nlpConfirmCard.style.transition = '';
-            }, 180);
-          } else {
-            nlpConfirmCard.style.transition = 'transform 0.2s cubic-bezier(0.32, 0.72, 0, 1)';
-            nlpConfirmCard.style.transform = 'translateY(0)';
-            setTimeout(() => {
-              nlpConfirmCard.style.transform = '';
-              nlpConfirmCard.style.transition = '';
-            }, 200);
-          }
-        }
-      }
-
-      nlpConfirmCard.addEventListener('touchend', handleNlpTouchEnd, { passive: true });
-      nlpConfirmCard.addEventListener('touchcancel', handleNlpTouchEnd, { passive: true });
-
-      // 半透明遮罩層向下滑動快速關閉
-      modal.addEventListener('touchmove', function (e) {
-        if (e.target === modal && e.touches.length === 1 && !modal.classList.contains('modal-closing')) {
-          const dy = e.touches[0].clientY - nlpTouchStartY;
-          if (dy > 25) {
-            closeNlpConfirmModal();
-          }
-        }
-      }, { passive: true });
-    }
+    bindSheetDrag(modal, closeNlpConfirmModal, modal.querySelector('.ios-modal-scroll'));
   }
 
   function initSmartQuickAdd() {
@@ -18865,7 +18483,7 @@ function extractCleanName(rawText) {
   // 9. 初始化啟動
   // ==========================================
   const urlParams = new URLSearchParams(window.location.search);
-  const savedTheme = urlParams.get('theme') || localStorage.getItem(THEME_KEY) || 'dark';
+  const savedTheme = urlParams.get('theme') || localStorage.getItem(THEME_KEY) || 'light';
   setTheme(savedTheme, false);
   loadItems();
   loadRecentlyDeleted();
@@ -19126,8 +18744,8 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.20"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.20"></script>
+  <script type="module" src="app.js?v=1.9.21"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.21"></script>
 
 <script>
 // Native selects retain mobile accessibility; a shared SVG identifies the selection.
