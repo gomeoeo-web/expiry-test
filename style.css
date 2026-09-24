@@ -2042,45 +2042,22 @@ body {
 
 /* Card Note Preview on Home Page */
 .card-note-preview {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.76rem;
+  display: block;
+  font-size: 0.84rem;
+  line-height: 1.35;
   color: var(--ios-text-secondary);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  margin-top: 0.32rem;
-  margin-bottom: 0.36rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.24rem;
   max-width: 100%;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all var(--transition-ios);
-}
-
-[data-theme="light"] .card-note-preview {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.06);
-  color: #636366;
-}
-
-[data-theme="amoled"] .card-note-preview {
-  background: #141416;
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.card-note-icon {
-  font-size: 0.78rem;
-  line-height: 1;
-  flex-shrink: 0;
+  overflow: visible;
 }
 
 .card-note-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-  flex: 1;
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-weight: 700;
 }
 
 /* Minimalist Progress Bar */
@@ -3865,19 +3842,26 @@ input[type="time"]::-webkit-date-and-time-value {
    ========================================================================== */
 .toast-container {
   position: fixed;
-  top: 1.5rem;
+  top: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-width: min(26rem, calc(100vw - 2rem));
   z-index: 2000;
   pointer-events: none;
 }
 
+@media (max-width: 600px) {
+  .toast-container { top: max(3.5rem, calc(env(safe-area-inset-top, 0px) + 0.75rem)); }
+}
+
 .toast {
-  background: rgba(30, 30, 32, 0.95);
-  backdrop-filter: blur(14px);
+  background: #252528;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
   color: #ffffff;
   padding: 0.65rem 1.25rem;
   border-radius: var(--radius-pill);
@@ -3887,6 +3871,7 @@ input[type="time"]::-webkit-date-and-time-value {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  overflow-wrap: anywhere;
   animation: slideDownToast 0.22s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -6285,7 +6270,7 @@ body.modal-open .view-panel {
 .mode-pill.active, .btn-sort-menu-trigger.active { background: #355c50 !important; color: #fffdf8 !important; }
 .home-filter-btn.active *, .pill-segment.active *, .subcat-pill.active *, .mode-pill.active * { color: inherit !important; }
 .progress-bar-fill.status-normal, .card-progress-fill.status-normal { background: #355c50 !important; }
-input::placeholder, textarea::placeholder, .card-note-preview, .card-note-text,
+input::placeholder, textarea::placeholder,
 .ios-search-field input::placeholder, .header-smart-input::placeholder { color: #aaa095 !important; opacity: .72; }
 
 [data-theme="amoled"] .notice-num.urgent {
@@ -6808,7 +6793,8 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 [data-theme="light"] input[type="datetime-local"],
 [data-theme="light"] .date-picker-input,
 [data-theme="light"] .custom-time-input,
-[data-theme="light"] #nlpConfirmCustomTime {
+[data-theme="light"] #nlpConfirmCustomTime,
+[data-theme="light"] #itemReminderCustomTime {
   background-color: rgba(0, 0, 0, 0.05) !important;
   border-color: rgba(0, 0, 0, 0.12) !important;
   color: #000000 !important;

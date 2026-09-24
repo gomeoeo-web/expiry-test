@@ -2175,45 +2175,22 @@ body {
 
 /* Card Note Preview on Home Page */
 .card-note-preview {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.76rem;
+  display: block;
+  font-size: 0.84rem;
+  line-height: 1.35;
   color: var(--ios-text-secondary);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  margin-top: 0.32rem;
-  margin-bottom: 0.36rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.24rem;
   max-width: 100%;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all var(--transition-ios);
-}
-
-[data-theme="light"] .card-note-preview {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.06);
-  color: #636366;
-}
-
-[data-theme="amoled"] .card-note-preview {
-  background: #141416;
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.card-note-icon {
-  font-size: 0.78rem;
-  line-height: 1;
-  flex-shrink: 0;
+  overflow: visible;
 }
 
 .card-note-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-  flex: 1;
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-weight: 700;
 }
 
 /* Minimalist Progress Bar */
@@ -3963,19 +3940,26 @@ input[type="time"]::-webkit-date-and-time-value {
    ========================================================================== */
 .toast-container {
   position: fixed;
-  top: 1.5rem;
+  top: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-width: min(26rem, calc(100vw - 2rem));
   z-index: 2000;
   pointer-events: none;
 }
 
+@media (max-width: 600px) {
+  .toast-container { top: max(3.5rem, calc(env(safe-area-inset-top, 0px) + 0.75rem)); }
+}
+
 .toast {
-  background: rgba(30, 30, 32, 0.95);
-  backdrop-filter: blur(14px);
+  background: #252528;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: none;
   color: #ffffff;
   padding: 0.65rem 1.25rem;
   border-radius: var(--radius-pill);
@@ -3985,6 +3969,7 @@ input[type="time"]::-webkit-date-and-time-value {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  overflow-wrap: anywhere;
   animation: slideDownToast 0.22s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -8795,7 +8780,10 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
         <div class="existing-categories-section" style="margin-top: 1rem;">
           <div class="category-list-heading">
             <h3 class="category-list-title">我的群組</h3>
-            <button type="button" id="btnToggleCategoryReorder" class="btn-category-reorder">排序</button>
+            <div class="category-reorder-actions" id="categoryReorderActions" hidden>
+              <button type="button" id="btnCancelCategoryReorder">取消</button>
+              <button type="button" id="btnConfirmCategoryReorder">確認排序</button>
+            </div>
           </div>
           <div class="category-manage-list" id="categoryManageList">
             <!-- Rendered by JS -->
@@ -10815,7 +10803,7 @@ var CapacitorBridgeBundle = (() => {
     card.addEventListener('pointercancel', () => { moved = true; }, { passive: true });
     card.addEventListener('click', event => {
       event.stopPropagation();
-      if (moved || hasSwipedHorizontally) return;
+      if (moved) return;
       openActionSheet(id);
     });
   }
@@ -12390,7 +12378,6 @@ var CapacitorBridgeBundle = (() => {
         <!-- Card Note Preview on Home Page (主頁專屬備註標籤) -->
         ${(!isInventory && item.showNotesHome && item.notes && item.notes.trim()) ? `
           <div class="card-note-preview" title="${escapeHtml(item.notes)}">
-            <span class="card-note-icon">📝</span>
             <span class="card-note-text">${escapeHtml(item.notes)}</span>
           </div>
         ` : ''}
@@ -15534,6 +15521,7 @@ var CapacitorBridgeBundle = (() => {
 
   function openCustomCategoryModal() {
     if (!customCategoryModal) return;
+    setCategoryReorderDraftActive(false);
     loadCustomCategories();
     if (newCatNameInput) newCatNameInput.value = '';
     if (newCatEmojiInput) newCatEmojiInput.value = '🏷️';
@@ -15562,14 +15550,75 @@ var CapacitorBridgeBundle = (() => {
     });
   }
 
-  const btnToggleCategoryReorder = document.getElementById('btnToggleCategoryReorder');
-  if (btnToggleCategoryReorder) {
-    btnToggleCategoryReorder.addEventListener('click', function () {
-      if (!categoryManageList) return;
-      categoryManageList.classList.toggle('reorder-mode');
-      renderCategoryManageList();
+  const categoryReorderActions = document.getElementById('categoryReorderActions');
+  const btnCancelCategoryReorder = document.getElementById('btnCancelCategoryReorder');
+  const btnConfirmCategoryReorder = document.getElementById('btnConfirmCategoryReorder');
+  let categoryReorderDraftActive = false;
+  let cancelActiveCategoryDrag = null;
+
+  function setCategoryReorderDraftActive(active) {
+    if (!active && cancelActiveCategoryDrag) cancelActiveCategoryDrag();
+    categoryReorderDraftActive = active;
+    if (categoryReorderActions) categoryReorderActions.hidden = !active;
+    if (categoryManageList) {
+      categoryManageList.classList.toggle('reorder-mode', active);
+      categoryManageList.querySelectorAll('.btn-edit-cat').forEach(button => {
+        button.disabled = active;
+        button.setAttribute('aria-disabled', String(active));
+      });
+    }
+  }
+
+  function updateCategoryDraftPages() {
+    if (!categoryManageList) return;
+    [...categoryManageList.querySelectorAll('.cat-manage-item')].forEach((row, index) => {
+      const badge = row.querySelector('.group-page-badge');
+      if (badge) badge.textContent = PAGE_NAMES[index] || `第 ${index + 1} 頁`;
     });
   }
+
+  function moveCategoryDraftRow(row, target, before) {
+    if (!categoryManageList || !target || row === target) return false;
+    if (before ? row.nextElementSibling === target : target.nextElementSibling === row) return false;
+    const rows = [...categoryManageList.querySelectorAll('.cat-manage-item')];
+    const previousTops = new Map(rows.map(item => [item, item.getBoundingClientRect().top]));
+    rows.forEach(item => item.getAnimations().forEach(animation => animation.cancel()));
+    categoryManageList.insertBefore(row, before ? target : target.nextSibling);
+    updateCategoryDraftPages();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      rows.forEach(item => {
+        if (item === row) return;
+        const offset = previousTops.get(item) - item.getBoundingClientRect().top;
+        if (Math.abs(offset) < 1) return;
+        item.animate([
+          { transform: `translate3d(0, ${offset}px, 0) scale(.985)` },
+          { transform: 'translate3d(0, 0, 0) scale(1)' }
+        ], { duration: 260, easing: 'cubic-bezier(.18, 1.2, .32, 1)' });
+      });
+    }
+    return true;
+  }
+
+  if (btnCancelCategoryReorder) btnCancelCategoryReorder.addEventListener('click', () => {
+    setCategoryReorderDraftActive(false);
+    renderCategoryManageList();
+  });
+
+  if (btnConfirmCategoryReorder) btnConfirmCategoryReorder.addEventListener('click', () => {
+    if (!categoryManageList || !categoryReorderDraftActive) return;
+    const keys = [...categoryManageList.querySelectorAll('.cat-manage-item')].map(row => row.dataset.catId);
+    if (!keys.length) return;
+    setCategoryReorderDraftActive(false);
+    saveCustomCategoryOrder(keys);
+    if (keys[0] !== getFirstPageCategory()) {
+      setFirstPageCategory(keys[0]);
+    } else {
+      renderCategoryManageList();
+      renderCategoryChips();
+      renderCards();
+    }
+    showToast('已儲存群組排序');
+  });
 
   if (btnCloseCustomCategoryModal) {
     btnCloseCustomCategoryModal.addEventListener('click', closeCustomCategoryModal);
@@ -15747,7 +15796,6 @@ var CapacitorBridgeBundle = (() => {
   function renderCategoryManageList() {
     if (!categoryManageList) return;
     categoryManageList.innerHTML = '';
-    const reorderMode = categoryManageList.classList.contains('reorder-mode');
     const allCats = getAllCategories();
     const firstPageKey = getFirstPageCategory();
     const catKeys = Object.keys(allCats);
@@ -15768,25 +15816,22 @@ var CapacitorBridgeBundle = (() => {
       const itemEl = document.createElement('div');
       itemEl.className = 'cat-manage-item';
 
-      const isPreset = !!cat.isPreset;
       const subCount = cat.items ? cat.items.length : 0;
-      const isFirstPage = key === firstPageKey;
-      const isFirst = idx === 0;
       const pageName = PAGE_NAMES[idx] || `第 ${idx + 1} 頁`;
+      itemEl.dataset.catId = key;
       itemEl.innerHTML = `
         <div class="cat-manage-info">
-          <div class="cat-manage-title-wrap">
-            <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function') ? getCategoryIcon(cat.isCustom ? cat.emoji : key) : cat.emoji}</span>
-            <span class="group-page-badge">${pageName}</span>
-            <span class="cat-manage-label" title="${escapeHtml(cat.label)}">${escapeHtml(cat.label)}</span>
+          <button type="button" class="cat-drag-handle" aria-label="拖動${escapeHtml(cat.label)}調整群組順序" title="拖動排序；鍵盤可用上下方向鍵"><span class="cat-drag-lines" aria-hidden="true"><i></i><i></i><i></i></span></button>
+          <span class="cat-manage-emoji">${(typeof getCategoryIcon === 'function') ? getCategoryIcon(cat.isCustom ? cat.emoji : key) : cat.emoji}</span>
+          <div class="cat-manage-copy">
+            <div class="cat-manage-title-wrap">
+              <span class="group-page-badge">${pageName}</span>
+              <span class="cat-manage-label" title="${escapeHtml(cat.label)}">${escapeHtml(cat.label)}</span>
+            </div>
+            <span class="cat-manage-subcount">${subCount} 項細項</span>
           </div>
-          <span class="cat-manage-subcount">${subCount} 項細項</span>
         </div>
         <div class="cat-manage-actions">
-          <div class="cat-reorder-controls" ${reorderMode ? '' : 'hidden'}>
-            <button type="button" class="btn-cat-order btn-cat-up" data-cat-id="${key}" ${isFirst ? 'disabled' : ''} aria-label="${escapeHtml(cat.label)} 上移">↑</button>
-            <button type="button" class="btn-cat-order btn-cat-down" data-cat-id="${key}" ${idx === orderedKeys.length - 1 ? 'disabled' : ''} aria-label="${escapeHtml(cat.label)} 下移">↓</button>
-          </div>
           <button type="button" class="btn-edit-cat" data-cat-id="${key}" title="編輯群組">編輯</button>
         </div>
       `;
@@ -15794,52 +15839,101 @@ var CapacitorBridgeBundle = (() => {
       categoryManageList.appendChild(itemEl);
     });
 
-    // 綁定群組上移一頁與下移一頁事件
-    categoryManageList.querySelectorAll('.btn-cat-up').forEach(btn => {
-      btn.addEventListener('click', function () {
-        const key = this.dataset.catId;
-        const keys = [...orderedKeys];
-        const idx = keys.indexOf(key);
-        if (idx > 0) {
-          const temp = keys[idx];
-          keys[idx] = keys[idx - 1];
-          keys[idx - 1] = temp;
-          saveCustomCategoryOrder(keys);
-          if (idx - 1 === 0) {
-            setFirstPageCategory(key);
-          }
-          renderCategoryManageList();
-          renderCategoryChips();
-          renderCards();
-          const pName = PAGE_NAMES[idx - 1] || `第 ${idx} 頁`;
-          showToast(`已上移至 ${pName}`);
+    categoryManageList.querySelectorAll('.cat-drag-handle').forEach(handle => {
+      const row = handle.closest('.cat-manage-item');
+      let pointerY = 0;
+      let scrollingFrame = 0;
+      let dragging = false;
+      let activePointerId = null;
+      let startPointerY = 0;
+      let preview = null;
+      let highlightedTarget = null;
+      const scrollArea = customCategoryModal.querySelector('.group-settings-scroll');
+
+      const movePreview = () => {
+        if (preview) preview.style.transform = `translate3d(0, ${pointerY - startPointerY}px, 0) scale(1.035)`;
+      };
+
+      const placeRow = () => {
+        if (!dragging) return;
+        const target = document.elementFromPoint(handle.getBoundingClientRect().left + 10, pointerY)?.closest('.cat-manage-item');
+        if (highlightedTarget && highlightedTarget !== target) highlightedTarget.classList.remove('is-drop-target');
+        highlightedTarget = target && target !== row && target.parentElement === categoryManageList ? target : null;
+        if (!highlightedTarget) return;
+        highlightedTarget.classList.add('is-drop-target');
+        const before = pointerY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+        if (moveCategoryDraftRow(row, target, before) && preview) {
+          preview.querySelector('.group-page-badge').textContent = row.querySelector('.group-page-badge').textContent;
         }
+      };
+
+      const autoScroll = () => {
+        if (!dragging || !scrollArea) return;
+        const bounds = scrollArea.getBoundingClientRect();
+        const edge = 56;
+        if (pointerY < bounds.top + edge) scrollArea.scrollTop -= 12;
+        if (pointerY > bounds.bottom - edge) scrollArea.scrollTop += 12;
+        placeRow();
+        scrollingFrame = requestAnimationFrame(autoScroll);
+      };
+
+      handle.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        setCategoryReorderDraftActive(true);
+        dragging = true;
+        activePointerId = event.pointerId;
+        pointerY = event.clientY;
+        startPointerY = event.clientY;
+        const bounds = row.getBoundingClientRect();
+        preview = row.cloneNode(true);
+        preview.classList.add('cat-drag-preview');
+        preview.setAttribute('aria-hidden', 'true');
+        preview.inert = true;
+        preview.style.left = `${bounds.left}px`;
+        preview.style.top = `${bounds.top}px`;
+        preview.style.width = `${bounds.width}px`;
+        preview.style.height = `${bounds.height}px`;
+        customCategoryModal.appendChild(preview);
+        movePreview();
+        row.classList.add('is-dragging');
+        cancelActiveCategoryDrag = () => finishDrag({ pointerId: activePointerId });
+        document.addEventListener('pointermove', moveDrag);
+        document.addEventListener('pointerup', finishDrag);
+        document.addEventListener('pointercancel', finishDrag);
+        scrollingFrame = requestAnimationFrame(autoScroll);
+      });
+      const moveDrag = event => {
+        if (!dragging || event.pointerId !== activePointerId) return;
+        pointerY = event.clientY;
+        movePreview();
+        placeRow();
+      };
+      const finishDrag = event => {
+        if (event.pointerId !== activePointerId) return;
+        dragging = false;
+        activePointerId = null;
+        row.classList.remove('is-dragging');
+        if (highlightedTarget) highlightedTarget.classList.remove('is-drop-target');
+        highlightedTarget = null;
+        if (preview) preview.remove();
+        preview = null;
+        cancelActiveCategoryDrag = null;
+        cancelAnimationFrame(scrollingFrame);
+        document.removeEventListener('pointermove', moveDrag);
+        document.removeEventListener('pointerup', finishDrag);
+        document.removeEventListener('pointercancel', finishDrag);
+      };
+      handle.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        event.preventDefault();
+        const sibling = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+        if (!sibling) return;
+        setCategoryReorderDraftActive(true);
+        moveCategoryDraftRow(row, sibling, event.key === 'ArrowUp');
+        handle.focus();
       });
     });
-
-    categoryManageList.querySelectorAll('.btn-cat-down').forEach(btn => {
-      btn.addEventListener('click', function () {
-        const key = this.dataset.catId;
-        const keys = [...orderedKeys];
-        const idx = keys.indexOf(key);
-        if (idx !== -1 && idx < keys.length - 1) {
-          const temp = keys[idx];
-          keys[idx] = keys[idx + 1];
-          keys[idx + 1] = temp;
-          saveCustomCategoryOrder(keys);
-          renderCategoryManageList();
-          renderCategoryChips();
-          renderCards();
-          const pName = PAGE_NAMES[idx + 1] || `第 ${idx + 2} 頁`;
-          showToast(`已下移至 ${pName}`);
-        }
-      });
-    });
-
-    if (btnToggleCategoryReorder) {
-      btnToggleCategoryReorder.textContent = reorderMode ? '完成' : '排序';
-      btnToggleCategoryReorder.setAttribute('aria-pressed', String(reorderMode));
-    }
 
     categoryManageList.querySelectorAll('.btn-set-first-page').forEach(btn => {
       btn.addEventListener('click', function () {
@@ -15874,6 +15968,7 @@ var CapacitorBridgeBundle = (() => {
         deleteCategory(catId);
       });
     });
+    if (categoryReorderDraftActive) setCategoryReorderDraftActive(true);
   }
 
   // 刪除群組 (可刪除預設群組與自訂群組)
@@ -16548,17 +16643,33 @@ var CapacitorBridgeBundle = (() => {
   if (fabAddBtn) fabAddBtn.addEventListener('click', openAddModal);
 
   const toastContainer = document.getElementById('toastContainer');
+  const toastQueue = [];
+  let visibleToastCount = 0;
+
+  function showQueuedToasts() {
+    while (visibleToastCount < 3 && toastQueue.length > 0) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = toastQueue.shift();
+      toastContainer.appendChild(toast);
+      visibleToastCount++;
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        setTimeout(() => {
+          toast.remove();
+          visibleToastCount--;
+          showQueuedToasts();
+        }, 200);
+      }, 2200);
+    }
+  }
+
   function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    toastContainer.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px)';
-      toast.style.transition = 'all 0.2s ease';
-      setTimeout(() => toast.remove(), 200);
-    }, 2200);
+    if (!toastContainer) return;
+    toastQueue.push(String(message));
+    showQueuedToasts();
   }
 
   // ==========================================

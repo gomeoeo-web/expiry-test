@@ -242,7 +242,7 @@ body::before {
   color: #292929 !important;
 }
 
-/* 群組管理：暖紙色與鼠尾草綠，降低表單與控制項的視覺負擔。 */
+/* 群組管理沿用設定視窗的主題表面與文字色。 */
 #customCategoryModal,
 #editCategoryModal {
   position: fixed !important;
@@ -252,20 +252,20 @@ body::before {
   justify-content: center;
 }
 #customCategoryModal .ios-modal-card {
-  background: linear-gradient(180deg, #f2efe8 0%, #e8e5dd 100%);
-  color: #3d3a35;
-  border: 1px solid rgba(110, 103, 91, .18);
-  box-shadow: 0 22px 60px rgba(55, 49, 38, .2);
+  background: var(--ios-surface);
+  color: var(--ios-text-primary);
+  border: 1px solid var(--ios-border);
 }
-#customCategoryModal .ios-modal-header { border-bottom-color: rgba(108, 119, 91, .14); }
+#editCategoryModal .ios-modal-card { background: var(--ios-surface); color: var(--ios-text-primary); }
+#customCategoryModal .ios-modal-header { border-bottom-color: var(--ios-border); }
 #customCategoryModal .ios-modal-header h2,
 #customCategoryModal .category-create-title,
-#customCategoryModal .category-list-title { color: #3f5145; }
+#customCategoryModal .category-list-title { color: var(--ios-text-primary); }
 #customCategoryModal .category-create-card,
 #customCategoryModal .cat-manage-item {
-  background: rgba(255, 253, 247, .78);
-  border-color: rgba(108, 119, 91, .2);
-  box-shadow: 0 3px 12px rgba(67, 62, 49, .045);
+  background: var(--ios-surface-secondary);
+  border-color: var(--ios-border);
+  box-shadow: none;
 }
 #customCategoryModal .category-create-card { padding: .95rem 1rem; }
 #customCategoryModal .category-create-card > summary {
@@ -278,56 +278,98 @@ body::before {
 #customCategoryModal .category-create-card > summary::-webkit-details-marker { display: none; }
 #customCategoryModal .category-create-card > summary span,
 #customCategoryModal .category-list-title span {
-  color: #8a897b;
+  color: var(--ios-text-secondary);
   font-size: .75rem;
   font-weight: 400;
 }
 #customCategoryModal .category-create-card[open] > summary { margin-bottom: .9rem; }
-#customCategoryModal .cat-manage-item { border-radius: 15px; padding: .72rem .82rem; }
-#customCategoryModal .category-list-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
+#customCategoryModal .cat-manage-item { flex-direction:row; align-items:center; gap:.45rem; min-height:58px; border-radius:13px; padding:.35rem .55rem; }
+#customCategoryModal .category-list-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; position:sticky; top:-1.25rem; z-index:2; padding:.5rem 0; background:var(--group-modal-bg, var(--ios-surface)); }
 #customCategoryModal .category-list-title span { display:none; }
-#customCategoryModal .btn-category-reorder { border:0; border-radius:999px; padding:.48rem .9rem; background:#dfe5d7; color:#46584b; font:inherit; font-size:.82rem; font-weight:700; }
-#customCategoryModal .cat-manage-info { min-height:36px; }
-#customCategoryModal .cat-manage-actions { display:flex; align-items:center; justify-content:flex-end; gap:.5rem; }
-#customCategoryModal .cat-reorder-controls { display:flex; gap:.3rem; }
-#customCategoryModal .cat-reorder-controls[hidden] { display:none; }
-#customCategoryModal .cat-manage-item .btn-cat-order { width:34px; height:34px; border-radius:50%; font-size:1rem; }
-#customCategoryModal .cat-manage-item .btn-edit-cat { min-width:64px; justify-content:center; padding:.45rem .75rem; }
+#customCategoryModal .category-manage-list { gap:.4rem; margin-top:.5rem; }
+#customCategoryModal .category-reorder-actions { display:flex; gap:.45rem; }
+#customCategoryModal .category-reorder-actions[hidden] { display:none; }
+#customCategoryModal .category-reorder-actions button { border:1px solid var(--button-border); border-radius:999px; padding:.48rem .7rem; font:inherit; font-size:.78rem; font-weight:700; white-space:nowrap; }
+#customCategoryModal #btnCancelCategoryReorder { background:var(--button-gray) !important; color:var(--button-text) !important; -webkit-text-fill-color:var(--button-text) !important; }
+#customCategoryModal #btnConfirmCategoryReorder { background:#24473c !important; border-color:#24473c !important; color:#fff !important; -webkit-text-fill-color:#fff !important; }
+#customCategoryModal .cat-drag-handle { width:44px; height:44px; flex:0 0 44px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:10px; background:transparent !important; color:var(--ios-text-secondary) !important; cursor:grab; touch-action:none; user-select:none; }
+#customCategoryModal .cat-drag-lines { display:flex; flex-direction:column; align-items:center; gap:4px; pointer-events:none; }
+#customCategoryModal .cat-drag-lines i { display:block; width:19px; height:2.5px; border-radius:999px; background:currentColor; }
+#customCategoryModal .cat-drag-handle:active { cursor:grabbing; }
+#customCategoryModal .cat-drag-handle:focus-visible { outline:2px solid var(--ios-blue); outline-offset:2px; }
+#customCategoryModal .cat-manage-item.is-dragging { visibility:hidden; }
+#customCategoryModal .cat-manage-item.is-drop-target { background:var(--button-selected) !important; border-color:var(--button-selected-border); }
+#customCategoryModal .cat-drag-preview { position:fixed; z-index:5; pointer-events:none; opacity:.98; border:2px solid var(--button-selected-border); box-shadow:0 20px 36px rgba(0,0,0,.38), 0 3px 10px rgba(0,0,0,.2); will-change:transform; }
+#customCategoryModal .category-manage-list.reorder-mode .btn-edit-cat:disabled { opacity:.48; cursor:not-allowed; }
+#customCategoryModal .cat-manage-info { flex:1; width:auto; min-width:0; min-height:44px; justify-content:flex-start; gap:.35rem; }
+#customCategoryModal .cat-manage-copy { display:flex; flex:1; flex-direction:column; justify-content:center; gap:.15rem; min-width:0; }
+#customCategoryModal .cat-manage-title-wrap { flex:0 1 auto; width:100%; gap:.3rem; }
+#customCategoryModal .cat-manage-subcount { line-height:1.1; }
+#customCategoryModal .group-page-badge { font-size:.7rem; padding:.15rem .4rem; }
+#customCategoryModal .cat-manage-actions { display:flex; flex:0 0 auto; align-items:center; justify-content:flex-end; }
+#customCategoryModal .cat-manage-item .btn-edit-cat { min-width:56px; min-height:36px; justify-content:center; padding:.35rem .55rem; }
 #customCategoryModal .cat-manage-item .cat-badge-default { display:none; }
-#customCategoryModal .category-manage-list.reorder-mode::before { content:'使用箭頭調整順序，第一列會成為首頁'; display:block; margin-bottom:.25rem; color:#8a897b; font-size:.78rem; }
-#customCategoryModal .edit-category-utilities { display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-top:1rem; padding-top:.8rem; border-top:1px solid rgba(108,119,91,.14); }
+#customCategoryModal .category-manage-list.reorder-mode::before { content:'拖動左側把手調整順序，第一列會成為首頁'; display:block; margin-bottom:.25rem; color:var(--ios-text-secondary); font-size:.78rem; }
+#customCategoryModal .edit-category-utilities { display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-top:1rem; padding-top:.8rem; border-top:1px solid var(--ios-border); }
 #customCategoryModal .edit-category-utilities button { font:inherit; font-size:.78rem; }
 #customCategoryModal #btnEditCategoryMakeFirst:disabled { opacity:.6; }
 #customCategoryModal .btn-set-first-page,
 #customCategoryModal .btn-edit-cat,
 #customCategoryModal .btn-cat-order,
 #customCategoryModal .group-page-select {
-  background: #e8e9dc !important;
-  border-color: rgba(108, 119, 91, .2) !important;
-  color: #46584b !important;
+  background: var(--button-gray) !important;
+  border-color: var(--button-border) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: var(--button-text) !important;
 }
 #customCategoryModal .btn-set-first-page:hover,
-#customCategoryModal .btn-edit-cat:hover { background: #dce4d6 !important; color: #344b3d !important; }
-#customCategoryModal .btn-delete-custom-cat { background: #f4e6df; border-color: #ead2c7; color: #a75d4b; }
-#customCategoryModal .badge-first-page { background: #e8ead8; color: #68754e; border-color: #d7ddc2; }
-#customCategoryModal .btn-reset-default-cats { color: #8a897b; border-color: rgba(108, 119, 91, .3); }
+#customCategoryModal .btn-edit-cat:hover { background: var(--button-selected) !important; color: var(--button-text) !important; }
+#customCategoryModal .btn-delete-custom-cat { background: var(--ios-red-bg); border-color: var(--delete-border); color: var(--ios-red); }
+#customCategoryModal .badge-first-page { background: var(--button-selected); color: var(--button-text); border-color: var(--button-selected-border); }
+#customCategoryModal .group-page-badge { background: var(--button-selected); color: var(--button-text); border-color: var(--button-selected-border); }
+#customCategoryModal .btn-reset-default-cats { color: var(--ios-text-secondary); border-color: var(--ios-border-strong); }
 [data-theme="dark"] #customCategoryModal .ios-modal-card,
-[data-theme="amoled"] #customCategoryModal .ios-modal-card {
-  background: linear-gradient(180deg, #35332f 0%, #292824 100%);
-  color: #efeee5;
+[data-theme="dark"] #editCategoryModal .ios-modal-card {
+  background: #151515;
+  color: var(--ios-text-primary);
 }
+[data-theme="amoled"] #customCategoryModal .ios-modal-card,
+[data-theme="amoled"] #editCategoryModal .ios-modal-card { background: #000; }
 [data-theme="dark"] #customCategoryModal .category-create-card,
 [data-theme="dark"] #customCategoryModal .cat-manage-item,
 [data-theme="amoled"] #customCategoryModal .category-create-card,
-[data-theme="amoled"] #customCategoryModal .cat-manage-item { background: rgba(255,255,255,.035); }
+[data-theme="amoled"] #customCategoryModal .cat-manage-item { background: #272729; border-color: var(--button-border); }
+[data-theme="amoled"] #customCategoryModal .category-create-card,
+[data-theme="amoled"] #customCategoryModal .cat-manage-item { background: #202022; }
 [data-theme="dark"] #customCategoryModal .ios-modal-header h2,
 [data-theme="dark"] #customCategoryModal .category-create-title,
 [data-theme="dark"] #customCategoryModal .category-list-title,
 [data-theme="amoled"] #customCategoryModal .ios-modal-header h2,
 [data-theme="amoled"] #customCategoryModal .category-create-title,
-[data-theme="amoled"] #customCategoryModal .category-list-title { color: #d7dfcf; }
-[data-theme="dark"] #customCategoryModal .btn-category-reorder,
-[data-theme="amoled"] #customCategoryModal .btn-category-reorder { background:#39443a; color:#d7dfcf; }
+[data-theme="amoled"] #customCategoryModal .category-list-title { color: var(--ios-text-primary); }
+[data-theme="dark"] #customCategoryModal { --group-modal-bg:#151515; }
+[data-theme="amoled"] #customCategoryModal { --group-modal-bg:#000; }
+:root:is([data-theme="dark"], [data-theme="amoled"]) #customCategoryModal #btnConfirmCategoryReorder { background:#d4d4d8 !important; border-color:#e4e4e7 !important; color:#202124 !important; -webkit-text-fill-color:#202124 !important; }
+
+/* 群組編輯按鈕：與卡片底色區分，確保各主題下文字清楚。 */
+:root[data-theme="light"] #customCategoryModal .cat-manage-item button.btn-edit-cat {
+  background: var(--button-selected) !important;
+  border-color: var(--button-selected-border) !important;
+  color: #24473c !important;
+  -webkit-text-fill-color: #24473c !important;
+}
+:root:is([data-theme="dark"], [data-theme="amoled"]) #customCategoryModal .cat-manage-item button.btn-edit-cat {
+  background: #d4d4d8 !important;
+  border-color: #e4e4e7 !important;
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+}
+:root[data-theme="light"] #customCategoryModal .cat-manage-item button.btn-edit-cat:hover {
+  background: #cbd9ce !important;
+}
+:root:is([data-theme="dark"], [data-theme="amoled"]) #customCategoryModal .cat-manage-item button.btn-edit-cat:hover {
+  background: #ececef !important;
+}
 :root:not([data-theme="light"]) button:where(:not(.danger,.confirm-active,.btn-clean-expired,.btn-modal-delete-item,.settings-row-btn,#btnSheetStart)) {
   background: var(--button-gray) !important;
   background-image: none !important;
@@ -457,8 +499,8 @@ body::before {
 
 [data-theme="light"] input::placeholder,
 [data-theme="light"] textarea::placeholder { color: #968c81 !important; opacity: .8; }
-[data-theme="light"] .card-note-preview,
-[data-theme="light"] .card-note-text { color: #81776d !important; opacity: .85; }
+.card-note-preview,
+.card-note-text { color: var(--ios-text-secondary) !important; opacity: 1 !important; }
 
 [data-screen-fit="tablet"] .card-summary:has(.card-note-preview) {
   display: grid;
@@ -477,11 +519,9 @@ body::before {
   align-items: flex-start;
 }
 [data-screen-fit="tablet"] .card-note-text {
-  white-space: normal;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  display: block;
 }
 
 /* 物品操作：暖紙白底、簡潔分組，保留確認操作的辨識色。 */
