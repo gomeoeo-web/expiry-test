@@ -170,7 +170,15 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
       recognitionCache.set(fingerprint, { at: Date.now(), result: structuredClone(result) });
     }
     const matched = window.matchCategoryAndSubCategory?.(result.name || '');
-    const category = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category) ? result.category : (matched?.category || 'other');
+    const modelCategory = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category)
+      ? result.category
+      : 'other';
+    // Prefer a concrete local name match over the model's broad visual guess.
+    // For example, a name containing "光泉鮮乳" is a dairy product even when
+    // the image model labels the package as fresh produce ("fresh").
+    const category = matched?.category && matched.category !== 'other'
+      ? matched.category
+      : (modelCategory !== 'other' ? modelCategory : (matched?.category || 'other'));
     const expiryDate = dateOrNull(result.expiryDate, result.expiryEvidence);
     // Keep a useful product name even when the model cannot map it to a
     // category. The confirmation dialog will use `other` instead of dropping
