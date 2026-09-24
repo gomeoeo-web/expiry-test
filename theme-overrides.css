@@ -131,6 +131,20 @@ body, button, input, textarea, select {
   background-image: none;
 }
 
+/* Keep the cloud-recognition consent prompt centered in mobile WebViews. */
+dialog.cloud-consent-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px) !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
 /* 群組管理：暖紙色與鼠尾草綠，降低表單與控制項的視覺負擔。 */
 #customCategoryModal,
 #editCategoryModal {

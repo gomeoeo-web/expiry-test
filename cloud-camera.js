@@ -70,6 +70,7 @@ async function consent(signal) {
   try { if (localStorage.getItem(CONSENT_KEY) === 'yes') return true; } catch {}
   return new Promise(resolve => {
     const dialog = document.createElement('dialog');
+    dialog.className = 'cloud-consent-dialog';
     dialog.style.cssText = 'max-width:360px;width:calc(100% - 32px);border:0;border-radius:22px;padding:24px;background:#fff;color:#222;font:16px/1.6 system-ui;';
     dialog.innerHTML = '<h2 style="font-size:20px;margin-top:0">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 Google Gemini，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept style="font:inherit;padding:12px;border:0;border-radius:12px;background:#205f40;color:white;width:100%">同意並辨識</button><button type="button" data-cancel style="font:inherit;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:12px;background:white;width:100%">改用手動填寫</button>';
     let finished = false;
