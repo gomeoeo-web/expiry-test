@@ -131,6 +131,24 @@ body, button, input, textarea, select {
   background-image: none;
 }
 
+/* Paint the iOS safe area with a solid color so system-status-bar blur cannot
+   wash out the content below it. Keep this beneath modal and toast layers. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 999;
+  pointer-events: none;
+  background: #eeece5;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root:not([data-theme="light"]) body::before { background: #111; }
+[data-theme="amoled"] body::before { background: #000; }
+
 /* App-owned consent layer avoids native dialog placement bugs in mobile WebViews. */
 .cloud-consent-overlay {
   position: fixed;
