@@ -69,15 +69,24 @@ export function cancelCurrentRecognition() {
 async function consent(signal) {
   try { if (localStorage.getItem(CONSENT_KEY) === 'yes') return true; } catch {}
   return new Promise(resolve => {
-    const dialog = document.createElement('dialog');
-    dialog.className = 'cloud-consent-dialog';
-    dialog.style.cssText = 'max-width:360px;width:calc(100% - 32px);border:0;border-radius:22px;padding:24px;background:#fff;color:#222;font:16px/1.6 system-ui;';
-    dialog.innerHTML = '<h2 style="font-size:20px;margin-top:0">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 Google Gemini，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept style="font:inherit;padding:12px;border:0;border-radius:12px;background:#205f40;color:white;width:100%">同意並辨識</button><button type="button" data-cancel style="font:inherit;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:12px;background:white;width:100%">改用手動填寫</button>';
+    const overlay = document.createElement('div');
+    overlay.className = 'cloud-consent-overlay';
+    overlay.innerHTML = '<section class="cloud-consent-dialog" role="dialog" aria-modal="true" aria-labelledby="cloudConsentTitle"><h2 id="cloudConsentTitle">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 Google Gemini，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept>同意並辨識</button><button type="button" data-cancel>改用手動填寫</button></section>';
     let finished = false;
     const onAbort = () => finish(false);
-    const finish = value => { if (finished) return; finished = true; signal?.removeEventListener('abort', onAbort); dialog.close(); dialog.remove(); resolve(value); };
-    const acceptBtn = dialog.querySelector('[data-accept]');
-    const cancelBtn = dialog.querySelector('[data-cancel]');
+    const priorBodyOverflow = document.body.style.overflow;
+    const onKeyDown = event => { if (event.key === 'Escape') finish(false); };
+    const finish = value => {
+      if (finished) return;
+      finished = true;
+      signal?.removeEventListener('abort', onAbort);
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = priorBodyOverflow;
+      overlay.remove();
+      resolve(value);
+    };
+    const acceptBtn = overlay.querySelector('[data-accept]');
+    const cancelBtn = overlay.querySelector('[data-cancel]');
     acceptBtn.onclick = () => {
       acceptBtn.disabled = true;
       acceptBtn.classList.add('loading');
@@ -86,8 +95,11 @@ async function consent(signal) {
       finish(true);
     };
     cancelBtn.onclick = () => finish(false);
-    dialog.addEventListener('cancel', e => { e.preventDefault(); finish(false); });
-    document.body.append(dialog); dialog.showModal();
+    overlay.addEventListener('click', event => { if (event.target === overlay) finish(false); });
+    document.body.style.overflow = 'hidden';
+    document.body.append(overlay);
+    document.addEventListener('keydown', onKeyDown);
+    acceptBtn.focus({ preventScroll: true });
     signal?.addEventListener('abort', onAbort, { once: true });
     if (signal?.aborted) finish(false);
   });
