@@ -14883,6 +14883,32 @@ var CapacitorBridgeBundle = (() => {
   let navigationStartTab = 'today';
   let navigationAnimationFrame = 0;
 
+  const dockMotionElement = document.querySelector('.floating-island-dock');
+  const dockMotionButtons = navTabs.map(tab => dockMotionElement.querySelector(`[data-tab="${tab}"]`));
+  function syncDockMotion() {
+    const width = viewsSliderViewport.clientWidth;
+    if (!width) return;
+    let progress = Math.max(0, Math.min(navTabs.length - 1, viewsSliderViewport.scrollLeft / width));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) progress = Math.round(progress);
+    const start = Math.floor(progress), end = Math.min(start + 1, navTabs.length - 1);
+    const fraction = progress - start;
+    const a = dockMotionButtons[start], b = dockMotionButtons[end];
+    const blend = (x, y) => x + (y - x) * fraction;
+    dockMotionElement.style.setProperty('--dock-indicator-x', blend(a.offsetLeft, b.offsetLeft) + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-width', blend(a.offsetWidth, b.offsetWidth) + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-top', a.offsetTop + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-height', a.offsetHeight + 'px');
+    dockMotionButtons.forEach((button, index) => {
+      const weight = Math.max(0, 1 - Math.abs(progress - index));
+      button.style.setProperty('--dock-emphasis', weight);
+      const channel = base => Math.round(base + (255 - base) * weight);
+      button.style.setProperty('--dock-ink', `rgb(${channel(133)}, ${channel(135)}, ${channel(140)})`);
+    });
+    dockMotionElement.classList.add('dock-motion-ready');
+  }
+  new ResizeObserver(syncDockMotion).observe(dockMotionElement);
+  requestAnimationFrame(syncDockMotion);
+
   function setPanelsSwipingState(swiping) {
     viewsSliderViewport.classList.toggle('is-swiping', swiping);
   }
@@ -14906,6 +14932,7 @@ var CapacitorBridgeBundle = (() => {
       if (active) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
+    syncDockMotion();
   }
 
   function setActivePanel(tab) {
@@ -16037,19 +16064,25 @@ var CapacitorBridgeBundle = (() => {
     if (bodyScrollLock) return;
     const body = document.body;
     const properties = ['position', 'top', 'left', 'width', 'overflow'];
+    // The transparent item sheet must leave the page in its normal painting
+    // position. Fixing body here makes iOS rebase the page and exposes the
+    // unpainted root around the safe area while the sheet opens.
+    const fixBody = actionSheet.style.display !== 'flex';
     bodyScrollLock = {
       x: window.scrollX, y: window.scrollY,
+      fixBody,
       styles: properties.map(name => [name, body.style.getPropertyValue(name), body.style.getPropertyPriority(name)])
     };
     cancelAnimationFrame(navigationAnimationFrame);
     navigationAnimationFrame = 0;
     clearTimeout(panelSwitchSettleTimer);
     panelSwitchSettleTimer = null;
-    // A fixed body holds the visual page position during iOS rubber-banding too.
-    body.style.position = 'fixed';
-    body.style.top = `-${bodyScrollLock.y}px`;
-    body.style.left = `-${bodyScrollLock.x}px`;
-    body.style.width = '100%';
+    if (fixBody) {
+      body.style.position = 'fixed';
+      body.style.top = `-${bodyScrollLock.y}px`;
+      body.style.left = `-${bodyScrollLock.x}px`;
+      body.style.width = '100%';
+    }
     body.style.overflow = 'hidden';
     document.documentElement.classList.add('modal-open');
     body.classList.add('modal-open');
@@ -16065,7 +16098,7 @@ var CapacitorBridgeBundle = (() => {
     }
     document.body.classList.remove('modal-open');
     document.documentElement.classList.remove('modal-open');
-    window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' });
+    if (saved.fixBody) window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' });
     if (navigationInProgress) switchViewTab(pendingNavTab || currentNavTab, true);
   }
 
@@ -16185,6 +16218,7 @@ var CapacitorBridgeBundle = (() => {
 
     viewsSliderViewport.addEventListener('scroll', () => {
       if (isAnyModalOpen()) return;
+      syncDockMotion();
       // The rAF animator owns completion. Avoid a timer and layout checks per frame.
       if (navigationAnimationFrame) return;
       if (!navigationInProgress) {

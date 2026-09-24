@@ -14,6 +14,34 @@ body, button, input, textarea, select {
   -webkit-backdrop-filter: none !important;
 }
 
+/* The item action sheet should overlay the page without tinting it. Keep
+   the home-indicator inset inside the sheet so no backdrop-colored strip
+   remains at the bottom of the screen. */
+#actionSheet.ios-action-backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding-bottom: 0.75rem;
+}
+
+/* Keep the page width constant when the modal scroll lock hides the scrollbar.
+   Reserve this space before opening too, so centered content never shifts. */
+html {
+  width: auto;
+  max-width: none;
+  scrollbar-gutter: stable;
+}
+
+/* Animate the sheet itself; fading the transparent parent makes its content
+   briefly translucent over the page. */
+#actionSheet.ios-action-backdrop:not(.modal-closing) {
+  animation: none !important;
+}
+
+#actionSheet .ios-action-sheet {
+  padding-bottom: max(1.25rem, calc(0.75rem + env(safe-area-inset-bottom, 0px)));
+}
+
 .card-metric-main .metric-highlight-number { font-size: 1.75rem; }
 .card-metric-main { flex-wrap: wrap; }
 .card-metric-main .metric-pretext { white-space: nowrap; flex-shrink: 0; }
@@ -134,6 +162,9 @@ body, button, input, textarea, select {
   --delete-border: #623838;
 }
 /* 手機頂部狀態列與頁面共用背景，頂端加深以襯托白色系系統圖示。 */
+:root { background-color: #111111; }
+:root[data-theme="light"] { background-color: #f3efe6; }
+:root[data-theme="amoled"] { background-color: #000; }
 :root body {
   background-color: #111111;
   background-image: none;
@@ -855,4 +886,38 @@ body::before {
 :root .sheet-actions-group #btnSheetDelete {
   border-color: var(--delete-border) !important;
   border-radius: 14px;
+}
+
+/* One selection pill follows the actual horizontal page scroll position. */
+.floating-island-dock.dock-motion-ready::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--dock-indicator-top);
+  width: var(--dock-indicator-width);
+  height: var(--dock-indicator-height);
+  transform: translateX(var(--dock-indicator-x));
+  border-radius: 32px;
+  background: #38383c;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .16);
+  pointer-events: none;
+}
+:root body .floating-island-dock.dock-motion-ready .dock-tab {
+  z-index: 1;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+:root body .floating-island-dock.dock-motion-ready .dock-tab,
+:root body .floating-island-dock.dock-motion-ready .dock-tab .dock-label,
+:root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon svg {
+  color: var(--dock-ink) !important;
+  -webkit-text-fill-color: var(--dock-ink) !important;
+  transition: none;
+}
+:root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon svg {
+  stroke: currentColor !important;
+}
+:root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon {
+  transform: translateY(calc(-1px * var(--dock-emphasis))) scale(calc(1 + .15 * var(--dock-emphasis)));
+  transition: none;
 }
