@@ -943,6 +943,20 @@ html {
   }
 }
 
+/* Scroll owns these transforms: timed easing would lag behind the finger. */
+.floating-island-dock.scroll-linked-navigation {
+  transform: translate(-50%, var(--nav-offset, 0px));
+  opacity: var(--nav-opacity, 1);
+  transition: none;
+}
+@media (max-width: 600px) {
+  .ios-header.scroll-linked-navigation {
+    transform: translateY(var(--nav-offset, 0px));
+    opacity: var(--nav-opacity, 1);
+    transition: none;
+  }
+}
+
 /* One selection pill follows the actual horizontal page scroll position. */
 .floating-island-dock.dock-motion-ready::before {
   content: '';

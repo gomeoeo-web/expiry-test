@@ -14968,6 +14968,7 @@ var CapacitorBridgeBundle = (() => {
     if (headerSublabel) headerSublabel.textContent = { today: '主頁', inventory: '物品分類', pending: '待用物品' }[tab];
     if (headerMainTitle) headerMainTitle.textContent = { today: '期效管家', inventory: '分類清單', pending: '待用物品' }[tab];
     document.querySelector('.floating-island-dock')?.classList.remove('dock-hidden');
+    window.dispatchEvent(new Event('app:navigation-reveal'));
   }
 
   function finishNavigation(targetTab) {
@@ -16347,12 +16348,35 @@ var CapacitorBridgeBundle = (() => {
   const stickyHeader = document.querySelector('.ios-header');
   if (floatingIslandDock && stickyHeader) {
     let lastY = Math.max(0, window.scrollY);
-    let travel = 0;
+    let headerOffset = 0;
+    let dockOffset = 0;
     let frame = 0;
+    let headerDistance = 1;
+    let dockDistance = 1;
+    const reducedNavigationMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    function measureNavigation() {
+      headerDistance = stickyHeader.offsetHeight + (parseFloat(getComputedStyle(stickyHeader).top) || 0) + 10;
+      dockDistance = floatingIslandDock.offsetHeight + (parseFloat(getComputedStyle(floatingIslandDock).bottom) || 0) + 10;
+    }
+    function paintNavigation() {
+      for (const [element, distance, offset, direction, hiddenClass] of [
+        [stickyHeader, headerDistance, headerOffset, -1, 'header-hidden'],
+        [floatingIslandDock, dockDistance, dockOffset, 1, 'dock-hidden']
+      ]) {
+        const progress = reducedNavigationMotion.matches ? Number(offset > 0) : Math.min(1, offset / distance);
+        element.style.setProperty('--nav-offset', `${direction * progress * distance}px`);
+        element.style.setProperty('--nav-opacity', String(1 - progress));
+        element.classList.toggle(hiddenClass, progress >= 1);
+      }
+    }
+    measureNavigation();
+    stickyHeader.classList.add('scroll-linked-navigation');
+    floatingIslandDock.classList.add('scroll-linked-navigation');
     function revealNavigation() {
       stickyHeader.classList.remove('header-hidden');
       floatingIslandDock.classList.remove('dock-hidden');
-      travel = 0;
+      headerOffset = dockOffset = 0;
+      paintNavigation();
       lastY = Math.max(0, window.scrollY);
     }
     function updateNavigationVisibility() {
@@ -16371,14 +16395,12 @@ var CapacitorBridgeBundle = (() => {
         return;
       }
       if (!delta) return;
-      travel = Math.sign(delta) === Math.sign(travel) ? travel + delta : delta;
-      if (travel > 12 && y > 60) {
-        stickyHeader.classList.add('header-hidden');
-        floatingIslandDock.classList.add('dock-hidden');
-        travel = 0;
-      } else if (travel < -10) {
-        revealNavigation();
-      }
+      // Move one CSS pixel for each scroll pixel, with no timed transition.
+      // Only the distance beyond the top guard contributes to hiding.
+      const movement = delta > 0 ? Math.max(0, y - Math.max(60, y - delta)) : delta;
+      headerOffset = Math.max(0, Math.min(headerDistance, headerOffset + movement));
+      dockOffset = Math.max(0, Math.min(dockDistance, dockOffset + movement));
+      paintNavigation();
     }
     window.addEventListener('scroll', () => {
       if (!frame) frame = requestAnimationFrame(updateNavigationVisibility);
@@ -16386,12 +16408,12 @@ var CapacitorBridgeBundle = (() => {
     stickyHeader.addEventListener('focusin', revealNavigation);
     floatingIslandDock.addEventListener('focusin', revealNavigation);
     floatingIslandDock.addEventListener('click', revealNavigation);
-    window.addEventListener('resize', revealNavigation);
-    // Tab switches (including horizontal swipes) already reveal the dock.
-    new MutationObserver(() => {
-      if (!floatingIslandDock.classList.contains('dock-hidden'))
-        stickyHeader.classList.remove('header-hidden');
-    }).observe(floatingIslandDock, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', () => { measureNavigation(); revealNavigation(); });
+    window.addEventListener('app:navigation-reveal', revealNavigation);
+    reducedNavigationMotion.addEventListener('change', revealNavigation);
+    new ResizeObserver(() => { measureNavigation(); paintNavigation(); })
+      .observe(stickyHeader);
+    paintNavigation();
   }
 
   const inventorySearchField = document.getElementById('inventorySearchField');
