@@ -181,7 +181,8 @@ html {
 }
 [data-theme="light"] body {
   background-color: #f3efe6;
-  background-image: linear-gradient(180deg, #d9e8d5 0 10rem, #e6ede0 17rem, #efeee5 24rem, #f3efe6 31rem);
+  background-image: linear-gradient(180deg, #a9c99f 0%, #a9c99f 10%, #c2d6bb 24%, #d9e6d3 38%, #e6ede0 45%, #f3efe6 50%);
+  background-repeat: no-repeat;
 }
 [data-theme="amoled"] body {
   background-color: #000;
@@ -196,7 +197,7 @@ html {
     --app-header-background: #111111;
     overscroll-behavior-y: none;
   }
-  :root[data-theme="light"] { --app-header-background: #d9e8d5; }
+  :root[data-theme="light"] { --app-header-background: #a9c99f; }
   :root[data-theme="amoled"] { --app-header-background: #000; }
   /* overflow-x:hidden creates a second scroll container on body and prevents
      the header from sticking to the document viewport. */
