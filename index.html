@@ -9,7 +9,7 @@
   <meta name="color-scheme" content="dark light">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="style.css?v=1.9.21">
   <style>
 /* ==========================================================================
@@ -7673,7 +7673,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
 </style>
-  <link rel="stylesheet" href="theme-overrides.css?v=1.9.21">
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.21-header-safe-area">
 </head>
 <body>
   <div class="ios-app-container">
@@ -14387,7 +14387,7 @@ var CapacitorBridgeBundle = (() => {
       else metaThemeColor.setAttribute('content', '#121212');
     }
     if (appleStatusBarStyle) {
-      appleStatusBarStyle.setAttribute('content', 'black');
+      appleStatusBarStyle.setAttribute('content', 'default');
     }
     if (settingsThemeText) {
       if (validTheme === 'amoled') settingsThemeText.textContent = '目前為 OLED純黑 模式';

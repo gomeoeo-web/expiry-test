@@ -178,9 +178,39 @@ html {
   background-image: none;
 }
 
-/* Keep the search field and settings control crisp against the header. */
+/* Keep the header's initial and scrolled positions identical. Safe-area padding
+   alone scrolls away with the document and cannot protect the input field. */
 @media (max-width: 600px) {
-  .ios-header { margin-top: 0; }
+  :root {
+    --app-header-top: max(1.2rem, calc(env(safe-area-inset-top, 0px) + 8px));
+    --app-header-background: #111111;
+    overscroll-behavior-y: none;
+  }
+  :root[data-theme="light"] { --app-header-background: #d9e8d5; }
+  :root[data-theme="amoled"] { --app-header-background: #000; }
+  /* overflow-x:hidden creates a second scroll container on body and prevents
+     the header from sticking to the document viewport. */
+  body { overflow-x: clip; }
+  .ios-app-container { padding-top: var(--app-header-top); }
+  .ios-header {
+    position: sticky;
+    top: var(--app-header-top);
+    z-index: 100;
+    isolation: isolate;
+    margin-top: 0;
+    background: var(--app-header-background);
+  }
+  .ios-header::before {
+    content: "";
+    position: absolute;
+    top: calc(-1 * var(--app-header-top));
+    bottom: -8px;
+    left: calc(50% - 50vw);
+    width: 100vw;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--app-header-background);
+  }
 }
 .ios-header,
 .ios-header * {
