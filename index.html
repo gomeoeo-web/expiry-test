@@ -7753,11 +7753,11 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
               </button>
               <button type="button" class="home-filter-btn" data-filter="urgent" id="pillUrgent">
                 <span class="filter-btn-text">將到期</span>
-                <span class="filter-btn-badge urgent" id="pillCountUrgent">0</span>
+                <span class="filter-btn-badge urgent" id="pillCountUrgent"><span class="filter-btn-badge-value">0</span></span>
               </button>
               <button type="button" class="home-filter-btn" data-filter="expired" id="pillExpired">
                 <span class="filter-btn-text">已過期</span>
-                <span class="filter-btn-badge expired" id="pillCountExpired">0</span>
+                <span class="filter-btn-badge expired" id="pillCountExpired"><span class="filter-btn-badge-value">0</span></span>
               </button>
             </section>
 
@@ -11987,8 +11987,8 @@ var CapacitorBridgeBundle = (() => {
       const upcoming = Math.max(0, urgent - dueToday);
 
       if (pillCountAll) pillCountAll.textContent = total;
-      if (pillCountUrgent) pillCountUrgent.textContent = urgent;
-      if (pillCountExpired) pillCountExpired.textContent = expired;
+      if (pillCountUrgent) pillCountUrgent.querySelector('.filter-btn-badge-value').textContent = urgent;
+      if (pillCountExpired) pillCountExpired.querySelector('.filter-btn-badge-value').textContent = expired;
 
     const noticeStatusTag = document.getElementById('noticeStatusTag');
     const noticeStatusText = document.getElementById('noticeStatusText');

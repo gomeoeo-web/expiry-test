@@ -114,13 +114,25 @@ html {
   gap: .25rem;
 }
 #segmentedPillsBar .filter-btn-badge {
+  display: inline-flex;
+  flex: 0 0 1.5rem;
+  align-self: center;
   box-sizing: border-box;
   min-width: 1.5rem;
   height: 1.5rem;
-  padding: 0 .42rem .16rem;
-  line-height: 1;
+  padding: 0;
+  line-height: 1 !important;
   align-items: center;
   justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+#segmentedPillsBar #pillCountUrgent,
+#segmentedPillsBar #pillCountExpired {
+  position: static;
+}
+#segmentedPillsBar .filter-btn-badge-value {
+  position: relative;
+  top: -1.3px;
 }
 
 :root {
