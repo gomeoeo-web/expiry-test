@@ -74,8 +74,10 @@ html {
   box-shadow: 0 4px 8px rgba(45, 42, 38, .14) !important;
 }
 
-/* Tighten the vertical rhythm above the item lists without shrinking controls. */
-#statusNoticeCard { margin-bottom: 14px; }
+/* Compact the header-to-list spacing while keeping clear touch targets. */
+.ios-header { margin-bottom: 10px; }
+#statusNoticeCard { margin-bottom: 8px; padding-block: 10px; }
+#homeSortToolbar { margin-bottom: 10px; }
 #inventoryControls { gap: 11px; margin-bottom: 15px; }
 
 /* 留白放在捲動區外，避免靠左對齊時露出上一個膠囊。 */
@@ -98,20 +100,23 @@ html {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   box-sizing: border-box;
   min-width: 0;
-  padding: 10px 2px;
-  margin-bottom: 17px;
+  padding: 6px 2px;
+  margin-bottom: 8px;
 }
 #segmentedPillsBar .home-filter-btn {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
   padding-inline: .3rem;
+  padding-block: 5px;
+  min-height: 40px;
+  height: 40px;
   gap: .25rem;
 }
 #segmentedPillsBar .filter-btn-badge {
   box-sizing: border-box;
-  min-width: 1.7rem;
-  height: 1.7rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
   padding: 0 .42rem .16rem;
   line-height: 1;
   align-items: center;

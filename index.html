@@ -16259,13 +16259,13 @@ var CapacitorBridgeBundle = (() => {
     viewsSliderViewport.addEventListener('touchcancel', () => {
       touchActive = false;
       viewsSliderViewport.style.scrollSnapType = '';
-      scheduleCheckSettled();
+      if (hasSwipedHorizontally || navigationInProgress) scheduleCheckSettled();
     }, { passive: true });
 
     viewsSliderViewport.addEventListener('touchend', () => {
       touchActive = false;
       viewsSliderViewport.style.scrollSnapType = '';
-      scheduleCheckSettled();
+      if (hasSwipedHorizontally || navigationInProgress) scheduleCheckSettled();
     }, { passive: true });
 
     viewsSliderViewport.addEventListener('scroll', () => {
@@ -16353,6 +16353,18 @@ var CapacitorBridgeBundle = (() => {
     let frame = 0;
     let headerDistance = 1;
     let dockDistance = 1;
+    let navigationTouch = null;
+    function navigationProtected() {
+      const focused = document.activeElement;
+      return isAnyModalOpen() ||
+        (stickyHeader.contains(focused) && focused.matches('input, textarea, select')) ||
+        ((stickyHeader.contains(focused) || floatingIslandDock.contains(focused)) && focused.matches(':focus-visible'));
+    }
+    function moveNavigation(distance) {
+      headerOffset = Math.max(0, Math.min(headerDistance, headerOffset + distance));
+      dockOffset = Math.max(0, Math.min(dockDistance, dockOffset + distance));
+      paintNavigation();
+    }
     const reducedNavigationMotion = matchMedia('(prefers-reduced-motion: reduce)');
     function measureNavigation() {
       headerDistance = stickyHeader.offsetHeight + (parseFloat(getComputedStyle(stickyHeader).top) || 0) + 10;
@@ -16387,28 +16399,49 @@ var CapacitorBridgeBundle = (() => {
       const y = Math.max(0, Math.min(window.scrollY, maxY));
       const delta = y - lastY;
       lastY = y;
-      const focused = document.activeElement;
-      const editing = stickyHeader.contains(focused) && focused.matches('input, textarea, select');
-      const keyboardNavigation = (stickyHeader.contains(focused) || floatingIslandDock.contains(focused)) && focused.matches(':focus-visible');
-      if (isAnyModalOpen() || editing || keyboardNavigation || y < 35) {
+      // Touch movement owns the offset until release; do not count it twice.
+      if (navigationTouch) return;
+      if (navigationProtected() || y <= 0) {
         revealNavigation();
         return;
       }
       if (!delta) return;
       // Move one CSS pixel for each scroll pixel, with no timed transition.
-      // Only the distance beyond the top guard contributes to hiding.
-      const movement = delta > 0 ? Math.max(0, y - Math.max(60, y - delta)) : delta;
-      headerOffset = Math.max(0, Math.min(headerDistance, headerOffset + movement));
-      dockOffset = Math.max(0, Math.min(dockDistance, dockOffset + movement));
-      paintNavigation();
+      moveNavigation(delta);
     }
     window.addEventListener('scroll', () => {
       if (!frame) frame = requestAnimationFrame(updateNavigationVisibility);
     }, { passive: true });
+    window.addEventListener('touchstart', event => {
+      navigationTouch = null;
+      if (event.touches.length !== 1 || navigationProtected() ||
+          event.target.closest('.ios-header, .floating-island-dock, input, textarea, select, #categoryChipRow')) return;
+      const touch = event.touches[0];
+      navigationTouch = { x: touch.clientX, y: touch.clientY, lastY: touch.clientY, axis: null };
+    }, { passive: true });
+    window.addEventListener('touchmove', event => {
+      if (!navigationTouch) return;
+      if (event.touches.length !== 1 || navigationProtected()) { navigationTouch = null; return; }
+      const touch = event.touches[0];
+      const dx = touch.clientX - navigationTouch.x;
+      const dy = touch.clientY - navigationTouch.y;
+      if (!navigationTouch.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 4)
+        navigationTouch.axis = Math.abs(dy) > Math.abs(dx) ? 'vertical' : 'horizontal';
+      if (navigationTouch.axis === 'vertical' && !event.defaultPrevented)
+        moveNavigation(navigationTouch.lastY - touch.clientY);
+      if (navigationTouch.axis) navigationTouch.lastY = touch.clientY;
+    }, { passive: true });
+    function finishNavigationTouch() {
+      navigationTouch = null;
+      lastY = Math.max(0, Math.min(window.scrollY, Math.max(0, document.documentElement.scrollHeight - innerHeight)));
+    }
+    window.addEventListener('touchend', finishNavigationTouch, { passive: true });
+    window.addEventListener('touchcancel', finishNavigationTouch, { passive: true });
     stickyHeader.addEventListener('focusin', revealNavigation);
     floatingIslandDock.addEventListener('focusin', revealNavigation);
     floatingIslandDock.addEventListener('click', revealNavigation);
-    window.addEventListener('resize', () => { measureNavigation(); revealNavigation(); });
+    // Browser toolbar expansion changes height during a swipe. Preserve progress.
+    window.addEventListener('resize', () => { measureNavigation(); paintNavigation(); });
     window.addEventListener('app:navigation-reveal', revealNavigation);
     reducedNavigationMotion.addEventListener('change', revealNavigation);
     new ResizeObserver(() => { measureNavigation(); paintNavigation(); })
