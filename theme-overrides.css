@@ -126,14 +126,7 @@ html {
   justify-content: center;
   font-variant-numeric: tabular-nums;
 }
-#segmentedPillsBar #pillCountUrgent,
-#segmentedPillsBar #pillCountExpired {
-  position: static;
-}
-#segmentedPillsBar .filter-btn-badge-value {
-  position: relative;
-  top: -1.3px;
-}
+#segmentedPillsBar .filter-btn-badge-value { position: static; }
 
 :root {
   --ink-green: #49c775;

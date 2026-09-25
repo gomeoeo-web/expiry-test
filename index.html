@@ -7749,7 +7749,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
             <section class="home-filter-buttons-row" id="segmentedPillsBar">
               <button type="button" class="home-filter-btn active" data-filter="all" id="pillAll">
                 <span class="filter-btn-text">全部</span>
-                <span class="filter-btn-badge" id="pillCountAll">0</span>
+                <span class="filter-btn-badge" id="pillCountAll"><span class="filter-btn-badge-value">0</span></span>
               </button>
               <button type="button" class="home-filter-btn" data-filter="urgent" id="pillUrgent">
                 <span class="filter-btn-text">將到期</span>
@@ -11986,7 +11986,7 @@ var CapacitorBridgeBundle = (() => {
 
       const upcoming = Math.max(0, urgent - dueToday);
 
-      if (pillCountAll) pillCountAll.textContent = total;
+      if (pillCountAll) pillCountAll.querySelector('.filter-btn-badge-value').textContent = total;
       if (pillCountUrgent) pillCountUrgent.querySelector('.filter-btn-badge-value').textContent = urgent;
       if (pillCountExpired) pillCountExpired.querySelector('.filter-btn-badge-value').textContent = expired;
 
