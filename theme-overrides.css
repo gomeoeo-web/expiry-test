@@ -897,6 +897,52 @@ html {
   border-radius: 14px;
 }
 
+/* 1.9.22: shared motion rhythm for controls, navigation and overlays. */
+:root,
+:root[data-motion-profile] {
+  --motion-ease: cubic-bezier(.22, .72, .18, 1);
+  --motion-duration: 280ms;
+  --motion-press: 160ms;
+  --transition-ios: var(--motion-press) var(--motion-ease);
+}
+:root body :is(button, [role="button"], summary, .ios-item-card, .pending-card) {
+  transition: scale var(--motion-press) var(--motion-ease),
+    transform var(--motion-press) var(--motion-ease),
+    opacity var(--motion-press) var(--motion-ease),
+    background-color var(--motion-press) var(--motion-ease),
+    color var(--motion-press) var(--motion-ease),
+    border-color var(--motion-press) var(--motion-ease);
+}
+:root body :is(button, [role="button"], summary, .ios-item-card, .pending-card):active:not(:disabled):not([aria-disabled="true"]) {
+  scale: .97;
+}
+:root body :is(input, textarea, select) {
+  transition: border-color var(--transition-ios), background-color var(--transition-ios), box-shadow var(--transition-ios);
+}
+.floating-island-dock {
+  transition: transform var(--motion-duration) var(--motion-ease), opacity var(--motion-duration) var(--motion-ease);
+}
+:root body :is(.ios-modal-card, .ios-action-sheet, .ios-modal-backdrop, .ios-action-backdrop, .toast) {
+  animation-duration: var(--motion-duration) !important;
+  animation-timing-function: var(--motion-ease) !important;
+}
+@media (max-width: 600px) {
+  .ios-header {
+    transition: transform var(--motion-duration) var(--motion-ease),
+      opacity var(--motion-duration) var(--motion-ease),
+      visibility 0s;
+  }
+  .ios-header.header-hidden {
+    transform: translateY(calc(-100% - var(--app-header-top) - 10px));
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform var(--motion-duration) var(--motion-ease),
+      opacity var(--motion-duration) var(--motion-ease),
+      visibility 0s var(--motion-duration);
+  }
+}
+
 /* One selection pill follows the actual horizontal page scroll position. */
 .floating-island-dock.dock-motion-ready::before {
   content: '';
@@ -927,6 +973,18 @@ html {
   color: var(--dock-ink) !important;
   -webkit-text-fill-color: var(--dock-ink) !important;
   transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body *, :root body *::before, :root body *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  :root body :is(button, [role="button"], summary, .ios-item-card, .pending-card):active {
+    scale: 1;
+  }
 }
 :root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon svg {
   stroke: currentColor !important;

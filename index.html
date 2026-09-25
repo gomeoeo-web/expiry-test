@@ -10,7 +10,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="style.css?v=1.9.21">
+  <link rel="stylesheet" href="style.css?v=1.9.22">
   <style>
 /* ==========================================================================
    期效管家 - 極簡 iOS 設計語彙 (Apple Dark Minimalist)
@@ -7673,7 +7673,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
 </style>
-  <link rel="stylesheet" href="theme-overrides.css?v=1.9.21-header-safe-area">
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22">
 </head>
 <body>
   <div class="ios-app-container">
@@ -8375,7 +8375,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
         <!-- Bottom Left Version Badge (設置裡的左下角版本號碼) -->
         <div class="settings-version-wrap">
-          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.21</span>
+          <span class="app-version-badge settings-version-badge" id="appVersionBadge">v1.9.22</span>
         </div>
 
         <!-- Extra bottom clearance to prevent bottom card frame from clipping text -->
@@ -9888,7 +9888,7 @@ var CapacitorBridgeBundle = (() => {
 */
 
 </script>
-  <script src="sheet-gestures.js?v=1.9.21"></script>
+  <script src="sheet-gestures.js?v=1.9.22"></script>
   <script id="appLogicInline">
   const { bindSheetDrag, animateModalClose, containModalScroll } = window.SheetGestures || {
     bindSheetDrag() {},
@@ -9912,7 +9912,7 @@ var CapacitorBridgeBundle = (() => {
 
   // ==========================================
   // 1. 常數與預設範本
-  const APP_VERSION = '1.9.21';
+  const APP_VERSION = '1.9.22';
   const STORAGE_KEY = 'lifespan_tracker_ios_v10';
   const OLD_STORAGE_KEY_V9 = 'lifespan_tracker_ios_v9';
   const THEME_KEY = 'lifespan_tracker_theme';
@@ -15035,7 +15035,7 @@ var CapacitorBridgeBundle = (() => {
     }
 
     const started = performance.now();
-    const duration = document.documentElement.dataset.motionProfile === 'one-ui' ? 260 : 240;
+    const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--motion-duration')) || 280;
     const tick = now => {
       const elapsed = now - started;
       const progress = Math.min(1, elapsed / duration);
@@ -16344,65 +16344,54 @@ var CapacitorBridgeBundle = (() => {
   // 主頁與物品分類框 滾動自動隱藏與顯現 (頁面往上滑自動隱藏，往下滑自動出現)
   // ==========================================
   const floatingIslandDock = document.querySelector('.floating-island-dock');
-  if (floatingIslandDock) {
-    let lastScrollY = window.scrollY || window.pageYOffset || 0;
-    let scrollTicking = false;
-    let touchStartDockY = 0;
-
-    function updateDockVisibility() {
-      const currentScrollY = window.scrollY || window.pageYOffset || 0;
-      const scrollDiff = currentScrollY - lastScrollY;
-
-      // 靠近頁面頂部時始終保持可見
-      if (currentScrollY < 35) {
-        floatingIslandDock.classList.remove('dock-hidden');
-      } else if (scrollDiff > 8 && currentScrollY > 60) {
-        // 頁面往上滑 (向下滾動閱讀內容) 自動隱藏
-        floatingIslandDock.classList.add('dock-hidden');
-      } else if (scrollDiff < -8) {
-        // 頁面往下滑 (回滾至上方) 自動顯現
-        floatingIslandDock.classList.remove('dock-hidden');
-      }
-
-      lastScrollY = currentScrollY;
-      scrollTicking = false;
+  const stickyHeader = document.querySelector('.ios-header');
+  if (floatingIslandDock && stickyHeader) {
+    let lastY = Math.max(0, window.scrollY);
+    let travel = 0;
+    let frame = 0;
+    function revealNavigation() {
+      stickyHeader.classList.remove('header-hidden');
+      floatingIslandDock.classList.remove('dock-hidden');
+      travel = 0;
+      lastY = Math.max(0, window.scrollY);
     }
-
-    window.addEventListener('scroll', function () {
-      if (isAnyModalOpen()) return;
-      if (!scrollTicking) {
-        window.requestAnimationFrame(updateDockVisibility);
-        scrollTicking = true;
+    function updateNavigationVisibility() {
+      frame = 0;
+      // Clamp rubber-band overscroll, and accumulate small movements so slow
+      // gestures work just as reliably as fast swipes.
+      const maxY = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+      const y = Math.max(0, Math.min(window.scrollY, maxY));
+      const delta = y - lastY;
+      lastY = y;
+      const focused = document.activeElement;
+      const editing = stickyHeader.contains(focused) && focused.matches('input, textarea, select');
+      const keyboardNavigation = (stickyHeader.contains(focused) || floatingIslandDock.contains(focused)) && focused.matches(':focus-visible');
+      if (isAnyModalOpen() || editing || keyboardNavigation || y < 35) {
+        revealNavigation();
+        return;
       }
-    }, { passive: true });
-
-    // 支援行動裝置觸控即時手勢監聽，確保滑動手感完全同步
-    window.addEventListener('touchstart', function (e) {
-      if (e.touches && e.touches.length === 1) {
-        touchStartDockY = e.touches[0].clientY;
-      }
-    }, { passive: true });
-
-    window.addEventListener('touchmove', function (e) {
-      if (isAnyModalOpen() || !e.touches || e.touches.length !== 1) return;
-      if (e.target && e.target.closest('.floating-island-dock')) return;
-      const currentTouchY = e.touches[0].clientY;
-      const touchDiff = touchStartDockY - currentTouchY;
-      const currentScrollY = window.scrollY || window.pageYOffset || 0;
-
-      // 手指往上推動超過 12px 且不在頂部：自動隱藏
-      if (touchDiff > 12 && currentScrollY > 50) {
+      if (!delta) return;
+      travel = Math.sign(delta) === Math.sign(travel) ? travel + delta : delta;
+      if (travel > 12 && y > 60) {
+        stickyHeader.classList.add('header-hidden');
         floatingIslandDock.classList.add('dock-hidden');
-      } else if (touchDiff < -12) {
-        // 手指往下拉動超過 12px：自動顯現
-        floatingIslandDock.classList.remove('dock-hidden');
+        travel = 0;
+      } else if (travel < -10) {
+        revealNavigation();
       }
+    }
+    window.addEventListener('scroll', () => {
+      if (!frame) frame = requestAnimationFrame(updateNavigationVisibility);
     }, { passive: true });
-
-    // 點擊底部導航分頁時立即恢復顯示
-    if (dockTabToday) dockTabToday.addEventListener('click', () => floatingIslandDock.classList.remove('dock-hidden'));
-    if (dockTabInventory) dockTabInventory.addEventListener('click', () => floatingIslandDock.classList.remove('dock-hidden'));
-    if (dockTabPending) dockTabPending.addEventListener('click', () => floatingIslandDock.classList.remove('dock-hidden'));
+    stickyHeader.addEventListener('focusin', revealNavigation);
+    floatingIslandDock.addEventListener('focusin', revealNavigation);
+    floatingIslandDock.addEventListener('click', revealNavigation);
+    window.addEventListener('resize', revealNavigation);
+    // Tab switches (including horizontal swipes) already reveal the dock.
+    new MutationObserver(() => {
+      if (!floatingIslandDock.classList.contains('dock-hidden'))
+        stickyHeader.classList.remove('header-hidden');
+    }).observe(floatingIslandDock, { attributes: true, attributeFilter: ['class'] });
   }
 
   const inventorySearchField = document.getElementById('inventorySearchField');
@@ -18829,8 +18818,8 @@ function extractCleanName(rawText) {
 
 </script>
 
-  <script type="module" src="app.js?v=1.9.21"></script>
-  <script type="module" src="cloud-camera.js?v=1.9.21"></script>
+  <script type="module" src="app.js?v=1.9.22"></script>
+  <script type="module" src="cloud-camera.js?v=1.9.22"></script>
 
 <script>
 // Native selects retain mobile accessibility; a shared SVG identifies the selection.

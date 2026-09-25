@@ -181,7 +181,11 @@ function animateModalClose(modal, onClosed) {
     // Continue from the finger position, instead of restarting CSS keyframes at zero.
     animations = [card.animate([
       { transform: from }, { transform: `translateY(${exitY}px)` }
-    ], { duration: reducedMotion() ? 0 : 180, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'forwards' })];
+    ], {
+      duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(card).getPropertyValue('--motion-duration')) || 280),
+      easing: getComputedStyle(card).getPropertyValue('--motion-ease').trim() || 'cubic-bezier(.22,.72,.18,1)',
+      fill: 'forwards'
+    })];
   } else {
     animations = card ? card.getAnimations() : [];
   }
