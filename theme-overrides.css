@@ -178,30 +178,9 @@ html {
   background-image: none;
 }
 
-/* Paint the iOS safe area with a solid color so system-status-bar blur cannot
-   wash out the content below it. Keep this beneath modal and toast layers. */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-top, 0px);
-  z-index: 999;
-  pointer-events: none;
-  background: #d9e8d5;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-:root:not([data-theme="light"]) body::before { background: #111; }
-[data-theme="light"] body::before {
-  background: #d9e8d5;
-}
-[data-theme="amoled"] body::before { background: #000; }
-
-/* Keep the search field and settings control crisp against the solid header. */
+/* Keep the search field and settings control crisp against the header. */
 @media (max-width: 600px) {
-  .ios-header { margin-top: 25px; }
+  .ios-header { margin-top: 0; }
 }
 .ios-header,
 .ios-header * {
