@@ -16381,6 +16381,39 @@ var CapacitorBridgeBundle = (() => {
     let headerDistance = 1;
     let dockDistance = 1;
     let navigationTouch = null;
+    let settleTimer = 0;
+    let settleFrame = 0;
+    let navigationDirection = 0;
+    function cancelNavigationSettle() {
+      clearTimeout(settleTimer);
+      cancelAnimationFrame(settleFrame);
+      settleFrame = 0;
+    }
+    function settleNavigation() {
+      cancelNavigationSettle();
+      if (navigationTouch) return;
+      if (navigationProtected()) { revealNavigation(); return; }
+      const hide = navigationDirection > 0;
+      const fromHeader = headerOffset;
+      const fromDock = dockOffset;
+      const targetHeader = hide ? headerDistance : 0;
+      const targetDock = hide ? dockDistance : 0;
+      if (fromHeader === targetHeader && fromDock === targetDock) return;
+      const start = performance.now();
+      function animate(now) {
+        const progress = reducedNavigationMotion.matches ? 1 : Math.min(1, (now - start) / 220);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        headerOffset = fromHeader + (targetHeader - fromHeader) * eased;
+        dockOffset = fromDock + (targetDock - fromDock) * eased;
+        paintNavigation();
+        settleFrame = progress < 1 ? requestAnimationFrame(animate) : 0;
+      }
+      settleFrame = requestAnimationFrame(animate);
+    }
+    function scheduleNavigationSettle() {
+      cancelNavigationSettle();
+      if (!navigationTouch) settleTimer = setTimeout(settleNavigation, 120);
+    }
     function navigationProtected() {
       const focused = document.activeElement;
       return isAnyModalOpen() ||
@@ -16388,6 +16421,9 @@ var CapacitorBridgeBundle = (() => {
         ((stickyHeader.contains(focused) || floatingIslandDock.contains(focused)) && focused.matches(':focus-visible'));
     }
     function moveNavigation(distance) {
+      if (!distance) return;
+      cancelNavigationSettle();
+      navigationDirection = Math.sign(distance);
       headerOffset = Math.max(0, Math.min(headerDistance, headerOffset + distance));
       dockOffset = Math.max(0, Math.min(dockDistance, dockOffset + distance));
       paintNavigation();
@@ -16412,6 +16448,8 @@ var CapacitorBridgeBundle = (() => {
     stickyHeader.classList.add('scroll-linked-navigation');
     floatingIslandDock.classList.add('scroll-linked-navigation');
     function revealNavigation() {
+      cancelNavigationSettle();
+      navigationDirection = 0;
       stickyHeader.classList.remove('header-hidden');
       floatingIslandDock.classList.remove('dock-hidden');
       headerOffset = dockOffset = 0;
@@ -16435,11 +16473,13 @@ var CapacitorBridgeBundle = (() => {
       if (!delta) return;
       // Move one CSS pixel for each scroll pixel, with no timed transition.
       moveNavigation(delta);
+      scheduleNavigationSettle();
     }
     window.addEventListener('scroll', () => {
       if (!frame) frame = requestAnimationFrame(updateNavigationVisibility);
     }, { passive: true });
     window.addEventListener('touchstart', event => {
+      cancelNavigationSettle();
       navigationTouch = null;
       if (event.touches.length !== 1 || navigationProtected() ||
           event.target.closest('.ios-header, .floating-island-dock, input, textarea, select, #categoryChipRow')) return;
@@ -16448,7 +16488,7 @@ var CapacitorBridgeBundle = (() => {
     }, { passive: true });
     window.addEventListener('touchmove', event => {
       if (!navigationTouch) return;
-      if (event.touches.length !== 1 || navigationProtected()) { navigationTouch = null; return; }
+      if (event.touches.length !== 1 || navigationProtected()) { navigationTouch = null; scheduleNavigationSettle(); return; }
       const touch = event.touches[0];
       const dx = touch.clientX - navigationTouch.x;
       const dy = touch.clientY - navigationTouch.y;
@@ -16461,7 +16501,12 @@ var CapacitorBridgeBundle = (() => {
     function finishNavigationTouch() {
       navigationTouch = null;
       lastY = Math.max(0, Math.min(window.scrollY, Math.max(0, document.documentElement.scrollHeight - innerHeight)));
+      scheduleNavigationSettle();
     }
+    window.addEventListener('scrollend', () => {
+      if (frame) { cancelAnimationFrame(frame); updateNavigationVisibility(); }
+      settleNavigation();
+    }, { passive: true });
     window.addEventListener('touchend', finishNavigationTouch, { passive: true });
     window.addEventListener('touchcancel', finishNavigationTouch, { passive: true });
     stickyHeader.addEventListener('focusin', revealNavigation);
