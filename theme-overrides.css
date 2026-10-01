@@ -88,7 +88,7 @@ body, button, input, textarea, select {
    the home-indicator inset inside the sheet so no backdrop-colored strip
    remains at the bottom of the screen. */
 #actionSheet.ios-action-backdrop {
-  background: rgba(0, 0, 0, 0.42) !important;
+  background: rgba(0, 0, 0, 0.42);
   backdrop-filter: blur(10px) saturate(115%) !important;
   -webkit-backdrop-filter: blur(10px) saturate(115%) !important;
   padding-bottom: 0.75rem;
@@ -982,8 +982,10 @@ html {
 :root,
 :root[data-motion-profile] {
   --motion-ease: cubic-bezier(.22, .72, .18, 1);
-  --motion-duration: 280ms;
-  --motion-press: 160ms;
+  --motion-duration: 300ms;
+  --motion-page: 320ms;
+  --motion-exit: 220ms;
+  --motion-press: 120ms;
   --transition-ios: var(--motion-press) var(--motion-ease);
 }
 :root body :is(button, [role="button"], summary, .ios-item-card, .pending-card) {
@@ -995,7 +997,7 @@ html {
     border-color var(--motion-press) var(--motion-ease);
 }
 :root body :is(button, [role="button"], summary, .ios-item-card, .pending-card):active:not(:disabled):not([aria-disabled="true"]) {
-  scale: .97;
+  scale: .985;
 }
 :root body :is(input, textarea, select) {
   transition: border-color var(--transition-ios), background-color var(--transition-ios), box-shadow var(--transition-ios);
@@ -1085,7 +1087,7 @@ html {
   stroke: currentColor !important;
 }
 :root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon {
-  transform: translateY(calc(-1px * var(--dock-emphasis))) scale(calc(1 + .15 * var(--dock-emphasis)));
+  transform: translateY(calc(-1px * var(--dock-emphasis))) scale(calc(1 + .04 * var(--dock-emphasis)));
   transition: none;
 }
 
@@ -1357,4 +1359,80 @@ html {
 :root[data-theme] body .floating-island-dock .dock-tab .dock-icon svg,
 :root[data-theme] body .floating-island-dock .dock-tab .dock-icon svg * {
   stroke: currentColor !important;
+}
+
+/* Motion hierarchy: tactile controls, stable navigation, solid modal surfaces. */
+:root body :is(button, [role="button"], summary, .ios-item-card, .pending-card):active:not(:disabled):not([aria-disabled="true"]) {
+  transform: none;
+  transition-duration: 70ms;
+}
+:root body .floating-island-dock .dock-tab:active:not(:disabled):not([aria-disabled="true"]) { scale: 1; transform: none; }
+:root body :is(.ios-item-card, .pending-card):active:not(:disabled):not([aria-disabled="true"]) { scale: .995; }
+:root body .view-panel { transition: none; }
+:root body .floating-island-dock.scroll-linked-navigation {
+  transform: translate(-50%, var(--nav-offset, 0px));
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: none;
+}
+:root body .floating-island-dock.scroll-linked-navigation.dock-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+:root body :is(.ios-modal-backdrop, .ios-action-backdrop) {
+  --overlay-dim: rgba(0, 0, 0, .42);
+  animation-name: premiumScrimIn;
+  animation-duration: 200ms !important;
+}
+:root body #actionSheet.ios-action-backdrop:not(.modal-closing) {
+  animation: premiumScrimIn 200ms var(--motion-ease) !important;
+}
+:root body :is(.ios-modal-backdrop, .ios-action-backdrop).modal-closing {
+  animation: premiumScrimOut var(--motion-exit) ease-in forwards !important;
+}
+:root body .ios-modal-card { animation-name: premiumDialogIn; }
+:root body .ios-modal-backdrop.modal-closing .ios-modal-card {
+  animation: premiumDialogOut var(--motion-exit) ease-in forwards !important;
+}
+:root body .ios-action-sheet { animation-name: premiumSheetIn; }
+:root body .ios-action-backdrop.modal-closing .ios-action-sheet {
+  animation: premiumSheetOut var(--motion-exit) cubic-bezier(.4, 0, 1, 1) forwards !important;
+}
+/* Gesture transforms retain ownership during closing. */
+:root body :is(.ios-modal-backdrop, .ios-action-backdrop) :is(.ios-modal-card, .ios-action-sheet).sheet-gesture-controlled {
+  animation: none !important;
+  transition: none !important;
+}
+@keyframes premiumScrimIn {
+  from { background-color: transparent; }
+  to { background-color: var(--overlay-dim); }
+}
+@keyframes premiumScrimOut {
+  from { background-color: var(--overlay-dim); }
+  to { background-color: transparent; }
+}
+@keyframes premiumDialogIn {
+  from { transform: translateY(16px) scale(.985); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes premiumDialogOut {
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(12px) scale(.985); opacity: 0; }
+}
+@keyframes premiumSheetIn {
+  from { transform: translateY(calc(100% + 32px)); }
+  to { transform: translateY(0); }
+}
+@keyframes premiumSheetOut {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(100% + 32px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body :is(button, [role="button"], summary, .ios-item-card, .pending-card):active:not(:disabled):not([aria-disabled="true"]) { scale: 1; }
+  :root body :is(.ios-modal-backdrop, .ios-action-backdrop, .ios-modal-card, .ios-action-sheet),
+  :root body #actionSheet.ios-action-backdrop:not(.modal-closing),
+  :root body :is(.ios-modal-backdrop, .ios-action-backdrop).modal-closing,
+  :root body .ios-modal-backdrop.modal-closing .ios-modal-card,
+  :root body .ios-action-backdrop.modal-closing .ios-action-sheet { animation-duration: .01ms !important; }
 }

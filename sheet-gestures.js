@@ -45,7 +45,7 @@ function bindSheetDrag(modal, onDismiss, scrollArea) {
     const from = freeze();
     card.style.transform = 'translateY(0px)';
     const animation = card.animate([{ transform: from }, { transform: 'translateY(0px)' }], {
-      duration: reducedMotion() ? 0 : 200,
+      duration: reducedMotion() ? 0 : 260,
       easing: 'cubic-bezier(0.32, 0.72, 0, 1)'
     });
     motion = animation;
@@ -63,7 +63,7 @@ function bindSheetDrag(modal, onDismiss, scrollArea) {
     if (modal.classList.contains('modal-closing') || event.target.closest(interactive)) return;
     const fromBackdrop = event.target === modal;
     if (!fromBackdrop && !card.contains(event.target)) return;
-    const offset = motion ? new DOMMatrixReadOnly(freeze()).m42 : 0;
+    const offset = motion || card.getAnimations().some(a => a.playState === 'running') ? new DOMMatrixReadOnly(freeze()).m42 : 0;
     gesture = {
       kind, id: kind === 'touch' ? point.identifier : event.pointerId,
       startX: point.clientX, startY: point.clientY, offset,
@@ -106,7 +106,7 @@ function bindSheetDrag(modal, onDismiss, scrollArea) {
       return;
     }
     const velocity = event.timeStamp - ended.lastTime <= 100 ? ended.velocity : 0;
-    if (!cancelled && (ended.dy > 35 || (ended.dy > 15 && velocity > 0.22))) {
+    if (!cancelled && (ended.dy > 64 || (ended.dy > 24 && velocity > 0.45))) {
       onDismiss();
       // A form can reject dismissal (for example an invalid date).
       if (!modal.classList.contains('modal-closing') && modal.style.display !== 'none') rebound();
@@ -160,7 +160,7 @@ function bindSheetDrag(modal, onDismiss, scrollArea) {
     reset,
     prepareClose() {
       releasePointer();
-      return card.classList.contains('sheet-gesture-controlled') ? freeze() : null;
+      return card.classList.contains('sheet-gesture-controlled') || card.getAnimations().some(a => a.playState === 'running') ? freeze() : null;
     }
   });
   new MutationObserver(() => { if (modal.style.display === 'none') reset(); })
@@ -172,6 +172,8 @@ function animateModalClose(modal, onClosed) {
   if (modal.classList.contains('modal-closing')) return;
   const card = modal.querySelector('.ios-modal-card, .ios-action-sheet');
   const controller = controllers.get(modal);
+  const fromBackground = getComputedStyle(modal).backgroundColor;
+  const fromOpacity = card ? getComputedStyle(card).opacity : '1';
   const from = controller?.prepareClose();
   const currentY = from ? new DOMMatrixReadOnly(from).m42 : 0;
   const exitY = from ? Math.max(card.offsetHeight, window.innerHeight - card.getBoundingClientRect().top + currentY) + 24 : 0;
@@ -179,16 +181,23 @@ function animateModalClose(modal, onClosed) {
   let animations;
   if (from) {
     // Continue from the finger position, instead of restarting CSS keyframes at zero.
+    const sheetExit = card.classList.contains('ios-action-sheet') || currentY > 24;
     animations = [card.animate([
-      { transform: from }, { transform: `translateY(${exitY}px)` }
+      { transform: from, opacity: fromOpacity },
+      { transform: sheetExit ? `translateY(${exitY}px)` : 'translateY(12px) scale(.985)', opacity: sheetExit ? 1 : 0 }
     ], {
-      duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(card).getPropertyValue('--motion-duration')) || 280),
-      easing: getComputedStyle(card).getPropertyValue('--motion-ease').trim() || 'cubic-bezier(.22,.72,.18,1)',
+      duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(card).getPropertyValue('--motion-exit')) || 220),
+      easing: 'cubic-bezier(.4, 0, 1, 1)',
       fill: 'forwards'
     })];
   } else {
     animations = card ? card.getAnimations() : [];
   }
+  // Reversing an opening overlay continues from its current dim level.
+  const scrim = modal.animate([{ backgroundColor: fromBackground }, { backgroundColor: 'transparent' }], {
+    duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(modal).getPropertyValue('--motion-exit')) || 220),
+    easing: 'ease-in', fill: 'forwards'
+  });
   animations.push(...modal.getAnimations());
   // Completion follows the browser's animation timeline at any refresh rate.
   Promise.all(animations.map(animation => animation.finished.catch(() => {}))).then(() => {

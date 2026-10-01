@@ -12885,7 +12885,7 @@ var CapacitorBridgeBundle = (() => {
     clearResetConfirmation();
     clearDeleteConfirmation();
     activeSheetItemId = null;
-    if (immediate || !actionSheet || actionSheet.style.display === 'none') {
+    if (immediate === true || !actionSheet || actionSheet.style.display === 'none') {
       if (actionSheet) {
         actionSheet.style.display = 'none';
         actionSheet.classList.remove('modal-closing');
@@ -13072,7 +13072,7 @@ var CapacitorBridgeBundle = (() => {
     });
   }
 
-  btnCloseSheet.addEventListener('click', closeActionSheet);
+  btnCloseSheet.addEventListener('click', () => closeActionSheet());
   actionSheet.addEventListener('click', function (e) {
     if (e.target === actionSheet) {
       if (Date.now() - lastActionSheetOpenedAt < 400) return;
@@ -15043,6 +15043,7 @@ var CapacitorBridgeBundle = (() => {
 
     updateDockSelection(tab);
     updateNavigationLabels(tab);
+    if (isUserClick) window.scrollTo({ top: 0, behavior: 'instant' });
     prepareIncomingPanelForSwipe();
     pendingNavTab = tab;
     hasSwipedHorizontally = true;
@@ -15063,11 +15064,11 @@ var CapacitorBridgeBundle = (() => {
     }
 
     const started = performance.now();
-    const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--motion-duration')) || 280;
+    const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--motion-page')) || 320;
     const tick = now => {
       const elapsed = now - started;
       const progress = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - progress, 4);
+      const eased = 1 - Math.pow(1 - progress, 3);
       viewsSliderViewport.scrollTo({ left: from + (target - from) * eased, behavior: 'instant' });
       if (progress < 1) {
         navigationAnimationFrame = requestAnimationFrame(tick);
@@ -16247,8 +16248,7 @@ var CapacitorBridgeBundle = (() => {
         if (settleStableSince && now - settleStableSince >= 80) {
           settleAttempts = 0;
           settleStableSince = 0;
-          viewsSliderViewport.scrollTo({ left: targetLeft, behavior: 'instant' });
-          finishNavigation(navTabs[index]);
+          switchViewTab(navTabs[index], true);
         } else {
           scheduleCheckSettled();
         }
@@ -16374,151 +16374,116 @@ var CapacitorBridgeBundle = (() => {
   const floatingIslandDock = document.querySelector('.floating-island-dock');
   const stickyHeader = document.querySelector('.ios-header');
   if (floatingIslandDock && stickyHeader) {
-    let lastY = Math.max(0, window.scrollY);
-    let headerOffset = 0;
-    let dockOffset = 0;
-    let frame = 0;
-    let headerDistance = 1;
-    let dockDistance = 1;
-    let navigationTouch = null;
-    let settleTimer = 0;
-    let settleFrame = 0;
-    let navigationDirection = 0;
-    function cancelNavigationSettle() {
-      clearTimeout(settleTimer);
-      cancelAnimationFrame(settleFrame);
-      settleFrame = 0;
-    }
-    function settleNavigation() {
-      cancelNavigationSettle();
-      if (navigationTouch) return;
-      if (navigationProtected()) { revealNavigation(); return; }
-      const hide = navigationDirection > 0;
-      const fromHeader = headerOffset;
-      const fromDock = dockOffset;
-      const targetHeader = hide ? headerDistance : 0;
-      const targetDock = hide ? dockDistance : 0;
-      if (fromHeader === targetHeader && fromDock === targetDock) return;
-      const start = performance.now();
-      function animate(now) {
-        const progress = reducedNavigationMotion.matches ? 1 : Math.min(1, (now - start) / 220);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        headerOffset = fromHeader + (targetHeader - fromHeader) * eased;
-        dockOffset = fromDock + (targetDock - fromDock) * eased;
-        paintNavigation();
-        settleFrame = progress < 1 ? requestAnimationFrame(animate) : 0;
-      }
-      settleFrame = requestAnimationFrame(animate);
-    }
-    function scheduleNavigationSettle() {
-      cancelNavigationSettle();
-      if (!navigationTouch) settleTimer = setTimeout(settleNavigation, 120);
-    }
-    function navigationProtected() {
-      const focused = document.activeElement;
-      return isAnyModalOpen() ||
-        (stickyHeader.contains(focused) && focused.matches('input, textarea, select')) ||
-        ((stickyHeader.contains(focused) || floatingIslandDock.contains(focused)) && focused.matches(':focus-visible'));
-    }
-    function moveNavigation(distance) {
-      if (!distance) return;
-      cancelNavigationSettle();
-      navigationDirection = Math.sign(distance);
-      headerOffset = Math.max(0, Math.min(headerDistance, headerOffset + distance));
-      dockOffset = Math.max(0, Math.min(dockDistance, dockOffset + distance));
-      paintNavigation();
-    }
     const reducedNavigationMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    function measureNavigation() {
-      headerDistance = stickyHeader.offsetHeight + (parseFloat(getComputedStyle(stickyHeader).top) || 0) + 10;
-      dockDistance = floatingIslandDock.offsetHeight + (parseFloat(getComputedStyle(floatingIslandDock).bottom) || 0) + 10;
+    let lastY = Math.max(0, window.scrollY), offset = 0, distance = 1, dockDistance = 1;
+    let frame = 0, animation = 0, settleTimer = 0;
+    let touching = false, direction = 0, intent = 0;
+    function protectedNavigation() {
+      return isAnyModalOpen() || stickyHeader.contains(document.activeElement) ||
+        (floatingIslandDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible'));
     }
-    function paintNavigation() {
-      for (const [element, distance, offset, direction, hiddenClass] of [
-        [stickyHeader, headerDistance, headerOffset, -1, 'header-hidden'],
-        [floatingIslandDock, dockDistance, dockOffset, 1, 'dock-hidden']
-      ]) {
-        const progress = reducedNavigationMotion.matches ? Number(offset > 0) : Math.min(1, offset / distance);
-        element.style.setProperty('--nav-offset', `${direction * progress * distance}px`);
-        element.style.setProperty('--nav-opacity', String(1 - progress));
-        element.classList.toggle(hiddenClass, progress >= 1);
+    function cancelSettle() {
+      clearTimeout(settleTimer);
+      cancelAnimationFrame(animation);
+      animation = 0;
+    }
+    function paint() {
+      stickyHeader.style.setProperty('--nav-offset', `${-offset}px`);
+      stickyHeader.style.setProperty('--nav-opacity', '1');
+      const hidden = offset >= distance - .01;
+      stickyHeader.classList.toggle('header-hidden', hidden);
+      floatingIslandDock.style.setProperty('--nav-offset', `${offset / distance * dockDistance}px`);
+      floatingIslandDock.style.setProperty('--nav-opacity', '1');
+      floatingIslandDock.classList.toggle('dock-hidden', hidden);
+    }
+    function measure() {
+      const progress = offset / distance;
+      distance = stickyHeader.offsetHeight + (parseFloat(getComputedStyle(stickyHeader).top) || 0) + 10;
+      dockDistance = floatingIslandDock.offsetHeight + (parseFloat(getComputedStyle(floatingIslandDock).bottom) || 0) + 16;
+      offset = Math.min(distance, progress * distance);
+      paint();
+    }
+    function animateTo(target) {
+      cancelSettle();
+      const from = offset;
+      if (from === target) return;
+      const started = performance.now();
+      const duration = 180 + 60 * Math.abs(target - from) / distance;
+      function tick(now) {
+        const t = reducedNavigationMotion.matches ? 1 : Math.min(1, (now - started) / duration);
+        offset = from + (target - from) * (1 - Math.pow(1 - t, 3));
+        paint();
+        animation = t < 1 ? requestAnimationFrame(tick) : 0;
       }
+      animation = requestAnimationFrame(tick);
     }
-    measureNavigation();
-    stickyHeader.classList.add('scroll-linked-navigation');
-    floatingIslandDock.classList.add('scroll-linked-navigation');
     function revealNavigation() {
-      cancelNavigationSettle();
-      navigationDirection = 0;
-      stickyHeader.classList.remove('header-hidden');
-      floatingIslandDock.classList.remove('dock-hidden');
-      headerOffset = dockOffset = 0;
-      paintNavigation();
+      cancelSettle();
+      offset = 0;
+      direction = intent = 0;
       lastY = Math.max(0, window.scrollY);
+      paint();
     }
-    function updateNavigationVisibility() {
+    function settle() {
+      if (touching) return;
+      const canHide = !protectedNavigation() && window.scrollY > distance &&
+        document.documentElement.scrollHeight > innerHeight + distance;
+      // Tiny reversals and wheel jitter do not change the intended endpoint.
+      const hide = canHide && (Math.abs(intent) >= 10 ? intent > 0 : offset > distance / 2);
+      animateTo(hide ? distance : 0);
+    }
+    function scheduleSettle() {
+      clearTimeout(settleTimer);
+      if (!touching) settleTimer = setTimeout(settle, 100);
+    }
+    function update() {
       frame = 0;
-      // Clamp rubber-band overscroll, and accumulate small movements so slow
-      // gestures work just as reliably as fast swipes.
       const maxY = Math.max(0, document.documentElement.scrollHeight - innerHeight);
       const y = Math.max(0, Math.min(window.scrollY, maxY));
       const delta = y - lastY;
       lastY = y;
-      // Touch movement owns the offset until release; do not count it twice.
-      if (navigationTouch) return;
-      if (navigationProtected() || y <= 0) {
+      if (protectedNavigation() || y <= 8 || maxY <= distance) {
         revealNavigation();
         return;
       }
-      if (!delta) return;
-      // Move one CSS pixel for each scroll pixel, with no timed transition.
-      moveNavigation(delta);
-      scheduleNavigationSettle();
+      if (delta) {
+        cancelSettle();
+        const nextDirection = Math.sign(delta);
+        intent = nextDirection === direction ? intent + delta : delta;
+        direction = nextDirection;
+        offset = Math.max(0, Math.min(distance, offset + delta));
+        paint();
+      }
+      scheduleSettle();
     }
+    // Respond to content travel, not touch movement on empty pages.
+    stickyHeader.classList.add('scroll-linked-navigation');
+    floatingIslandDock.classList.add('scroll-linked-navigation');
+    floatingIslandDock.classList.remove('dock-hidden');
     window.addEventListener('scroll', () => {
-      if (!frame) frame = requestAnimationFrame(updateNavigationVisibility);
+      if (!frame) frame = requestAnimationFrame(update);
     }, { passive: true });
-    window.addEventListener('touchstart', event => {
-      cancelNavigationSettle();
-      navigationTouch = null;
-      if (event.touches.length !== 1 || navigationProtected() ||
-          event.target.closest('.ios-header, .floating-island-dock, input, textarea, select, #categoryChipRow')) return;
-      const touch = event.touches[0];
-      navigationTouch = { x: touch.clientX, y: touch.clientY, lastY: touch.clientY, axis: null };
-    }, { passive: true });
-    window.addEventListener('touchmove', event => {
-      if (!navigationTouch) return;
-      if (event.touches.length !== 1 || navigationProtected()) { navigationTouch = null; scheduleNavigationSettle(); return; }
-      const touch = event.touches[0];
-      const dx = touch.clientX - navigationTouch.x;
-      const dy = touch.clientY - navigationTouch.y;
-      if (!navigationTouch.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 4)
-        navigationTouch.axis = Math.abs(dy) > Math.abs(dx) ? 'vertical' : 'horizontal';
-      if (navigationTouch.axis === 'vertical' && !event.defaultPrevented)
-        moveNavigation(navigationTouch.lastY - touch.clientY);
-      if (navigationTouch.axis) navigationTouch.lastY = touch.clientY;
-    }, { passive: true });
-    function finishNavigationTouch() {
-      navigationTouch = null;
-      lastY = Math.max(0, Math.min(window.scrollY, Math.max(0, document.documentElement.scrollHeight - innerHeight)));
-      scheduleNavigationSettle();
+    window.addEventListener('touchstart', () => { touching = true; cancelSettle(); }, { passive: true });
+    function release(event) {
+      touching = event.touches.length > 0;
+      if (!touching) scheduleSettle();
     }
+    window.addEventListener('touchend', release, { passive: true });
+    window.addEventListener('touchcancel', release, { passive: true });
     window.addEventListener('scrollend', () => {
-      if (frame) { cancelAnimationFrame(frame); updateNavigationVisibility(); }
-      settleNavigation();
+      if (frame) { cancelAnimationFrame(frame); update(); }
+      settle();
     }, { passive: true });
-    window.addEventListener('touchend', finishNavigationTouch, { passive: true });
-    window.addEventListener('touchcancel', finishNavigationTouch, { passive: true });
+    window.addEventListener('blur', () => { touching = false; settle(); });
     stickyHeader.addEventListener('focusin', revealNavigation);
     floatingIslandDock.addEventListener('focusin', revealNavigation);
-    floatingIslandDock.addEventListener('click', revealNavigation);
-    // Browser toolbar expansion changes height during a swipe. Preserve progress.
-    window.addEventListener('resize', () => { measureNavigation(); paintNavigation(); });
     window.addEventListener('app:navigation-reveal', revealNavigation);
     reducedNavigationMotion.addEventListener('change', revealNavigation);
-    new ResizeObserver(() => { measureNavigation(); paintNavigation(); })
-      .observe(stickyHeader);
-    paintNavigation();
+    window.addEventListener('resize', () => { cancelSettle(); measure(); scheduleSettle(); });
+    const navigationSizeObserver = new ResizeObserver(() => { cancelSettle(); measure(); scheduleSettle(); });
+    navigationSizeObserver.observe(stickyHeader);
+    navigationSizeObserver.observe(floatingIslandDock);
+    measure();
   }
 
   const inventorySearchField = document.getElementById('inventorySearchField');
