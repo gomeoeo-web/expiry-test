@@ -1436,3 +1436,158 @@ html {
   :root body .ios-modal-backdrop.modal-closing .ios-modal-card,
   :root body .ios-action-backdrop.modal-closing .ios-action-sheet { animation-duration: .01ms !important; }
 }
+
+/* Quiet utility rail. One surface replaces the green slab and separate capsules. */
+:root {
+  --header-surface: #232724;
+  --header-stroke: #363c37;
+  --header-ink: #e9eee7;
+  --header-muted: #a8b3a5;
+  --header-action: #343e34;
+}
+:root[data-theme="light"] {
+  --header-surface: #fcfdf9;
+  --header-stroke: #dce4d7;
+  --header-ink: #344335;
+  --header-muted: #768271;
+  --header-action: #e9f0e3;
+  --app-header-background: #e3ebdc;
+}
+:root[data-theme="amoled"] { --header-surface: #101410; --header-stroke: #293029; }
+:root body .ios-header {
+  gap: 6px;
+  padding: 6px;
+  min-height: 58px;
+  margin-bottom: 16px;
+  border: 1px solid var(--header-stroke);
+  border-radius: 22px;
+  background: var(--header-surface);
+  box-shadow: 0 4px 16px rgba(36, 53, 33, .055);
+}
+:root body .ios-header::before { content: none; }
+:root body .ios-header .header-smart-input-form { height: 44px; margin: 0; }
+:root body .ios-header .header-entry-icon {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--header-muted);
+  display: flex;
+  pointer-events: none;
+}
+:root body .ios-header .header-smart-input {
+  height: 44px;
+  line-height: normal;
+  padding: 0 54px 0 37px;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--header-ink) !important;
+  -webkit-text-fill-color: var(--header-ink) !important;
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 14px !important;
+}
+:root body .ios-header .header-smart-input.has-clear { padding-right: 86px; }
+:root body .ios-header .header-smart-input::placeholder {
+  color: var(--header-muted) !important;
+  -webkit-text-fill-color: var(--header-muted) !important;
+  font-size: 14px;
+  opacity: 1 !important;
+}
+:root body .ios-header .header-smart-input:focus { outline: 2px solid #71926a; outline-offset: 0; }
+:root body .ios-header #btnCameraScan {
+  width: 44px;
+  height: 44px;
+  right: 0;
+  top: 50%;
+  translate: 0 -50%;
+  transform: none;
+  border-radius: 15px !important;
+  background: var(--header-action) !important;
+  border: 1px solid transparent !important;
+  color: var(--header-ink) !important;
+  -webkit-text-fill-color: var(--header-ink) !important;
+}
+:root body .ios-header #btnCameraScan svg {
+  width: 21px; height: 21px;
+  color: var(--header-ink) !important;
+  stroke: var(--header-ink) !important;
+  stroke-width: 1.8;
+}
+:root body .ios-header .header-smart-clear {
+  right: 46px;
+  top: 50%;
+  translate: 0 -50%;
+  transform: none;
+  width: 32px; height: 44px;
+  background: transparent !important;
+  color: var(--header-muted) !important;
+}
+:root body .ios-header .header-actions { margin: 0; gap: 0; }
+:root body .ios-header #btnOpenSettings {
+  width: 44px; height: 44px;
+  border-radius: 15px !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--header-muted) !important;
+  -webkit-text-fill-color: var(--header-muted) !important;
+}
+:root body .ios-header #btnOpenSettings svg {
+  width: 20px; height: 20px;
+  color: var(--header-muted) !important;
+  stroke: var(--header-muted) !important;
+  stroke-width: 1.7;
+}
+/* Move only compositor transforms; no fading, continuous JS writes or broad will-change. */
+:root body .floating-island-dock.scroll-linked-navigation {
+  transform: translate3d(-50%, var(--nav-offset, 0px), 0);
+}
+@media (max-width: 600px) {
+  :root { --app-header-top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px)); }
+  :root body .ios-header.scroll-linked-navigation {
+    transform: translate3d(0, var(--nav-offset, 0px), 0);
+    transition: none;
+  }
+  /* The status-bar mask stays in place while the toolbar leaves the viewport. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    background: var(--app-header-background);
+    pointer-events: none;
+    z-index: 101;
+  }
+}
+
+/* Supported Safari versions attach the indicator directly to native page scrolling. */
+@supports (animation-timeline: --app-pages) and (timeline-scope: --app-pages) {
+  .ios-app-container { timeline-scope: --app-pages; }
+  #viewsSliderViewport { scroll-timeline-name: --app-pages; scroll-timeline-axis: inline; }
+  :root body .floating-island-dock.dock-scroll-timeline::before {
+    width: var(--dock-base-width);
+    transform-origin: left center;
+    animation: dockNativeTravel 1s linear both;
+    animation-timeline: --app-pages;
+  }
+  :root body .floating-island-dock.dock-scroll-timeline .dock-icon { transform: none; }
+  :root body .floating-island-dock.dock-scroll-timeline .dock-highlight-content {
+    clip-path: none;
+    animation: dockNativeFirst 1s linear both;
+    animation-timeline: --app-pages;
+  }
+  :root body .floating-island-dock.dock-scroll-timeline .dock-tab:nth-child(2) .dock-highlight-content {
+    animation-name: dockNativeMiddle;
+  }
+  :root body .floating-island-dock.dock-scroll-timeline .dock-tab:nth-child(3) .dock-highlight-content {
+    animation-name: dockNativeLast;
+  }
+}
+@keyframes dockNativeTravel {
+  0% { transform: translate3d(var(--dock-stop-0), 0, 0) scaleX(var(--dock-scale-0)); }
+  50% { transform: translate3d(var(--dock-stop-1), 0, 0) scaleX(var(--dock-scale-1)); }
+  100% { transform: translate3d(var(--dock-stop-2), 0, 0) scaleX(var(--dock-scale-2)); }
+}
+@keyframes dockNativeFirst { 0% { opacity: 1; } 35%, 100% { opacity: 0; } }
+@keyframes dockNativeMiddle { 0%, 15%, 85%, 100% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes dockNativeLast { 0%, 65% { opacity: 0; } 100% { opacity: 1; } }

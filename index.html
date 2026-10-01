@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>期效管家</title>
   <meta name="description" content="極簡物品生命週期與保固管家：更換濾網耗材、食品效期、保固時間、日化開封天數。">
-  <meta name="theme-color" content="#d9e8d5" id="metaThemeColor">
+  <meta name="theme-color" content="#e3ebdc" id="metaThemeColor">
   <meta name="color-scheme" content="dark light">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7691,13 +7691,13 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
 </style>
-  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22-ui7">
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22-ui8">
   <style>
     [data-theme="light"] body {
       background-color: #f3efe6;
-      background-image: linear-gradient(180deg, #73966a 0%, #73966a 1%, #e0eadb 18%, #e9efe5 34%, #f0f1e9 45%, #f3efe6 50%, #f3efe6 100%);
+      background-image: linear-gradient(180deg, #e3ebdc 0%, #e3ebdc 1%, #e8eee2 18%, #eef1e8 34%, #f0f1e9 45%, #f3efe6 50%, #f3efe6 100%);
       background-attachment: fixed;
-      background-size: 100% 100vh;
+      background-size: 100% 100lvh;
       background-repeat: no-repeat;
     }
   </style>
@@ -7706,13 +7706,14 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
   <div class="ios-app-container">
     <!-- Top Header -->
     <header class="ios-header">
-      <!-- Header Natural Language Input Form (純文字簡潔外觀，無前綴圖示，Enter送出) -->
+      <!-- Smart entry and utility controls share one quiet toolbar surface. -->
       <form class="header-smart-input-form" id="smartQuickAddForm" onsubmit="return false;">
+        <span class="header-entry-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M4 12h16"/></svg></span>
         <input
           type="text"
           id="smartQuickAddInput"
           class="header-smart-input"
-          placeholder="智慧輸入：鮮奶 5 天"
+          placeholder="新增物品：鮮奶 5 天"
           autocomplete="off"
           aria-label="智慧輸入"
           title="智慧輸入"
@@ -14397,7 +14398,7 @@ var CapacitorBridgeBundle = (() => {
     const appleStatusBarStyle = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (metaThemeColor) {
       if (validTheme === 'amoled') metaThemeColor.setAttribute('content', '#000000');
-      else if (validTheme === 'light') metaThemeColor.setAttribute('content', '#d9e8d5');
+      else if (validTheme === 'light') metaThemeColor.setAttribute('content', '#e3ebdc');
       else metaThemeColor.setAttribute('content', '#121212');
     }
     if (appleStatusBarStyle) {
@@ -14895,7 +14896,10 @@ var CapacitorBridgeBundle = (() => {
   let pendingNavTab = null;
   let navigationInProgress = false;
   let navigationStartTab = 'today';
-  let navigationAnimationFrame = 0;
+  function stopNativePageScroll() {
+    // Cancel native smooth travel at its current position before a new owner takes over.
+    viewsSliderViewport.scrollTo({ left: viewsSliderViewport.scrollLeft, behavior: 'instant' });
+  }
   let dockDrag = null;
 
   const dockMotionElement = document.querySelector('.floating-island-dock');
@@ -14908,25 +14912,33 @@ var CapacitorBridgeBundle = (() => {
     [...button.children].forEach(child => highlight.append(child.cloneNode(true)));
     button.append(highlight);
   });
+  let dockGeometry = [];
+  const dockReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const nativeDockTimeline = CSS.supports('animation-timeline: --app-pages') &&
+    CSS.supports('scroll-timeline-name: --app-pages') && CSS.supports('timeline-scope: --app-pages');
   function syncDockMotion() {
     const width = viewsSliderViewport.clientWidth;
-    if (!width) return;
+    if (!width || dockGeometry.length !== navTabs.length) return;
+    dockMotionElement.classList.add('dock-motion-ready');
+    const threaded = nativeDockTimeline && !dockReducedMotion.matches;
+    dockMotionElement.classList.toggle('dock-scroll-timeline', threaded);
+    if (threaded) return;
     let progress = Math.max(0, Math.min(navTabs.length - 1, viewsSliderViewport.scrollLeft / width));
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) progress = Math.round(progress);
+    if (dockReducedMotion.matches) progress = Math.round(progress);
     const start = Math.floor(progress), end = Math.min(start + 1, navTabs.length - 1);
     const fraction = progress - start;
-    const a = dockMotionButtons[start], b = dockMotionButtons[end];
+    const a = dockGeometry[start], b = dockGeometry[end];
     const blend = (x, y) => x + (y - x) * fraction;
-    const indicatorX = blend(a.offsetLeft, b.offsetLeft);
-    const indicatorWidth = blend(a.offsetWidth, b.offsetWidth);
+    const indicatorX = blend(a.left, b.left);
+    const indicatorWidth = blend(a.width, b.width);
     dockMotionElement.style.setProperty('--dock-indicator-x', indicatorX + 'px');
     dockMotionElement.style.setProperty('--dock-indicator-width', indicatorWidth + 'px');
-    dockMotionElement.style.setProperty('--dock-indicator-top', a.offsetTop + 'px');
-    dockMotionElement.style.setProperty('--dock-indicator-height', a.offsetHeight + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-top', a.top + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-height', a.height + 'px');
     dockMotionButtons.forEach((button, index) => {
-      const left = indicatorX - button.offsetLeft;
+      const left = indicatorX - dockGeometry[index].left;
       button.style.setProperty('--dock-highlight-left', left + 'px');
-      button.style.setProperty('--dock-highlight-right', (button.offsetWidth - left - indicatorWidth) + 'px');
+      button.style.setProperty('--dock-highlight-right', (dockGeometry[index].width - left - indicatorWidth) + 'px');
       const weight = Math.max(0, 1 - Math.abs(progress - index));
       button.style.setProperty('--dock-emphasis', weight);
       const channel = base => Math.round(base + (255 - base) * weight);
@@ -14934,8 +14946,23 @@ var CapacitorBridgeBundle = (() => {
     });
     dockMotionElement.classList.add('dock-motion-ready');
   }
-  new ResizeObserver(syncDockMotion).observe(dockMotionElement);
-  requestAnimationFrame(syncDockMotion);
+  function measureDockMotion() {
+    dockGeometry = dockMotionButtons.map(button => ({ left: button.offsetLeft, top: button.offsetTop, width: button.offsetWidth, height: button.offsetHeight }));
+    const base = dockGeometry[0];
+    dockMotionElement.style.setProperty('--dock-indicator-top', base.top + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-height', base.height + 'px');
+    dockMotionElement.style.setProperty('--dock-base-width', base.width + 'px');
+    dockGeometry.forEach((geometry, index) => {
+      dockMotionElement.style.setProperty(`--dock-stop-${index}`, geometry.left + 'px');
+      dockMotionElement.style.setProperty(`--dock-scale-${index}`, String(geometry.width / Math.max(1, base.width)));
+    });
+    syncDockMotion();
+  }
+  const dockSizeObserver = new ResizeObserver(measureDockMotion);
+  dockSizeObserver.observe(dockMotionElement);
+  dockMotionButtons.forEach(button => dockSizeObserver.observe(button));
+  dockReducedMotion.addEventListener('change', syncDockMotion);
+  requestAnimationFrame(measureDockMotion);
 
   function setPanelsSwipingState(swiping) {
     viewsSliderViewport.classList.toggle('is-swiping', swiping);
@@ -14999,7 +15026,7 @@ var CapacitorBridgeBundle = (() => {
   }
 
   function finishNavigation(targetTab) {
-    if (navigationAnimationFrame || isAnyModalOpen()) return;
+    if (isAnyModalOpen()) return;
     const width = viewsSliderViewport.clientWidth;
     if (!width) return;
     const index = Math.max(0, Math.min(navTabs.length - 1, Math.round(viewsSliderViewport.scrollLeft / width)));
@@ -15012,6 +15039,7 @@ var CapacitorBridgeBundle = (() => {
 
     clearTimeout(panelSwitchSettleTimer);
     panelSwitchSettleTimer = null;
+    viewsSliderViewport.style.scrollSnapType = '';
     currentNavTab = tab;
     setActivePanel(tab);
     clearIncomingPanelTransform();
@@ -15048,8 +15076,7 @@ var CapacitorBridgeBundle = (() => {
     pendingNavTab = tab;
     hasSwipedHorizontally = true;
 
-    cancelAnimationFrame(navigationAnimationFrame);
-    navigationAnimationFrame = 0;
+    stopNativePageScroll();
 
     const from = viewsSliderViewport.scrollLeft;
     const target = navTabs.indexOf(tab) * viewsSliderViewport.clientWidth;
@@ -15063,23 +15090,12 @@ var CapacitorBridgeBundle = (() => {
       return;
     }
 
-    const started = performance.now();
-    const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--motion-page')) || 320;
-    const tick = now => {
-      const elapsed = now - started;
-      const progress = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      viewsSliderViewport.scrollTo({ left: from + (target - from) * eased, behavior: 'instant' });
-      if (progress < 1) {
-        navigationAnimationFrame = requestAnimationFrame(tick);
-      } else {
-        navigationAnimationFrame = 0;
-        viewsSliderViewport.style.scrollSnapType = '';
-        viewsSliderViewport.scrollTo({ left: target, behavior: 'instant' });
-        finishNavigation(tab);
-      }
-    };
-    navigationAnimationFrame = requestAnimationFrame(tick);
+    // Safari can run native scrolling independently of JavaScript callback frequency.
+    viewsSliderViewport.scrollTo({ left: target, behavior: 'smooth' });
+    panelSwitchSettleTimer = setTimeout(() => {
+      viewsSliderViewport.dispatchEvent(new Event('scrollend'));
+    }, 100);
+
   }
 
   dockTabPending.addEventListener('click', () => switchViewTab('pending', true, true));
@@ -15103,8 +15119,7 @@ var CapacitorBridgeBundle = (() => {
     if (!dockDrag.moved) {
       if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
       dockDrag.moved = true;
-      cancelAnimationFrame(navigationAnimationFrame);
-      navigationAnimationFrame = 0;
+      stopNativePageScroll();
       clearTimeout(panelSwitchSettleTimer);
       panelSwitchSettleTimer = null;
       pendingNavTab = null;
@@ -16153,8 +16168,7 @@ var CapacitorBridgeBundle = (() => {
       fixBody,
       styles: properties.map(name => [name, body.style.getPropertyValue(name), body.style.getPropertyPriority(name)])
     };
-    cancelAnimationFrame(navigationAnimationFrame);
-    navigationAnimationFrame = 0;
+    stopNativePageScroll();
     clearTimeout(panelSwitchSettleTimer);
     panelSwitchSettleTimer = null;
     if (fixBody) {
@@ -16220,14 +16234,14 @@ var CapacitorBridgeBundle = (() => {
     }
 
     function checkSettled() {
-      if (touchActive || isMouseDragging || dockDrag?.moved || navigationAnimationFrame) {
+      if (touchActive || isMouseDragging || dockDrag?.moved) {
         settleAttempts = 0;
         return;
       }
       const width = viewsSliderViewport.clientWidth;
       if (!width) return;
       const scrollLeft = viewsSliderViewport.scrollLeft;
-      const index = Math.max(0, Math.min(navTabs.length - 1, Math.round(scrollLeft / width)));
+      const index = pendingNavTab ? navTabs.indexOf(pendingNavTab) : Math.max(0, Math.min(navTabs.length - 1, Math.round(scrollLeft / width)));
       const targetLeft = index * width;
       const dist = Math.abs(scrollLeft - targetLeft);
       if (dist < 1.5) {
@@ -16266,8 +16280,7 @@ var CapacitorBridgeBundle = (() => {
       if (!navigationInProgress) {
         hasSwipedHorizontally = false;
       }
-      cancelAnimationFrame(navigationAnimationFrame);
-      navigationAnimationFrame = 0;
+      stopNativePageScroll();
       pendingNavTab = null;
       clearTimeout(panelSwitchSettleTimer);
     }, { passive: true });
@@ -16298,8 +16311,6 @@ var CapacitorBridgeBundle = (() => {
     viewsSliderViewport.addEventListener('scroll', () => {
       if (isAnyModalOpen()) return;
       syncDockMotion();
-      // The rAF animator owns completion. Avoid a timer and layout checks per frame.
-      if (navigationAnimationFrame) return;
       if (!navigationInProgress) {
         prepareIncomingPanelForSwipe();
       }
@@ -16324,8 +16335,7 @@ var CapacitorBridgeBundle = (() => {
       mouseStartPage = Math.max(0, Math.min(navTabs.length - 1, Math.round(mouseStartScrollLeft / Math.max(1, viewsSliderViewport.clientWidth))));
       settleAttempts = 0;
       settleStableSince = 0;
-      cancelAnimationFrame(navigationAnimationFrame);
-      navigationAnimationFrame = 0;
+      stopNativePageScroll();
       pendingNavTab = null;
       clearTimeout(panelSwitchSettleTimer);
     });
@@ -16357,10 +16367,14 @@ var CapacitorBridgeBundle = (() => {
       switchViewTab(navTabs[targetIndex], true);
     });
 
+    let navigationViewportWidth = viewsSliderViewport.clientWidth;
     window.addEventListener('resize', () => {
+      const nextWidth = viewsSliderViewport.clientWidth;
+      // Safari toolbar and keyboard height changes must not interrupt horizontal travel.
+      if (nextWidth === navigationViewportWidth) return;
+      navigationViewportWidth = nextWidth;
       const tab = pendingNavTab || currentNavTab;
-      cancelAnimationFrame(navigationAnimationFrame);
-      navigationAnimationFrame = 0;
+      stopNativePageScroll();
       viewsSliderViewport.style.scrollSnapType = '';
       viewsSliderViewport.scrollTo({ left: navTabs.indexOf(tab) * viewsSliderViewport.clientWidth, behavior: 'instant' });
       if (navigationInProgress) finishNavigation(tab);
@@ -16375,66 +16389,55 @@ var CapacitorBridgeBundle = (() => {
   const stickyHeader = document.querySelector('.ios-header');
   if (floatingIslandDock && stickyHeader) {
     const reducedNavigationMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    let lastY = Math.max(0, window.scrollY), offset = 0, distance = 1, dockDistance = 1;
-    let frame = 0, animation = 0, settleTimer = 0;
-    let touching = false, direction = 0, intent = 0;
+    let lastY = Math.max(0, window.scrollY), direction = 0, intent = 0;
+    let headerDistance = 1, dockDistance = 1, viewportWidth = innerWidth;
+    let hidden = false, frame = 0, motions = [], motionVersion = 0;
+    const mobileNavigation = matchMedia('(max-width: 600px)');
     function protectedNavigation() {
-      return isAnyModalOpen() || stickyHeader.contains(document.activeElement) ||
-        (floatingIslandDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible'));
+      const focused = document.activeElement;
+      return isAnyModalOpen() || stickyHeader.contains(focused) ||
+        (floatingIslandDock.contains(focused) && focused.matches(':focus-visible'));
     }
-    function cancelSettle() {
-      clearTimeout(settleTimer);
-      cancelAnimationFrame(animation);
-      animation = 0;
-    }
-    function paint() {
-      stickyHeader.style.setProperty('--nav-offset', `${-offset}px`);
-      stickyHeader.style.setProperty('--nav-opacity', '1');
-      const hidden = offset >= distance - .01;
-      stickyHeader.classList.toggle('header-hidden', hidden);
-      floatingIslandDock.style.setProperty('--nav-offset', `${offset / distance * dockDistance}px`);
-      floatingIslandDock.style.setProperty('--nav-opacity', '1');
-      floatingIslandDock.classList.toggle('dock-hidden', hidden);
+    function setHidden(next, immediate = false) {
+      if (next === hidden && !immediate) return;
+      hidden = next;
+      const version = ++motionVersion;
+      const elements = mobileNavigation.matches ? [stickyHeader, floatingIslandDock] : [floatingIslandDock];
+      const from = elements.map(element => getComputedStyle(element).transform);
+      motions.forEach(animation => animation.cancel());
+      motions = [];
+      stickyHeader.classList.remove('header-hidden');
+      floatingIslandDock.classList.remove('dock-hidden');
+      stickyHeader.style.setProperty('--nav-offset', next ? `${-headerDistance}px` : '0px');
+      floatingIslandDock.style.setProperty('--nav-offset', next ? `${dockDistance}px` : '0px');
+      for (const element of elements) {
+        element.style.setProperty('--nav-opacity', '1');
+        element.dataset.navigationState = next ? 'hidden' : 'visible';
+      }
+      if (!immediate && !reducedNavigationMotion.matches) {
+        motions = elements.map((element, index) => element.animate([
+          { transform: from[index] },
+          { transform: element === stickyHeader ? `translate3d(0, ${next ? -headerDistance : 0}px, 0)` : `translate3d(-50%, ${next ? dockDistance : 0}px, 0)` }
+        ], { duration: next ? 220 : 260, easing: 'cubic-bezier(.22,.72,.18,1)' }));
+      }
+      Promise.all(motions.map(animation => animation.finished.catch(() => {}))).then(() => {
+        if (version !== motionVersion) return;
+        stickyHeader.classList.toggle('header-hidden', next && mobileNavigation.matches);
+        floatingIslandDock.classList.toggle('dock-hidden', next);
+        motions = [];
+      });
     }
     function measure() {
-      const progress = offset / distance;
-      distance = stickyHeader.offsetHeight + (parseFloat(getComputedStyle(stickyHeader).top) || 0) + 10;
-      dockDistance = floatingIslandDock.offsetHeight + (parseFloat(getComputedStyle(floatingIslandDock).bottom) || 0) + 16;
-      offset = Math.min(distance, progress * distance);
-      paint();
-    }
-    function animateTo(target) {
-      cancelSettle();
-      const from = offset;
-      if (from === target) return;
-      const started = performance.now();
-      const duration = 180 + 60 * Math.abs(target - from) / distance;
-      function tick(now) {
-        const t = reducedNavigationMotion.matches ? 1 : Math.min(1, (now - started) / duration);
-        offset = from + (target - from) * (1 - Math.pow(1 - t, 3));
-        paint();
-        animation = t < 1 ? requestAnimationFrame(tick) : 0;
-      }
-      animation = requestAnimationFrame(tick);
+      const nextHeader = stickyHeader.offsetHeight + (parseFloat(getComputedStyle(stickyHeader).top) || 0) + 10;
+      const nextDock = floatingIslandDock.offsetHeight + (parseFloat(getComputedStyle(floatingIslandDock).bottom) || 0) + 16;
+      if (nextHeader === headerDistance && nextDock === dockDistance) return;
+      headerDistance = nextHeader; dockDistance = nextDock;
+      setHidden(hidden, true);
     }
     function revealNavigation() {
-      cancelSettle();
-      offset = 0;
       direction = intent = 0;
       lastY = Math.max(0, window.scrollY);
-      paint();
-    }
-    function settle() {
-      if (touching) return;
-      const canHide = !protectedNavigation() && window.scrollY > distance &&
-        document.documentElement.scrollHeight > innerHeight + distance;
-      // Tiny reversals and wheel jitter do not change the intended endpoint.
-      const hide = canHide && (Math.abs(intent) >= 10 ? intent > 0 : offset > distance / 2);
-      animateTo(hide ? distance : 0);
-    }
-    function scheduleSettle() {
-      clearTimeout(settleTimer);
-      if (!touching) settleTimer = setTimeout(settle, 100);
+      setHidden(false);
     }
     function update() {
       frame = 0;
@@ -16442,47 +16445,36 @@ var CapacitorBridgeBundle = (() => {
       const y = Math.max(0, Math.min(window.scrollY, maxY));
       const delta = y - lastY;
       lastY = y;
-      if (protectedNavigation() || y <= 8 || maxY <= distance) {
-        revealNavigation();
-        return;
-      }
-      if (delta) {
-        cancelSettle();
-        const nextDirection = Math.sign(delta);
-        intent = nextDirection === direction ? intent + delta : delta;
-        direction = nextDirection;
-        offset = Math.max(0, Math.min(distance, offset + delta));
-        paint();
-      }
-      scheduleSettle();
+      if (protectedNavigation() || y <= 8 || maxY === 0) { revealNavigation(); return; }
+      if (!delta) return;
+      const nextDirection = Math.sign(delta);
+      intent = nextDirection === direction ? intent + delta : delta;
+      direction = nextDirection;
+      // Direction hysteresis avoids flicker from tiny reversals and rubber-band scroll.
+      if (Math.abs(intent) < 12) return;
+      if (intent < 0) setHidden(false);
+      else if (y > 32) setHidden(true);
+      intent = 0;
     }
-    // Respond to content travel, not touch movement on empty pages.
     stickyHeader.classList.add('scroll-linked-navigation');
     floatingIslandDock.classList.add('scroll-linked-navigation');
-    floatingIslandDock.classList.remove('dock-hidden');
     window.addEventListener('scroll', () => {
       if (!frame) frame = requestAnimationFrame(update);
     }, { passive: true });
-    window.addEventListener('touchstart', () => { touching = true; cancelSettle(); }, { passive: true });
-    function release(event) {
-      touching = event.touches.length > 0;
-      if (!touching) scheduleSettle();
-    }
-    window.addEventListener('touchend', release, { passive: true });
-    window.addEventListener('touchcancel', release, { passive: true });
     window.addEventListener('scrollend', () => {
       if (frame) { cancelAnimationFrame(frame); update(); }
-      settle();
     }, { passive: true });
-    window.addEventListener('blur', () => { touching = false; settle(); });
     stickyHeader.addEventListener('focusin', revealNavigation);
     floatingIslandDock.addEventListener('focusin', revealNavigation);
     window.addEventListener('app:navigation-reveal', revealNavigation);
-    reducedNavigationMotion.addEventListener('change', revealNavigation);
-    window.addEventListener('resize', () => { cancelSettle(); measure(); scheduleSettle(); });
-    const navigationSizeObserver = new ResizeObserver(() => { cancelSettle(); measure(); scheduleSettle(); });
-    navigationSizeObserver.observe(stickyHeader);
-    navigationSizeObserver.observe(floatingIslandDock);
+    reducedNavigationMotion.addEventListener('change', () => setHidden(false, true));
+    window.addEventListener('resize', () => {
+      if (innerWidth === viewportWidth) return;
+      viewportWidth = innerWidth;
+      measure();
+    });
+    const sizeObserver = new ResizeObserver(measure);
+    sizeObserver.observe(stickyHeader); sizeObserver.observe(floatingIslandDock);
     measure();
   }
 
