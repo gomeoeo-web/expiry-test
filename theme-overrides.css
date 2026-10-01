@@ -4,8 +4,78 @@
   font-display: swap;
 }
 
+/* Shared outer radii; nested corners subtract the space to their parent. */
+:root {
+  --radius-control: 26px;
+  --radius-container: 36px;
+  --item-card-inset: 14px;
+  --radius-item-media: max(0px, calc(var(--radius-container) - var(--item-card-inset) - 1px));
+  --radius-pill: var(--radius-control);
+  --radius-sm: var(--radius-control);
+  --radius-subcard: var(--radius-control);
+  --radius-card: var(--radius-container);
+  --dock-inset: 6px;
+  --radius-dock-inner: max(0px, calc(var(--radius-container) - var(--dock-inset) - 1px));
+}
+:root body :where(button, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea, [role="button"]) {
+  border-radius: var(--radius-control) !important;
+}
+:root body :is(.ios-item-card, .pending-card, .ios-modal-card, .ios-action-sheet, .nlp-confirm-dialog, .cloud-consent-dialog, .icon-picker-dialog, .dropdown-menu, .sort-menu, .category-dropdown-menu) {
+  border-radius: var(--radius-container) !important;
+}
+
+/* Equal top/side insets keep the thumbnail concentric with the card corner. */
+:root body .ios-item-card {
+  padding: var(--item-card-inset);
+}
+:root body .ios-item-card .card-icon-box {
+  border-radius: var(--radius-item-media) !important;
+  box-sizing: border-box;
+}
+:root body :is(.card-icon-box, .sheet-emoji, .avatar-preview-box, .order-item-thumb, .picker-item-thumb) {
+  overflow: hidden;
+  isolation: isolate;
+}
+/* The wrapper owns the crop, including images with an inline radius. */
+:root body :is(.card-icon-box, .sheet-emoji, .avatar-preview-box, .order-item-thumb, .picker-item-thumb) > img {
+  display: block;
+  border-radius: 0 !important;
+}
+
+/* Circular arcs remain concentric when the inner radius subtracts the inset.
+   Use the same geometry on older WebViews and browsers with corner-shape. */
+:root body :is(button, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea, [role="button"], .ios-item-card, .pending-card, .ios-modal-card, .ios-action-sheet, .nlp-confirm-dialog, .cloud-consent-dialog, .icon-picker-dialog, .dropdown-menu, .sort-menu, .category-dropdown-menu, .card-icon-box, .sheet-emoji, .avatar-preview-box, .order-item-thumb, .picker-item-thumb, .nlp-confirm-icon-preview, #nlpConfirmImagePreview, .floating-island-dock, .dock-tab) {
+  corner-shape: round;
+}
+:root body .floating-island-dock {
+  padding: var(--dock-inset);
+  border-radius: var(--radius-container) !important;
+}
+:root body .floating-island-dock .dock-tab,
+:root body .floating-island-dock.dock-motion-ready::before {
+  --radius-control: var(--radius-dock-inner);
+  border-radius: var(--radius-dock-inner) !important;
+  corner-shape: round;
+}
+:root body .category-action-bar {
+  border-radius: var(--radius-container) !important;
+}
+
+/* Group actions use full capsules, with a circular search button. */
+:root body #categoryActionBar .category-action-buttons-group > button {
+  border-radius: 999px !important;
+  corner-shape: round;
+}
+
 body, button, input, textarea, select {
   font-family: 'jf-openhuninn', 'Noto Sans TC', sans-serif;
+}
+
+/* Every button has a theme surface; semantic/selected rules below take priority. */
+:root body button {
+  background-color: var(--button-gray) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 /* Disable frosted-glass blur throughout the app, including iOS WebKit layers. */
@@ -268,7 +338,7 @@ html {
   padding: 24px;
   overflow-y: auto;
   box-sizing: border-box;
-  border-radius: 22px;
+  border-radius: var(--radius-container);
   background: #fff;
   color: #262626;
   box-shadow: 0 18px 48px rgba(0, 0, 0, .28);
@@ -281,7 +351,7 @@ html {
   width: 100%;
   min-height: 52px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   font: inherit;
   cursor: pointer;
   -webkit-text-fill-color: currentColor !important;
@@ -340,18 +410,18 @@ html {
   font-weight: 400;
 }
 #customCategoryModal .category-create-card[open] > summary { margin-bottom: .9rem; }
-#customCategoryModal .cat-manage-item { flex-direction:row; align-items:center; gap:.45rem; min-height:58px; border-radius:13px; padding:.35rem .55rem; }
+#customCategoryModal .cat-manage-item { flex-direction:row; align-items:center; gap:.45rem; min-height:58px; border-radius:var(--radius-control); padding:.35rem .55rem; }
 #customCategoryModal .category-list-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; position:sticky; top:-1.25rem; z-index:2; padding:.5rem 0; background:var(--group-modal-bg, var(--ios-surface)); }
 #customCategoryModal .category-list-title span { display:none; }
 #customCategoryModal .category-manage-list { gap:.4rem; margin-top:.5rem; }
 #customCategoryModal .category-reorder-actions { display:flex; gap:.45rem; }
 #customCategoryModal .category-reorder-actions[hidden] { display:none; }
-#customCategoryModal .category-reorder-actions button { border:1px solid var(--button-border); border-radius:999px; padding:.48rem .7rem; font:inherit; font-size:.78rem; font-weight:700; white-space:nowrap; }
+#customCategoryModal .category-reorder-actions button { border:1px solid var(--button-border); border-radius:var(--radius-control); padding:.48rem .7rem; font:inherit; font-size:.78rem; font-weight:700; white-space:nowrap; }
 #customCategoryModal #btnCancelCategoryReorder { background:var(--button-gray) !important; color:var(--button-text) !important; -webkit-text-fill-color:var(--button-text) !important; }
 #customCategoryModal #btnConfirmCategoryReorder { background:#24473c !important; border-color:#24473c !important; color:#fff !important; -webkit-text-fill-color:#fff !important; }
-#customCategoryModal .cat-drag-handle { width:44px; height:44px; flex:0 0 44px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:10px; background:transparent !important; color:var(--ios-text-secondary) !important; cursor:grab; touch-action:none; user-select:none; }
+#customCategoryModal .cat-drag-handle { width:44px; height:44px; flex:0 0 44px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:var(--radius-control); background:transparent !important; color:var(--ios-text-secondary) !important; cursor:grab; touch-action:none; user-select:none; }
 #customCategoryModal .cat-drag-lines { display:flex; flex-direction:column; align-items:center; gap:4px; pointer-events:none; }
-#customCategoryModal .cat-drag-lines i { display:block; width:19px; height:2.5px; border-radius:999px; background:currentColor; }
+#customCategoryModal .cat-drag-lines i { display:block; width:19px; height:2.5px; border-radius:var(--radius-control); background:currentColor; }
 #customCategoryModal .cat-drag-handle:active { cursor:grabbing; }
 #customCategoryModal .cat-drag-handle:focus-visible { outline:2px solid var(--ios-blue); outline-offset:2px; }
 #customCategoryModal .cat-manage-item.is-dragging { visibility:hidden; }
@@ -601,7 +671,7 @@ html {
   min-height: 46px;
   padding: .6rem .75rem;
   border: 1px solid var(--button-border) !important;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--button-gray) !important;
   background-image: none !important;
   color: var(--button-text) !important;
@@ -745,7 +815,7 @@ html {
 }
 
 /* 深色按鈕：按壓與選中狀態使用淺灰底、深色文字。 */
-:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan) {
+:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan):not(.dock-tab) {
   --button-text: #202124;
   background: #d4d4d8 !important;
   background-image: none !important;
@@ -754,13 +824,13 @@ html {
   -webkit-text-fill-color: var(--button-text) !important;
   box-shadow: none !important;
 }
-:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan) :is(.dock-label, .filter-btn-text, .chip-label),
+:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan):not(.dock-tab) :is(.dock-label, .filter-btn-text, .chip-label),
 :root:not([data-theme="light"]) body .btn-sheet-action:active:not(#btnCameraScan) span,
 :root:not([data-theme="light"]) body .settings-row-btn:active :is(.settings-title, .settings-subtitle) {
   color: #202124 !important;
   -webkit-text-fill-color: #202124 !important;
 }
-:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan) svg {
+:root:not([data-theme="light"]) body button:is(:active, .active, [aria-pressed="true"]):not(#btnCameraScan):not(.dock-tab) svg {
   color: #202124 !important;
   stroke: #202124 !important;
 }
@@ -800,7 +870,7 @@ html {
   height: 52px;
   margin: 0 auto 16px;
   border: 1px solid var(--button-border);
-  border-radius: 18px;
+  border-radius: var(--radius-container);
   background: var(--button-gray);
   color: var(--button-text);
   font-size: 28px;
@@ -838,7 +908,7 @@ html {
   background: var(--camera-control) !important;
   color: var(--camera-text) !important;
   -webkit-text-fill-color: var(--camera-text) !important;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
 }
 #cameraScanModal .control-label { color: var(--camera-text); }
 #cameraScanModal .camera-quota-pill {
@@ -876,7 +946,7 @@ html {
   min-height: 46px;
   padding: 8px 6px;
   margin: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   gap: 6px;
   text-align: center;
   white-space: normal;
@@ -905,7 +975,7 @@ html {
 }
 :root .sheet-actions-group #btnSheetDelete {
   border-color: var(--delete-border) !important;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
 }
 
 /* 1.9.22: shared motion rhythm for controls, navigation and overlays. */
@@ -977,7 +1047,7 @@ html {
   width: var(--dock-indicator-width);
   height: var(--dock-indicator-height);
   transform: translateX(var(--dock-indicator-x));
-  border-radius: 32px;
+  border-radius: var(--radius-container);
   background: #38383c;
   box-shadow: 0 3px 12px rgba(0, 0, 0, .16);
   pointer-events: none;
@@ -1017,4 +1087,274 @@ html {
 :root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon {
   transform: translateY(calc(-1px * var(--dock-emphasis))) scale(calc(1 + .15 * var(--dock-emphasis)));
   transition: none;
+}
+
+/* Keep native time digits visible in every theme; avoid flex on native editors. */
+:root body #nlpConfirmReminderTime {
+  display: block !important;
+  color: var(--ios-text-primary) !important;
+  -webkit-text-fill-color: var(--ios-text-primary) !important;
+  background: var(--ios-surface) !important;
+  border: 1px solid var(--ios-border, rgba(128,128,128,.25)) !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  line-height: normal !important;
+  padding: 10px 12px !important;
+  font-size: 16px !important;
+  text-align: left !important;
+}
+:root body #nlpConfirmReminderTime::-webkit-datetime-edit {
+  color: var(--ios-text-primary) !important;
+  -webkit-text-fill-color: var(--ios-text-primary) !important;
+}
+:root body .nlp-time-input-container { height: auto; }
+:root body #nlpConfirmReminder { min-height: 44px; }
+:root body #nlpTrackingModeSelector .nlp-mode-pill { font-size: 14px; padding: 10px 6px; }
+:root body .nlp-extra-options { margin-top: 10px; }
+:root body .nlp-extra-options summary {
+  cursor: pointer; color: var(--ios-text-secondary); font-size: 14px; padding: 6px 0;
+}
+:root body .nlp-extra-options[open] summary { margin-bottom: 8px; }
+:root body .nlp-extra-options .nlp-quick-days-pills {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+}
+
+/* Secondary actions remain visible against modal and page surfaces. */
+:root body :is(.btn-ios-secondary, .btn-delete-confirm-cancel, button[id*="Cancel"], .icon-picker-option) {
+  background: var(--button-gray) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border: 1px solid var(--button-border) !important;
+}
+:root body button:focus-visible {
+  outline: 2px solid var(--ink-green);
+  outline-offset: 3px;
+}
+/* The shutter's 4px border and 4px inset share the same corner centre. */
+:root body #cameraScanModal #btnCameraShutter {
+  --radius-control: 36px;
+  box-sizing: border-box;
+  padding: 4px;
+  border: 4px solid var(--camera-text) !important;
+  border-radius: 36px !important;
+  background: var(--camera-panel) !important;
+  corner-shape: round;
+}
+:root body #cameraScanModal #btnCameraShutter .shutter-inner {
+  box-sizing: border-box;
+  border-radius: 28px;
+  background: var(--camera-text);
+  corner-shape: round;
+}
+
+/* Button surfaces and inks are paired in every theme. */
+:root { --button-danger-ink: #ff958c; --button-warning-ink: #f0c46e; }
+:root[data-theme="light"] {
+  --button-danger-ink: #b42318;
+  --button-warning-ink: #925000;
+  --ios-text-secondary: #6c645c;
+}
+:root body :is(.settings-row-btn, #btnOpenArchive, #btnOpenRecentlyDeleted, #btnExportJson, #btnRestoreDemoData) {
+  background: transparent !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+:root body :is(.settings-row-btn, #btnOpenArchive, #btnOpenRecentlyDeleted, #btnExportJson, #btnRestoreDemoData) span {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root body :is(#btnSheetDelete, .btn-clean-expired, .btn-modal-delete-item, .danger, #btnRestoreDemoData),
+:root body :is(#btnSheetDelete, .btn-clean-expired, .btn-modal-delete-item, .danger, #btnRestoreDemoData) span {
+  color: var(--button-danger-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root body :is(#pillCountExpired, .pill-counter.expired) {
+  color: var(--button-danger-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root body :is(#pillCountUrgent, .pill-counter.urgent) {
+  color: var(--button-warning-ink) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root[data-theme="light"] body :is(#pillCountExpired, .pill-counter.expired) { background: #fff0ed !important; }
+:root[data-theme="light"] body :is(#pillCountUrgent, .pill-counter.urgent) { background: #fff4e5 !important; }
+:root body #btnCameraScan,
+:root body .sheet-actions-group #btnSheetStart {
+  background: #1765c4 !important;
+  border-color: #1765c4 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+:root body #fabAddBtn svg { color: inherit !important; }
+
+/* Only the selected tab has a highlighted surface. */
+:root body .floating-island-dock .dock-tab,
+:root body .floating-island-dock.dock-motion-ready .dock-tab {
+  background: transparent !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+:root body .floating-island-dock .dock-tab.active,
+:root body .floating-island-dock.dock-motion-ready .dock-tab.active {
+  background: #d4d4d8 !important;
+  color: #202124 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root[data-theme="light"] body .floating-island-dock .dock-tab.active,
+:root[data-theme="light"] body .floating-island-dock.dock-motion-ready .dock-tab.active {
+  background: #38383c !important;
+  color: #fff !important;
+}
+:root body .floating-island-dock .dock-tab .dock-label,
+:root body .floating-island-dock .dock-tab .dock-icon svg,
+:root body .floating-island-dock.dock-motion-ready .dock-tab .dock-label,
+:root body .floating-island-dock.dock-motion-ready .dock-tab .dock-icon svg {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root body .category-chip.active svg {
+  color: inherit !important;
+}
+:root body :is(#btnOpenArchive, #btnOpenRecentlyDeleted) .trash-badge-count {
+  background: var(--button-selected) !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root body #customCategoryModal button.cat-drag-handle {
+  background: var(--button-gray) !important;
+  color: var(--button-text) !important;
+  border: 1px solid var(--button-border);
+}
+
+/* Shared form rhythm across item, confirmation and category menus. */
+:root {
+  --form-control-height: 48px;
+  --form-label-gap: 8px;
+  --form-field-gap: 20px;
+  --modal-content-inset: 20px;
+  --form-surface: #29292c;
+  --form-border: #55555b;
+}
+:root[data-theme="light"] { --form-surface: #f7f3eb; --form-border: #d9d5cd; }
+:root[data-theme="amoled"] { --form-surface: #202022; --form-border: #4d4d51; }
+:root body .ios-modal-header,
+:root body .icon-picker-dialog header { padding: 20px var(--modal-content-inset); }
+:root body .ios-modal-scroll {
+  padding: 20px var(--modal-content-inset) 24px !important;
+  gap: var(--form-field-gap);
+}
+:root body #nlpConfirmModal .ios-modal-scroll { gap: 0; }
+:root body :is(.nlp-confirm-label, .ios-label, .ios-field > label) {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+:root body .nlp-confirm-label { margin-bottom: var(--form-label-gap); }
+:root body .ios-field { gap: var(--form-label-gap); }
+:root body .nlp-confirm-field { margin-bottom: var(--form-field-gap); }
+:root body #nlpReminderScheduleTimeSection { margin-bottom: var(--form-field-gap) !important; }
+:root body .ios-modal-backdrop :is(#nlpConfirmReminderTime, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), select, .icon-picker-trigger) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--form-control-height) !important;
+  min-height: var(--form-control-height) !important;
+  padding: 10px 16px !important;
+  border: 1px solid var(--form-border) !important;
+  background-color: var(--form-surface) !important;
+  color: var(--ios-text-primary) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 16px !important;
+  font-family: inherit;
+  line-height: normal !important;
+  text-align: left !important;
+}
+:root body .ios-modal-backdrop select { padding-right: 36px !important; }
+:root body .ios-modal-backdrop .icon-picker-trigger {
+  gap: 12px;
+  background-image: none !important;
+}
+:root body .icon-picker-trigger .flat-item-icon { width: 24px; height: 24px; flex: 0 0 24px; }
+:root body :is(.nlp-select-wrap, .nlp-time-input-container) { height: var(--form-control-height); }
+:root body :is(.nlp-select-wrap, .ios-select-wrapper):has(.icon-picker-trigger) > .select-arrow { display: none; }
+:root body .ios-modal-backdrop :is(input[type="date"], input[type="time"])::-webkit-datetime-edit {
+  color: var(--ios-text-primary) !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-align: left;
+}
+:root body .nlp-reminder-time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+:root body .nlp-extra-options { margin-top: 16px; }
+:root body .nlp-confirm-hint { margin-top: 8px; }
+:root body .nlp-quick-days-pills { gap: 8px; }
+:root body #nlpConfirmImageWrap { margin-block: 8px 24px !important; }
+:root body :is(.nlp-confirm-actions, .studio-modal-footer) { gap: 12px; margin-top: 24px; }
+:root body .nlp-confirm-actions > button {
+  flex: 1 !important;
+  min-height: var(--form-control-height);
+  height: var(--form-control-height);
+  font-size: 16px;
+}
+:root body .icon-picker-options { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+:root body .icon-picker-option { min-height: var(--form-control-height); padding: 12px 16px; gap: 12px; }
+:root body :is(.ios-modal-header, .icon-picker-dialog header) .btn-modal-close { width: 40px; height: 40px; }
+:root body .ios-modal-backdrop :is(input[type="date"], input[type="time"])::-webkit-date-and-time-value {
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+/* One moving background; all original content stays above it. The white
+   duplicate is visible only where that background intersects each tab. */
+:root body .floating-island-dock.dock-motion-ready { isolation: isolate; }
+:root body .floating-island-dock.dock-motion-ready::before { z-index: 0; background: #38383c; }
+:root[data-theme] body .floating-island-dock.dock-motion-ready button.dock-tab,
+:root[data-theme] body .floating-island-dock.dock-motion-ready button.dock-tab.active {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+  color: var(--button-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+:root body .floating-island-dock .dock-highlight-content {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: inherit;
+  padding: inherit;
+  box-sizing: border-box;
+  pointer-events: none;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  clip-path: inset(0 var(--dock-highlight-right, 100%) 0 var(--dock-highlight-left, 100%) round var(--radius-dock-inner));
+}
+:root body .floating-island-dock.dock-motion-ready .dock-highlight-content :is(.dock-label, .dock-icon svg) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  stroke: currentColor;
+}
+
+
+/* Icons and labels share their layer's ink, including clipped swipe highlights. */
+:root[data-theme] body .floating-island-dock .dock-tab .dock-icon,
+:root[data-theme] body .floating-island-dock .dock-tab .dock-label,
+:root[data-theme] body .floating-island-dock .dock-tab .dock-icon svg,
+:root[data-theme] body .floating-island-dock .dock-tab .dock-icon svg * {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+:root[data-theme] body .floating-island-dock .dock-tab .dock-icon svg,
+:root[data-theme] body .floating-island-dock .dock-tab .dock-icon svg * {
+  stroke: currentColor !important;
 }

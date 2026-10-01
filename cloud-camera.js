@@ -1,6 +1,6 @@
 // 1.9.18 — public endpoint only; no API key or developer password in the app.
 const ENDPOINT = 'https://expiry-ai.gomeoeo.workers.dev/api/recognize';
-const CONSENT_KEY = 'expiry_cloud_photo_consent_v1';
+const CONSENT_KEY = 'expiry_cloud_photo_consent_openai_v2';
 
 let activeRecognitionController = null;
 let isRecognizing = false;
@@ -71,7 +71,7 @@ async function consent(signal) {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.className = 'cloud-consent-overlay';
-    overlay.innerHTML = '<section class="cloud-consent-dialog" role="dialog" aria-modal="true" aria-labelledby="cloudConsentTitle"><h2 id="cloudConsentTitle">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 Google Gemini，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept>同意並辨識</button><button type="button" data-cancel>改用手動填寫</button></section>';
+    overlay.innerHTML = '<section class="cloud-consent-dialog" role="dialog" aria-modal="true" aria-labelledby="cloudConsentTitle"><h2 id="cloudConsentTitle">使用雲端照片辨識</h2><p>選擇的照片會傳送至 Cloudflare 與 OpenAI GPT‑6 Luna，協助讀取商品和日期。本 App 後端不儲存照片；供應商依服務方案處理資料。</p><p>辨識可能出錯，儲存前請確認名稱與日期。你也可以選擇手動填寫。</p><button type="button" data-accept>同意並辨識</button><button type="button" data-cancel>改用手動填寫</button></section>';
     let finished = false;
     const onAbort = () => finish(false);
     const priorBodyOverflow = document.body.style.overflow;
@@ -183,7 +183,7 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
       recognitionCache.set(fingerprint, { at: Date.now(), result: structuredClone(result) });
     }
     const matched = window.matchCategoryAndSubCategory?.(result.name || '');
-    const modelCategory = result.recognized && Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category)
+    const modelCategory = Object.hasOwn(window.DEFAULT_CATEGORIES || {}, result.category)
       ? result.category
       : 'other';
     // Prefer a concrete local name match over the model's broad visual guess.
@@ -196,12 +196,12 @@ export async function recognizeCanvas(canvas, photoDataUrl) {
     // Keep a useful product name even when the model cannot map it to a
     // category. The confirmation dialog will use `other` instead of dropping
     // the name and forcing the user to type it again.
-    const name = typeof result.name === 'string' ? result.name.trim().slice(0, 100) : '';
+    const name = result.name.trim().slice(0, 100) || '未辨識物品';
     const subCategory = (matched && matched.category === category) ? (matched.subCategory || '') : '';
     const autoInferred = window.inferItemLifespanOrUsageDate?.(name, category, subCategory);
     return { success: true, source: cached ? 'cloud-cache' : 'cloud', name, category, subCategory, autoInferred,
       emoji: window.DEFAULT_CATEGORIES?.[category]?.emoji || matched?.emoji || '📦', expiryDate, hasEndDate: !!expiryDate, remindDaysBefore: 3, remindTime: '09:00', image: photoDataUrl,
-      recognitionNotice: [(name ? (result.recognized ? '' : '已辨識名稱，分類暫選「其他」，請確認。') : '無法確認商品，請填入名稱。'), expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : (autoInferred?.hasEndDate ? `未讀到包裝到期日，已為您準備建議使用期限（約 ${autoInferred.durationDays} 天）。` : '此物品未讀到效期，可記錄使用日期或手動填寫。'), typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
+      recognitionNotice: [result.recognized ? '已辨識名稱：' + name + '，請確認。' : '已填入暫定名稱：' + name + '；照片主體不清楚，請確認或修改。', category === 'other' ? '分類暫選「其他」，可自行調整。' : '', expiryDate ? '辨識日期：' + expiryDate + '，請對照包裝確認。' : (autoInferred?.hasEndDate ? `未讀到包裝到期日，已為您準備建議使用期限（約 ${autoInferred.durationDays} 天）。` : '未讀到效期，可記錄使用日期或手動填寫。'), typeof result.uncertainty === 'string' ? result.uncertainty.slice(0, 200) : ''].filter(Boolean).join('\n'),
       notes: typeof result.expiryEvidence === 'string' && expiryDate ? '日期原文：' + result.expiryEvidence.slice(0, 300) : '' };
   } catch (error) {
     if (error.name === 'AbortError' || controller.signal.aborted) {

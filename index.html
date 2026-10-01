@@ -42,10 +42,10 @@
   --ios-blue: #0a84ff;
 
   /* Geometry */
-  --radius-pill: 9999px;
-  --radius-card: 22px;
-  --radius-subcard: 16px;
-  --radius-sm: 10px;
+  --radius-pill: 18px;
+  --radius-card: 28px;
+  --radius-subcard: 18px;
+  --radius-sm: 18px;
 
   --transition-ios: 0.22s cubic-bezier(0.32, 0.72, 0, 1);
   --app-max-width: 440px;
@@ -241,7 +241,7 @@ body {
 .btn-circle-dark {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: var(--ios-surface-elevated);
   color: var(--ios-text-primary);
   border: none;
@@ -261,7 +261,7 @@ body {
 .btn-circle-white {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: #ffffff;
   color: #000000;
   border: none;
@@ -285,7 +285,7 @@ body {
   right: 2px;
   width: 9px;
   height: 9px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: var(--ios-green);
   border: 2px solid var(--ios-bg);
   box-shadow: 0 0 4px rgba(52, 199, 89, 0.6);
@@ -348,7 +348,7 @@ body {
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--ios-text-secondary);
   border: none;
@@ -378,7 +378,7 @@ body {
   transform: translateY(-50%);
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.18);
   color: var(--ios-text-primary);
   border: none;
@@ -443,7 +443,7 @@ body {
   right: max(20px, env(safe-area-inset-right, 0px));
   width: 58px;
   height: 58px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background-color: #FFFFFF !important;
   background: #FFFFFF !important;
   color: #000000 !important;
@@ -535,7 +535,7 @@ body {
   height: 85vh;
   max-height: 720px;
   background: #000000;
-  border-radius: 28px;
+  border-radius: var(--radius-container);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -576,7 +576,7 @@ body {
 .camera-btn-close {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
   border: none;
@@ -627,7 +627,7 @@ body {
   max-width: 320px;
   position: relative;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-  border-radius: 18px;
+  border-radius: var(--radius-container);
 }
 
 .viewfinder-corner {
@@ -642,28 +642,28 @@ body {
   top: 0;
   left: 0;
   border-width: 3.5px 0 0 3.5px;
-  border-top-left-radius: 12px;
+  border-top-left-radius: var(--radius-control);
 }
 
 .viewfinder-corner.top-right {
   top: 0;
   right: 0;
   border-width: 3.5px 3.5px 0 0;
-  border-top-right-radius: 12px;
+  border-top-right-radius: var(--radius-control);
 }
 
 .viewfinder-corner.bottom-left {
   bottom: 0;
   left: 0;
   border-width: 0 0 3.5px 3.5px;
-  border-bottom-left-radius: 12px;
+  border-bottom-left-radius: var(--radius-control);
 }
 
 .viewfinder-corner.bottom-right {
   bottom: 0;
   right: 0;
   border-width: 0 3.5px 3.5px 0;
-  border-bottom-right-radius: 12px;
+  border-bottom-right-radius: var(--radius-control);
 }
 
 .camera-scan-laser {
@@ -674,7 +674,7 @@ body {
   height: 2px;
   background: linear-gradient(90deg, transparent, #34c759, #30d158, transparent);
   box-shadow: 0 0 10px #34c759;
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   animation: scanLaserMove 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
 }
 
@@ -700,7 +700,7 @@ body {
   color: rgba(255, 255, 255, 0.85);
   background: rgba(0, 0, 0, 0.6);
   padding: 6px 14px;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -713,7 +713,7 @@ body {
   width: 68px;
   height: 68px;
   border: 2px solid #ffd60a;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   pointer-events: none;
   transform: translate(-50%, -50%) scale(1.2);
   opacity: 0;
@@ -759,7 +759,7 @@ body {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   padding: 4px 6px;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
   border: 1px solid rgba(255, 255, 255, 0.18);
   z-index: 15;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
@@ -769,7 +769,7 @@ body {
 .camera-zoom-btn {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.85);
@@ -831,7 +831,7 @@ body {
   padding: 20px 20px;
   background: rgba(28, 28, 32, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
+  border-radius: var(--radius-container);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -853,7 +853,7 @@ body {
   width: 100%;
   height: 110px;
   max-height: 110px;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   margin-bottom: 16px;
   background: rgba(0, 0, 0, 0.5);
@@ -940,7 +940,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: transparent;
   color: rgba(255, 255, 255, 0.35);
   font-size: 0.8rem;
@@ -977,7 +977,7 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
   background: rgba(52, 199, 89, 0.16);
   color: #34c759;
   border: 1px solid rgba(52, 199, 89, 0.35);
@@ -999,7 +999,7 @@ body {
   font-size: 0.76rem;
   font-weight: 600;
   padding: 4px 11px;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
   background: rgba(52, 199, 89, 0.15);
   color: #34c759;
   border: 1px solid rgba(52, 199, 89, 0.3);
@@ -1023,7 +1023,7 @@ body {
   padding: 20px 20px;
   background: rgba(28, 28, 32, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
+  border-radius: var(--radius-container);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -1045,7 +1045,7 @@ body {
   width: 100%;
   height: 110px;
   max-height: 110px;
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   margin-bottom: 16px;
   background: rgba(0, 0, 0, 0.5);
@@ -1132,7 +1132,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: transparent;
   color: rgba(255, 255, 255, 0.35);
   font-size: 0.8rem;
@@ -1169,7 +1169,7 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
   background: rgba(52, 199, 89, 0.16);
   color: #34c759;
   border: 1px solid rgba(52, 199, 89, 0.35);
@@ -1191,7 +1191,7 @@ body {
   font-size: 0.76rem;
   font-weight: 600;
   padding: 4px 11px;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
   background: rgba(52, 199, 89, 0.15);
   color: #34c759;
   border: 1px solid rgba(52, 199, 89, 0.3);
@@ -1216,7 +1216,7 @@ body {
   padding: 0.85rem 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
+  border-radius: var(--radius-container);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -1265,7 +1265,7 @@ body {
   font-size: 0.65rem;
   font-weight: 700;
   padding: 2px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   background: rgba(10, 132, 255, 0.2);
   color: #0a84ff;
   border: 1px solid rgba(10, 132, 255, 0.35);
@@ -1275,7 +1275,7 @@ body {
   font-size: 0.65rem;
   font-weight: 600;
   padding: 2px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   background: rgba(48, 209, 88, 0.16);
   color: #30d158;
   border: 1px solid rgba(48, 209, 88, 0.3);
@@ -1293,7 +1293,7 @@ body {
   width: 100%;
   height: 8px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   margin: 0.6rem 0 0.45rem 0;
   position: relative;
@@ -1303,7 +1303,7 @@ body {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #0a84ff, #5e5ce6, #30d158);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   transition: width 0.22s cubic-bezier(0.32, 0.72, 0, 1);
   position: relative;
   overflow: hidden;
@@ -1349,7 +1349,7 @@ body {
 .vlm-hint-note {
   margin-top: 0.55rem;
   padding: 0.4rem 0.6rem;
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.68rem;
@@ -1456,7 +1456,7 @@ body {
 .camera-shutter-btn {
   width: 72px;
   height: 72px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   border: 4px solid #ffffff;
   background: transparent;
   padding: 4px;
@@ -1475,7 +1475,7 @@ body {
 .camera-shutter-btn .shutter-inner {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: #ffffff;
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
@@ -1553,7 +1553,7 @@ body {
   width: 32px;
   height: 32px;
   min-width: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: rgba(52, 199, 89, 0.14);
   color: var(--ios-green);
   display: inline-flex;
@@ -1652,7 +1652,7 @@ body {
   width: 32px;
   height: 32px;
   min-width: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: rgba(255, 69, 58, 0.12);
   color: #ff453a;
   border: 1px solid rgba(255, 69, 58, 0.28);
@@ -1882,7 +1882,7 @@ body {
   color: var(--ios-text-secondary);
   width: 20px;
   height: 20px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   font-size: 0.75rem;
   cursor: pointer;
   display: flex;
@@ -2199,7 +2199,7 @@ body {
   width: 100%;
   height: 4px;
   background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   margin-top: auto;
 }
@@ -2207,7 +2207,7 @@ body {
 .progress-bar-fill,
 .card-progress-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   transition: width 0.3s ease, background-color 0.2s ease;
 }
 
@@ -2250,7 +2250,7 @@ body {
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem 0.65rem;
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, var(--radius-control));
   background: var(--ios-surface-elevated, #2c2c2e);
   border: 1px solid var(--ios-border, rgba(255, 255, 255, 0.12));
   color: var(--ios-text-secondary, #8e8e93);
@@ -2284,7 +2284,7 @@ body {
 .empty-icon-circle {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: var(--ios-surface);
   color: var(--ios-text-secondary);
   display: flex;
@@ -2316,7 +2316,7 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 40px;
+  border-radius: var(--radius-container);
   padding: 0.32rem 0.42rem;
   display: flex;
   align-items: center;
@@ -2388,7 +2388,7 @@ body {
   justify-content: center;
   gap: 0.15rem;
   padding: 0.52rem 1.6rem;
-  border-radius: 32px;
+  border-radius: var(--radius-container);
   background: transparent;
   color: var(--ios-text-secondary);
   border: none;
@@ -2591,7 +2591,7 @@ body {
   border: none;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   color: var(--ios-text-secondary);
   font-size: 1rem;
   cursor: pointer;
@@ -2932,7 +2932,7 @@ body {
   background-color: var(--ios-surface-elevated, #39393d);
   border: 1.5px solid var(--ios-border, rgba(255, 255, 255, 0.15));
   transition: all 0.28s cubic-bezier(0.32, 0.72, 0, 1);
-  border-radius: 31px;
+  border-radius: var(--radius-container);
 }
 
 .ios-switch-slider::before {
@@ -2944,7 +2944,7 @@ body {
   bottom: 1.5px;
   background-color: #ffffff;
   transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -3375,7 +3375,7 @@ input[type="time"]::-webkit-date-and-time-value {
   text-align: center;
   background: var(--ios-surface-elevated);
   border: 1px solid var(--ios-border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   color: #ffffff;
   font-size: 1.15rem;
   outline: none;
@@ -3489,7 +3489,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .ios-action-sheet {
   background: var(--ios-surface);
-  border-radius: 26px;
+  border-radius: var(--radius-container);
   width: 100%;
   max-width: 500px;
   max-height: min(85vh, calc(100vh - 2.5rem));
@@ -3524,7 +3524,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .sheet-drag-handle {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   background: var(--ios-border-strong);
   margin: 0 auto 0.75rem auto;
   cursor: grab;
@@ -3535,6 +3535,7 @@ input[type="time"]::-webkit-date-and-time-value {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 0.85rem;
   touch-action: none;
   cursor: grab;
@@ -3545,6 +3546,12 @@ input[type="time"]::-webkit-date-and-time-value {
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sheet-item-info > div:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .sheet-emoji {
@@ -3565,9 +3572,20 @@ input[type="time"]::-webkit-date-and-time-value {
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.015em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#btnCloseSheet.btn-modal-close {
+  width: 42px;
+  height: 42px;
+  color: var(--ios-text-primary);
+  background: var(--ios-surface-secondary);
+  border: 1px solid var(--ios-border-strong);
+  font-size: 1.35rem;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
 }
 
 .sheet-tag {
@@ -4202,7 +4220,7 @@ input[type="time"]::-webkit-date-and-time-value {
   appearance: none;
   width: 100%;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   background: var(--ios-surface-elevated);
   outline: none;
   margin: 0.4rem 0;
@@ -4214,7 +4232,7 @@ input[type="time"]::-webkit-date-and-time-value {
   appearance: none;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   cursor: pointer;
@@ -4264,7 +4282,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .category-create-card {
   background: var(--ios-surface-secondary);
   border: 1.5px solid var(--ios-border);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   padding: 0.85rem 1rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -4319,7 +4337,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .quick-emoji-btn {
   background: var(--ios-surface);
   border: 1px solid var(--ios-border);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   font-size: 1.15rem;
   padding: 0.3rem 0.55rem;
   cursor: pointer;
@@ -4345,7 +4363,7 @@ input[type="time"]::-webkit-date-and-time-value {
   gap: 0.4rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   padding: 0.55rem 0.75rem;
   transition: background 0.15s ease;
   box-sizing: border-box;
@@ -4406,7 +4424,7 @@ input[type="time"]::-webkit-date-and-time-value {
   font-size: 0.76rem;
   font-weight: 600;
   padding: 0.28rem 0.55rem;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -4438,7 +4456,7 @@ input[type="time"]::-webkit-date-and-time-value {
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.35rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -4474,7 +4492,7 @@ input[type="time"]::-webkit-date-and-time-value {
   color: var(--ios-text-secondary);
   background: rgba(255, 255, 255, 0.08);
   padding: 0.25rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   font-weight: 600;
 }
 
@@ -4656,7 +4674,7 @@ input[type="time"]::-webkit-date-and-time-value {
   justify-content: center;
   width: 26px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   border: 1.5px solid var(--ios-border);
   color: transparent;
   font-size: 0.85rem;
@@ -4716,7 +4734,7 @@ input[type="time"]::-webkit-date-and-time-value {
 
 .custom-order-items-list::-webkit-scrollbar-thumb {
   background: var(--ios-border-strong);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
 }
 
 .order-item-row {
@@ -4749,7 +4767,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .order-item-thumb {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--ios-surface-elevated);
   display: flex;
   align-items: center;
@@ -4784,7 +4802,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .btn-move-order {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-control);
   border: 1px solid var(--ios-border);
   background: var(--ios-surface-elevated);
   color: var(--ios-text-primary);
@@ -5164,7 +5182,7 @@ input[type="time"]::-webkit-date-and-time-value {
   padding: 0.45rem 0.75rem;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   margin-top: 0;
   margin-bottom: 0;
   box-shadow: none;
@@ -5416,7 +5434,7 @@ input[type="time"]::-webkit-date-and-time-value {
   padding: 0.65rem 0.85rem;
   background: var(--ios-surface-secondary);
   border: 1.5px solid var(--ios-border);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   cursor: pointer;
   user-select: none;
   transition: all 0.15s ease;
@@ -5450,7 +5468,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .picker-checkbox {
   width: 22px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   border: 2px solid var(--ios-text-secondary);
   display: flex;
   align-items: center;
@@ -5477,7 +5495,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .picker-item-thumb {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: #2a2a2d;
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
@@ -5525,7 +5543,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .picker-cat-tag {
   background: rgba(255, 255, 255, 0.08);
   padding: 0.1rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   font-size: 0.75rem;
 }
 
@@ -5544,7 +5562,7 @@ input[type="time"]::-webkit-date-and-time-value {
 .btn-cat-order {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--ios-border);
   color: var(--ios-text-primary);
@@ -5737,7 +5755,7 @@ body.modal-open .view-panel {
   width: 88%;
   text-align: center;
   padding: 1.75rem 1.35rem 1.45rem 1.35rem;
-  border-radius: 22px;
+  border-radius: var(--radius-container);
   background: var(--ios-surface);
   border: 1px solid var(--ios-border);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -5843,7 +5861,7 @@ body.modal-open .view-panel {
   background: rgba(10, 132, 255, 0.14);
   border: 1px solid rgba(10, 132, 255, 0.28);
   padding: 0.2rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   white-space: nowrap;
 }
 
@@ -5868,7 +5886,7 @@ body.modal-open .view-panel {
   font-size: 0.78rem;
   font-weight: 600;
   padding: 0.3rem 1.4rem 0.3rem 0.6rem;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   cursor: pointer;
   outline: none;
   font-family: inherit;
@@ -5926,7 +5944,7 @@ body.modal-open .view-panel {
   .ios-modal-card {
     max-width: calc(100% - 0.5rem);
     margin: 0 auto;
-    border-radius: 20px;
+    border-radius: var(--radius-container);
     max-height: 90vh;
   }
 
@@ -6072,7 +6090,7 @@ body.modal-open .view-panel {
   font-size: 1.6rem;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--ios-surface-elevated);
   display: flex;
   align-items: center;
@@ -6211,7 +6229,7 @@ body.modal-open .view-panel {
 [data-theme="amoled"] .settings-icon {
   background: #282834;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   width: 34px;
   height: 34px;
   display: inline-flex;
@@ -6585,7 +6603,7 @@ body.modal-open .view-panel {
   gap: 0.55rem;
   background: rgba(255, 149, 0, 0.09);
   border: 1px solid rgba(255, 149, 0, 0.28);
-  border-radius: var(--radius-card, 16px);
+  border-radius: var(--radius-card, var(--radius-container));
   padding: 0.7rem 0.85rem;
   margin-bottom: 0.95rem;
   transition: all 0.25s ease;
@@ -6608,7 +6626,7 @@ body.modal-open .view-panel {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 4px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
 }
 
 .nlp-mode-pill {
@@ -6617,7 +6635,7 @@ body.modal-open .view-panel {
   justify-content: center;
   gap: 0.35rem;
   padding: 0.55rem 0.5rem;
-  border-radius: 9px;
+  border-radius: var(--radius-control);
   border: 1px solid transparent;
   background: transparent;
   color: #a1a1a6;
@@ -6672,7 +6690,7 @@ body.modal-open .view-panel {
   background: rgba(10, 132, 255, 0.12);
   border: 1px solid rgba(10, 132, 255, 0.28);
   color: #0a84ff;
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   padding: 0.5rem 0.75rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -6705,7 +6723,7 @@ body.modal-open .view-panel {
   box-sizing: border-box;
   background: var(--ios-surface-secondary);
   border: 1px solid var(--ios-border-strong);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   padding: 0 0.75rem;
   color: var(--ios-text-primary);
   font-family: inherit;
@@ -6822,7 +6840,7 @@ input[type="datetime-local"].nlp-confirm-input {
   padding: 0 10px !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-control) !important;
   color: #FFFFFF !important;
   font-size: 14px !important;
   font-weight: 500 !important;
@@ -6979,7 +6997,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 3px;
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   margin-bottom: 0;
 }
 
@@ -6988,7 +7006,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   align-items: center;
   justify-content: center;
   padding: 0.38rem 0.25rem;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   border: 1px solid transparent;
   background: transparent;
   color: #a1a1a6;
@@ -7049,7 +7067,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #ffffff;
   padding: 0.32rem 0.65rem;
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, var(--radius-control));
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -7080,7 +7098,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 
 .nlp-time-pill {
   padding: 3px 8px;
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, var(--radius-control));
   border: 1px solid var(--ios-border-strong);
   background: var(--ios-surface-secondary);
   color: var(--ios-text-secondary);
@@ -7157,7 +7175,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   height: 4px;
   width: 100%;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   margin-top: 0.5rem;
 }
@@ -7166,7 +7184,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #0a84ff, #30d158);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   transition: width 0.22s ease;
 }
 
@@ -7201,7 +7219,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   max-width: 360px;
   background: linear-gradient(180deg, rgba(30, 32, 44, 0.96) 0%, rgba(18, 20, 28, 0.98) 100%);
   border: 1px solid rgba(99, 102, 241, 0.35);
-  border-radius: 22px;
+  border-radius: var(--radius-container);
   padding: 1.35rem 1.45rem;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(99, 102, 241, 0.2);
   display: flex;
@@ -7250,7 +7268,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   font-size: 0.68rem;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   background: rgba(99, 102, 241, 0.2);
   color: #818cf8;
   border: 1px solid rgba(99, 102, 241, 0.4);
@@ -7283,7 +7301,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   width: 100%;
   height: 9px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   overflow: hidden;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -7293,7 +7311,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #6366f1 0%, #3b82f6 50%, #10b981 100%);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
@@ -7409,7 +7427,7 @@ input[type="datetime-local"]::-webkit-inner-spin-button {
 .nlp-confirm-icon-preview {
   width: 88px;
   height: 88px;
-  border-radius: 16px;
+  border-radius: var(--radius-container);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7490,13 +7508,13 @@ select.flat-icon-select {padding-left:46px!important;background-image:var(--flat
 .icon-picker-trigger .flat-item-icon{width:28px;height:28px;}
 .icon-picker-chevron{opacity:.6;}
 .icon-picker-trigger:focus-visible,.icon-picker-option:focus-visible{outline:2px solid #5bafff;outline-offset:-3px;}
-.icon-picker-dialog{margin:auto;box-sizing:border-box;width:min(440px,calc(100vw - 28px));max-height:min(620px,80dvh);padding:0;border:1px solid #48484b;border-radius:20px;background:#242426;color:#f7f7f9;box-shadow:0 16px 60px #0005;}
+.icon-picker-dialog{margin:auto;box-sizing:border-box;width:min(440px,calc(100vw - 28px));max-height:min(620px,80dvh);padding:0;border:1px solid #48484b;border-radius:var(--radius-container);background:#242426;color:#f7f7f9;box-shadow:0 16px 60px #0005;}
 .icon-picker-dialog::backdrop{background:#0008;}
 .icon-picker-dialog header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ffffff20;}
 .icon-picker-dialog h2{font:600 18px/1.4 system-ui;margin:0;}
-.icon-picker-dialog header button{border:0;border-radius:50%;width:34px;height:34px;font-size:24px;background:#ffffff12;color:inherit;cursor:pointer;}
+.icon-picker-dialog header button{border:0;border-radius:var(--radius-control);width:34px;height:34px;font-size:24px;background:#ffffff12;color:inherit;cursor:pointer;}
 .icon-picker-options{max-height:min(520px,calc(80dvh - 75px));overflow:auto;overscroll-behavior:contain;padding:8px;}
-.icon-picker-option{display:flex;align-items:center;gap:14px;width:100%;min-height:54px;padding:10px 14px;border:0;border-radius:12px;background:transparent;color:inherit;text-align:left;font:500 16px/1.5 system-ui;cursor:pointer;}
+.icon-picker-option{display:flex;align-items:center;gap:14px;width:100%;min-height:54px;padding:10px 14px;border:0;border-radius:var(--radius-control);background:transparent;color:inherit;text-align:left;font:500 16px/1.5 system-ui;cursor:pointer;}
 .icon-picker-option .flat-item-icon{width:30px;height:30px;}
 .icon-picker-option>span:nth-child(2){flex:1;}
 .icon-picker-option[aria-selected=true]{background:#68aef322;}
@@ -7508,7 +7526,7 @@ select.flat-icon-select {padding-left:46px!important;background-image:var(--flat
 </style>
 <style>
 .app-ui-icon{width:20px;height:20px;display:inline-block;vertical-align:-4px;flex-shrink:0;pointer-events:none;}
-.settings-icon{color:var(--ios-text-secondary,#a9bac6)!important;background:transparent!important;border-radius:10px;}
+.settings-icon{color:var(--ios-text-secondary,#a9bac6)!important;background:transparent!important;border-radius:var(--radius-control);}
 .settings-icon .app-ui-icon{width:25px;height:25px;}
 .btn-modal-close .app-ui-icon{width:20px;height:20px;}
 .pill-btn-icon .app-ui-icon{width:20px;height:20px;}
@@ -7519,7 +7537,7 @@ button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linec
 .card-icon-box .flat-item-icon{width:42px;height:42px;}
 </style><style>
 /* 1.9.13: circular camera affordance and pending inventory */
-#btnCameraScan { width:42px;height:42px;right:6px;border-radius:50%;background:#237be8;color:#fff;box-shadow:0 3px 12px #237be844; }
+#btnCameraScan { width:42px;height:42px;right:6px;border-radius:var(--radius-control);background:#237be8;color:#fff;box-shadow:0 3px 12px #237be844; }
 #btnCameraScan svg { width:22px;height:22px;stroke-width:2.2; }
 #smartQuickAddInput { min-height:54px;padding-right:56px; }
 #smartQuickAddInput.has-clear { padding-right:90px; }
@@ -7533,14 +7551,14 @@ button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linec
 .tracking-mode-form-row .mode-pill { flex:1;text-align:center;padding:6px 4px;font-size:0.84rem;font-weight:600;white-space:nowrap;border-radius:var(--radius-pill);border:none;cursor:pointer;background:transparent;color:var(--ios-text-secondary);transition:all var(--transition-ios);position:relative; }
 .tracking-mode-form-row .mode-pill.active { background:#ffffff;color:#000000;box-shadow:0 2px 8px rgba(0,0,0,0.2); }
 [data-theme="light"] .tracking-mode-form-row .mode-pill.active { background:#007aff;color:#ffffff; }
-.pending-box { border:1px solid #6aa9ef55;background:#6aa9ef12;border-radius:18px;padding:14px;margin:8px 0; }
+.pending-box { border:1px solid #6aa9ef55;background:#6aa9ef12;border-radius:var(--radius-container);padding:14px;margin:8px 0; }
 .pending-toggle { display:flex;align-items:center;gap:12px;font-weight:650;cursor:pointer; }
 .pending-toggle input { width:22px;height:22px;accent-color:#237be8;flex-shrink:0; }
 .pending-box p,.pending-intro p,.pending-dates { color:var(--ios-text-secondary);line-height:1.6;font-size:.9rem; }
 .pending-fields { display:grid;gap:12px;margin-top:4px; }
 .pending-fields[hidden] { display:none; }
 .pending-fields label { display:grid;gap:6px; }
-.pending-fields input { width:100%;min-width:0;box-sizing:border-box;padding:12px;border:1px solid #8885;border-radius:12px;background:var(--ios-surface);color:var(--ios-text-primary);font:inherit; }
+.pending-fields input { width:100%;min-width:0;box-sizing:border-box;padding:12px;border:1px solid #8885;border-radius:var(--radius-control);background:var(--ios-surface);color:var(--ios-text-primary);font:inherit; }
 .pending-error { color:#ff6961!important; }
 .pending-enabled .active-tracking { display:none!important; }
 .pending-intro { padding:18px 4px; }
@@ -7558,7 +7576,7 @@ button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linec
 .btn-sheet-action.pending-start:active {
   background: #0062cc !important;
 }
-.pending-card { background:var(--ios-surface);border:1px solid #8883;border-radius:22px;padding:18px;margin-bottom:14px; }
+.pending-card { background:var(--ios-surface);border:1px solid #8883;border-radius:var(--radius-container);padding:18px;margin-bottom:14px; }
 .pending-card-head { display:flex;align-items:center;gap:14px; }
 .pending-card-head .flat-item-icon { width:44px;height:44px;flex-shrink:0; }
 .pending-card h3 { margin:0;overflow-wrap:anywhere; }
@@ -7570,13 +7588,13 @@ button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linec
 <style>
 /* 1.9.13: consistent tracking pills and breathing room at both ends of the chip rail. */
 #trackingModeRow { flex-direction:column;align-items:stretch;gap:8px; }
-#modeSegment,#nlpTrackingModeSelector { display:flex;width:100%;box-sizing:border-box;gap:4px;padding:4px;border-radius:28px; }
-#modeSegment button,#nlpTrackingModeSelector button { flex:1;min-width:0;white-space:nowrap;font-size:clamp(11px,3.2vw,14px);padding:12px 3px;border-radius:24px; }
+#modeSegment,#nlpTrackingModeSelector { display:flex;width:100%;box-sizing:border-box;gap:4px;padding:4px;border-radius:var(--radius-container); }
+#modeSegment button,#nlpTrackingModeSelector button { flex:1;min-width:0;white-space:nowrap;font-size:clamp(11px,3.2vw,14px);padding:12px 3px;border-radius:var(--radius-container); }
 #categoryChipRow { box-sizing:border-box;padding:10px 12px 14px;scroll-padding-inline:12px; }
 #categoryChipRow .category-chip { scroll-margin-inline:12px; }
 .pending-intro { display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px 14px;padding:20px 4px 24px; }
 .pending-intro h2 { display:flex;align-items:center;gap:10px;font-size:1.5rem; }
-#pendingCount { display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:10px;background:#6aa9ef22;color:var(--ios-blue,#398ce8);font-size:14px; }
+#pendingCount { display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:var(--radius-control);background:#6aa9ef22;color:var(--ios-blue,#398ce8);font-size:14px; }
 .pending-intro p { grid-column:1/-1;margin:0; }
 #btnAddPending { grid-column:2;grid-row:1;min-height:42px;padding:10px 14px;font-size:.85rem;white-space:nowrap; }
 #pendingItemsGrid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px;align-items:start;padding-bottom:130px; }
@@ -7590,8 +7608,8 @@ button>svg:not(.flat-item-icon):not(.app-ui-icon){stroke-width:1.65;stroke-linec
 .pending-date-grid span { display:block;font-size:.76rem;color:var(--ios-text-secondary);margin-bottom:5px; }
 .pending-card-notes { margin-top:2px;padding-top:8px;border-top:1px solid var(--ios-border);color:var(--ios-text-secondary);font-size:.9rem;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere; }
 .pending-date-grid strong { font-size:.9rem;font-weight:600; }
-#pendingEmpty { margin:10px 0 130px;padding:48px 18px;text-align:center;border:1px dashed var(--ios-border);border-radius:24px;background:var(--ios-surface);color:var(--ios-text-secondary); }
-#pendingEmpty::before { content:'＋';display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin:0 auto 16px;border-radius:18px;background:#6aa9ef14;color:var(--ios-blue,#398ce8);font-size:28px; }
+#pendingEmpty { margin:10px 0 130px;padding:48px 18px;text-align:center;border:1px dashed var(--ios-border);border-radius:var(--radius-container);background:var(--ios-surface);color:var(--ios-text-secondary); }
+#pendingEmpty::before { content:'＋';display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin:0 auto 16px;border-radius:var(--radius-container);background:#6aa9ef14;color:var(--ios-blue,#398ce8);font-size:28px; }
 </style><style>
 .views-slider-viewport { overflow-anchor:none; }
 .view-panel { transition:none; }
@@ -7612,7 +7630,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 </style><style>
 /* 1.9.16 compact pending cards and expandable inventory search */
 #inventorySearchField[hidden] { display:none!important; }
-#btnToggleInventorySearch { flex:0 0 44px;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ios-border);background:var(--ios-surface);color:var(--ios-text-primary); }
+#btnToggleInventorySearch { flex:0 0 44px;width:44px;height:44px;border-radius:var(--radius-control);display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ios-border);background:var(--ios-surface);color:var(--ios-text-primary); }
 #btnToggleInventorySearch[aria-expanded="true"] { color:var(--ios-blue);background:var(--ios-bg); }
 #pendingItemsGrid .pending-card { padding:9px 16px; }
 #pendingItemsGrid .card-top-row { margin-bottom:5px; }
@@ -7642,7 +7660,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 .settings-row > button,.settings-row > .ios-switch,.settings-row > .settings-quota-pill,.settings-row-actions,.settings-row-btn > .settings-chevron { grid-column:3;grid-row:1;justify-self:end; }
 .settings-row-actions { display:inline-flex;align-items:center;gap:8px;white-space:nowrap; }
 .settings-row-actions .settings-chevron { line-height:1; }
-.settings-row > button { appearance:none;font:inherit;font-size:.8rem;font-weight:600;white-space:nowrap;min-height:44px;padding:8px 12px;border:1px solid var(--ios-border);border-radius:22px;background:var(--ios-surface-elevated);color:var(--ios-text-primary); }
+.settings-row > button { appearance:none;font:inherit;font-size:.8rem;font-weight:600;white-space:nowrap;min-height:44px;padding:8px 12px;border:1px solid var(--ios-border);border-radius:var(--radius-container);background:var(--ios-surface-elevated);color:var(--ios-text-primary); }
 .settings-row > .settings-quota-pill { font-size:.72rem;padding:5px 8px;white-space:nowrap; }
 #rowScreenFit { display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:4px 10px;padding:14px 16px; }
 #rowScreenFit .settings-title { grid-column:2 / -1; }
@@ -7673,7 +7691,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
 </style>
-  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22">
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22-ui7">
   <style>
     [data-theme="light"] body {
       background-color: #f3efe6;
@@ -8536,9 +8554,9 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
         <!-- Photo / Vector Icon Thumbnail Preview (相片縮圖或向量圖標預覽) -->
         <div id="nlpConfirmImageWrap" class="nlp-confirm-image-wrap" style="margin-bottom: 0.85rem; text-align: center;">
           <div style="position: relative; display: inline-flex; align-items: center; justify-content: center;">
-            <img id="nlpConfirmImagePreview" src="" alt="物品相片縮圖" style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: 16px; border: 1.5px solid var(--ios-border-strong); box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+            <img id="nlpConfirmImagePreview" src="" alt="物品相片縮圖" style="display: none; width: 84px; height: 84px; object-fit: cover; border-radius: var(--radius-container); border: 1.5px solid var(--ios-border-strong); box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
             <div id="nlpConfirmIconPreview" class="nlp-confirm-icon-preview" style="display: none;"></div>
-            <button type="button" id="btnRemoveNlpImage" title="移除相片" aria-label="移除相片" style="display: none; position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #ff453a; color: #ffffff; border: 2px solid var(--ios-surface, #222); font-size: 11px; font-weight: 700; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1;">✕</button>
+            <button type="button" id="btnRemoveNlpImage" title="移除相片" aria-label="移除相片" style="display: none; position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: var(--radius-control); background: #ff453a; color: #ffffff; border: 2px solid var(--ios-surface, #222); font-size: 11px; font-weight: 700; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1;">✕</button>
           </div>
         </div>
 
@@ -8582,26 +8600,22 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 <section class="pending-box" id="nlpPendingBox"><input type="checkbox" id="nlpPending" hidden><div class="pending-fields" id="nlpPendingFields" hidden><p>暫不計時、不提醒，日期可留空。</p><label>預定開始日期（選填）<input type="date" id="nlpPendingStart"></label><label>到期日期（選填）<input type="date" id="nlpPendingEnd"></label><p class="pending-error" id="nlpPendingError" role="status"></p></div></section><div class="active-tracking">
         <!-- Field 3: Expiry Date & Custom Expiration Days (到期日期與自訂天數) -->
         <div class="nlp-confirm-field" id="nlpConfirmDateWrap">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
-            <label class="nlp-confirm-label" for="nlpConfirmDate" style="margin-bottom: 0;">到期日期</label>
-            <label class="nlp-confirm-label" for="nlpConfirmDays" style="margin-bottom: 0; font-size: 0.8rem; color: var(--ios-text-secondary); font-weight: 500;">或自訂到期天數</label>
-          </div>
-          <div class="nlp-date-days-row" style="display: flex; gap: 8px; align-items: center;">
-            <input type="date" id="nlpConfirmDate" class="nlp-confirm-input date-picker-input" style="flex: 1.4; min-width: 0;">
-            <div class="nlp-days-input-wrap" style="position: relative; flex: 1; min-width: 0; display: flex; align-items: center;">
-              <input type="number" id="nlpConfirmDays" class="nlp-confirm-input" min="1" max="9999" placeholder="天數" style="padding-right: 1.85rem;">
-              <span style="position: absolute; right: 0.65rem; color: var(--ios-text-secondary); font-size: 0.84rem; pointer-events: none; font-weight: 600;">天</span>
+          <label class="nlp-confirm-label" for="nlpConfirmDate">到期日期</label>
+          <input type="date" id="nlpConfirmDate" class="nlp-confirm-input date-picker-input">
+          <div class="nlp-extra-options" id="nlpDateExtraOptions">
+            <label class="nlp-confirm-label" for="nlpConfirmDays">幾天後到期</label>
+            <div class="nlp-days-input-wrap">
+              <input type="number" id="nlpConfirmDays" class="nlp-confirm-input" min="1" max="9999" placeholder="輸入天數">
             </div>
-          </div>
-          <!-- Quick Day Presets (快捷天數膠囊) -->
-          <div class="nlp-quick-days-pills" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-            <button type="button" class="nlp-day-pill" data-days="3">3天</button>
-            <button type="button" class="nlp-day-pill" data-days="7">7天</button>
-            <button type="button" class="nlp-day-pill" data-days="14">14天</button>
-            <button type="button" class="nlp-day-pill" data-days="30">30天</button>
-            <button type="button" class="nlp-day-pill" data-days="90">90天</button>
-            <button type="button" class="nlp-day-pill" data-days="180">半年</button>
-            <button type="button" class="nlp-day-pill" data-days="365">1年</button>
+            <div class="nlp-quick-days-pills">
+              <button type="button" class="nlp-day-pill" data-days="3">3天</button>
+              <button type="button" class="nlp-day-pill" data-days="7">7天</button>
+              <button type="button" class="nlp-day-pill" data-days="14">14天</button>
+              <button type="button" class="nlp-day-pill" data-days="30">30天</button>
+              <button type="button" class="nlp-day-pill" data-days="90">90天</button>
+              <button type="button" class="nlp-day-pill" data-days="180">半年</button>
+              <button type="button" class="nlp-day-pill" data-days="365">1年</button>
+            </div>
           </div>
           <div id="nlpConfirmDateHint" class="nlp-confirm-hint">還有 7 天到期</div>
         </div>
@@ -8621,7 +8635,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
           <div class="nlp-reminder-time-grid" id="nlpReminderTimeGrid">
             <!-- 提醒通知排程 -->
             <div class="nlp-confirm-field-col" id="nlpConfirmReminderWrap">
-              <label class="nlp-confirm-label" for="nlpConfirmReminder">提醒通知排程</label>
+              <label class="nlp-confirm-label" for="nlpConfirmReminder">何時提醒</label>
               <div class="nlp-select-wrap">
                 <select id="nlpConfirmReminder" class="nlp-confirm-select">
                   <option value="-1">不提醒</option>
@@ -8654,16 +8668,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
             <input type="date" id="nlpConfirmCustomDate" class="nlp-confirm-input date-picker-input">
           </div>
 
-          <!-- Field 5.2: 24小時制快捷時間膠囊 (統一為24小時制，取消12/24切換按鈕) -->
-          <div class="nlp-time-adjust-wrap" id="nlpTimeAdjustWrap" style="margin-top: 6px;">
-            <!-- Quick Time Pills (快捷時間膠囊) -->
-            <div class="nlp-quick-time-pills" id="nlpQuickTimePills">
-              <button type="button" class="nlp-time-pill active" data-time="09:00">09:00 上午</button>
-              <button type="button" class="nlp-time-pill" data-time="12:00">12:00 中午</button>
-              <button type="button" class="nlp-time-pill" data-time="15:00">15:00 下午</button>
-              <button type="button" class="nlp-time-pill" data-time="20:00">20:00 晚間</button>
-            </div>
-          </div>
+
         </div>
 
         <!-- Elapsed Mode Hint (謹記使用天數提示) -->
@@ -11458,7 +11463,7 @@ var CapacitorBridgeBundle = (() => {
 
       let mediaHtml = '';
       if (item.image) {
-        mediaHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+        mediaHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-control);">`;
       } else {
         mediaHtml = getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji});
       }
@@ -11645,7 +11650,7 @@ var CapacitorBridgeBundle = (() => {
       const catLabel = allCats[item.category]?.label || item.category || '未分類';
       let mediaHtml = '';
       if (item.image) {
-        mediaHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+        mediaHtml = `<img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-control);">`;
       } else {
         mediaHtml = getItemIcon({...item, iconHint: getAllCategories()[item.category]?.emoji});
       }
@@ -14895,6 +14900,14 @@ var CapacitorBridgeBundle = (() => {
 
   const dockMotionElement = document.querySelector('.floating-island-dock');
   const dockMotionButtons = navTabs.map(tab => dockMotionElement.querySelector(`[data-tab="${tab}"]`));
+  // Clip a white copy of the content to the moving pill, including partial overlaps.
+  dockMotionButtons.forEach(button => {
+    const highlight = document.createElement('span');
+    highlight.className = 'dock-highlight-content';
+    highlight.setAttribute('aria-hidden', 'true');
+    [...button.children].forEach(child => highlight.append(child.cloneNode(true)));
+    button.append(highlight);
+  });
   function syncDockMotion() {
     const width = viewsSliderViewport.clientWidth;
     if (!width) return;
@@ -14904,11 +14917,16 @@ var CapacitorBridgeBundle = (() => {
     const fraction = progress - start;
     const a = dockMotionButtons[start], b = dockMotionButtons[end];
     const blend = (x, y) => x + (y - x) * fraction;
-    dockMotionElement.style.setProperty('--dock-indicator-x', blend(a.offsetLeft, b.offsetLeft) + 'px');
-    dockMotionElement.style.setProperty('--dock-indicator-width', blend(a.offsetWidth, b.offsetWidth) + 'px');
+    const indicatorX = blend(a.offsetLeft, b.offsetLeft);
+    const indicatorWidth = blend(a.offsetWidth, b.offsetWidth);
+    dockMotionElement.style.setProperty('--dock-indicator-x', indicatorX + 'px');
+    dockMotionElement.style.setProperty('--dock-indicator-width', indicatorWidth + 'px');
     dockMotionElement.style.setProperty('--dock-indicator-top', a.offsetTop + 'px');
     dockMotionElement.style.setProperty('--dock-indicator-height', a.offsetHeight + 'px');
     dockMotionButtons.forEach((button, index) => {
+      const left = indicatorX - button.offsetLeft;
+      button.style.setProperty('--dock-highlight-left', left + 'px');
+      button.style.setProperty('--dock-highlight-right', (button.offsetWidth - left - indicatorWidth) + 'px');
       const weight = Math.max(0, 1 - Math.abs(progress - index));
       button.style.setProperty('--dock-emphasis', weight);
       const channel = base => Math.round(base + (255 - base) * weight);
@@ -17315,7 +17333,7 @@ function extractCleanName(rawText) {
     let cloudNotice = document.getElementById('cloudRecognitionNotice');
     if (!cloudNotice) {
       cloudNotice = document.createElement('p'); cloudNotice.id = 'cloudRecognitionNotice';
-      cloudNotice.style.cssText = 'margin:12px 20px;padding:12px;border-radius:12px;background:rgba(128,128,128,.12);white-space:pre-wrap;line-height:1.6;';
+      cloudNotice.style.cssText = 'margin:12px 20px;padding:12px;border-radius:var(--radius-control);background:rgba(128,128,128,.12);white-space:pre-wrap;line-height:1.6;';
       document.querySelector('#nlpConfirmModal .ios-modal-header')?.after(cloudNotice);
     }
     cloudNotice.textContent = parsed.recognitionNotice || '';
@@ -18102,78 +18120,84 @@ function extractCleanName(rawText) {
     }
   }
 
+  function cameraFocusSupport(track) {
+    const caps = track?.getCapabilities?.() || {};
+    const supported = navigator.mediaDevices?.getSupportedConstraints?.() || {};
+    const modes = Array.isArray(caps.focusMode) ? caps.focusMode : [];
+    return { modes, point: caps.pointsOfInterest !== undefined || supported.pointsOfInterest === true };
+  }
+
+  function cameraFocusPoint(video, clientX, clientY) {
+    // The transformed video rectangle includes CSS zoom. object-fit:cover crops
+    // the source around its center, so viewport fractions are not sensor fractions.
+    const rect = video.getBoundingClientRect();
+    const sw = video.videoWidth || rect.width, sh = video.videoHeight || rect.height;
+    const scale = Math.max(rect.width / sw, rect.height / sh);
+    const renderedW = sw * scale, renderedH = sh * scale;
+    return {
+      x: Math.max(0, Math.min(1, (clientX - rect.left + (renderedW - rect.width) / 2) / renderedW)),
+      y: Math.max(0, Math.min(1, (clientY - rect.top + (renderedH - rect.height) / 2) / renderedH))
+    };
+  }
+
   async function triggerCameraFocus(track, normX = 0.5, normY = 0.5) {
-    if (!track || typeof track.getCapabilities !== 'function') return;
+    if (!track || track.readyState === 'ended' || typeof track.applyConstraints !== 'function') return 'unsupported';
+    const { modes, point } = cameraFocusSupport(track);
+    const mode = modes.includes('single-shot') ? 'single-shot' : modes.includes('continuous') ? 'continuous' : null;
+    if (!point) return 'unsupported';
     try {
-      const caps = track.getCapabilities() || {};
-      const focusModes = Array.isArray(caps.focusMode) ? caps.focusMode : [];
-      const hasSingleShot = focusModes.includes('single-shot');
-      const hasContinuous = focusModes.includes('continuous');
-      const hasPOI = !!caps.pointsOfInterest;
-
-      const advanced = {};
-      if (hasPOI) {
-        advanced.pointsOfInterest = [{ x: normX, y: normY }];
+      clearTimeout(track._focusRestoreTimer);
+      const constraints = { pointsOfInterest: [{ x: normX, y: normY }] };
+      if (mode) constraints.focusMode = mode;
+      await track.applyConstraints({ advanced: [constraints] });
+      if (track.readyState === 'ended') return 'unsupported';
+      const settings = track.getSettings?.() || {};
+      if (Array.isArray(settings.pointsOfInterest) && settings.pointsOfInterest.length) {
+        const applied = settings.pointsOfInterest[0];
+        if (Math.abs(applied.x - normX) > 0.03 || Math.abs(applied.y - normY) > 0.03) return 'unsupported';
       }
-
-      // 若支援 single-shot，切換為 single-shot 觸發硬體鏡頭實體對焦步進
-      if (hasSingleShot) {
-        advanced.focusMode = 'single-shot';
-        await track.applyConstraints({ advanced: [advanced] });
-        // 對焦掃描完成後，2.5 秒平滑恢復 continuous 連續自動對焦
-        if (hasContinuous) {
-          clearTimeout(track._focusRestoreTimer);
-          track._focusRestoreTimer = setTimeout(() => {
-            track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-          }, 2500);
-        }
-      } else if (hasContinuous) {
-        advanced.focusMode = 'continuous';
-        await track.applyConstraints({ advanced: [advanced] });
+      if (mode === 'single-shot' && modes.includes('continuous')) {
+        track._focusRestoreTimer = setTimeout(() => {
+          if (track.readyState !== 'ended') track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+        }, 2500);
       }
+      // Constraint acceptance does not prove the lens has finished focusing.
+      return 'requested';
     } catch (err) {
       console.warn('[Camera] Tap-to-focus constraints error:', err);
+      return 'failed';
     }
   }
 
   let lastFocusTapTime = 0;
-  function handleCameraTapToFocus(e) {
-    if (e.target.closest('.camera-zoom-controls') || e.target.closest('button')) return;
-
+  let cameraFocusRequest = 0;
+  async function handleCameraTapToFocus(e) {
+    if (e.target.closest('.camera-zoom-controls') || e.target.closest('button') || e.isPrimary === false) return;
     const now = Date.now();
     if (now - lastFocusTapTime < 250) return;
     lastFocusTapTime = now;
-
     const wrap = document.getElementById('cameraViewportWrap');
     const reticle = document.getElementById('cameraFocusReticle');
-    if (!wrap || !reticle) return;
-
+    const video = document.getElementById('cameraVideo');
+    const track = cameraStream?.getVideoTracks()[0];
+    if (!wrap || !reticle || !video || !track || !video.videoWidth) return;
+    const request = ++cameraFocusRequest;
+    const point = cameraFocusPoint(video, e.clientX, e.clientY);
+    const result = await triggerCameraFocus(track, point.x, point.y);
+    if (request !== cameraFocusRequest || cameraStream?.getVideoTracks()[0] !== track) return;
+    if (result !== 'requested') {
+      reticle.style.display = 'none';
+      showToast(result === 'failed' ? '對焦位置設定失敗，請調整距離後再拍攝' : '此裝置不支援點按對焦，請使用鏡頭自動對焦或原生相機拍攝');
+      return;
+    }
     const rect = wrap.getBoundingClientRect();
-    const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : 0));
-    const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : 0));
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-
-    reticle.style.left = `${x}px`;
-    reticle.style.top = `${y}px`;
+    reticle.style.left = (e.clientX - rect.left) + 'px';
+    reticle.style.top = (e.clientY - rect.top) + 'px';
     reticle.style.display = 'block';
     reticle.classList.remove('pulsing');
     void reticle.offsetWidth;
     reticle.classList.add('pulsing');
-
-    if (navigator.vibrate) {
-      try { navigator.vibrate(25); } catch (_) {}
-    }
-
-    if (cameraStream) {
-      const track = cameraStream.getVideoTracks()[0];
-      if (track) {
-        const normX = Math.max(0, Math.min(1, x / (rect.width || 1)));
-        const normY = Math.max(0, Math.min(1, y / (rect.height || 1)));
-        triggerCameraFocus(track, normX, normY);
-      }
-    }
-
+    reticle.setAttribute('aria-label', '已請求此位置對焦');
     clearTimeout(reticle._hideTimer);
     reticle._hideTimer = setTimeout(() => {
       reticle.style.display = 'none';
@@ -18323,6 +18347,15 @@ function extractCleanName(rawText) {
         video.srcObject = cameraStream;
         await video.play().catch(e => console.warn('Camera video play caught:', e));
       }
+      if (requestVersion !== cameraRequestVersion) return;
+      const track = cameraStream.getVideoTracks()[0];
+      const focus = cameraFocusSupport(track);
+      if (focus.modes.includes('continuous')) {
+        await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+      }
+      if (requestVersion !== cameraRequestVersion) return;
+      const hint = document.querySelector('.camera-viewfinder-hint');
+      if (hint) hint.textContent = focus.point ? '輕觸主體設定對焦位置 / 雙指縮放' : '鏡頭自動對焦 / 雙指縮放';
       setCameraZoom(currentCameraZoom);
     } catch (err) {
       console.warn('getUserMedia error:', err);
@@ -18332,8 +18365,12 @@ function extractCleanName(rawText) {
 
   function stopCameraStream() {
     cameraRequestVersion++;
+    cameraFocusRequest++;
+    const reticle = document.getElementById('cameraFocusReticle');
+    if (reticle) { clearTimeout(reticle._hideTimer); reticle.style.display = 'none'; }
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => {
+        clearTimeout(track._focusRestoreTimer);
         try { track.stop(); } catch(e){}
       });
       cameraStream = null;
