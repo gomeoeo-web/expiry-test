@@ -45,7 +45,7 @@ function bindSheetDrag(modal, onDismiss, scrollArea) {
     const from = freeze();
     card.style.transform = 'translateY(0px)';
     const animation = card.animate([{ transform: from }, { transform: 'translateY(0px)' }], {
-      duration: reducedMotion() ? 0 : 260,
+      duration: reducedMotion() ? 0 : 200,
       easing: 'cubic-bezier(0.32, 0.72, 0, 1)'
     });
     motion = animation;
@@ -186,7 +186,7 @@ function animateModalClose(modal, onClosed) {
       { transform: from, opacity: fromOpacity },
       { transform: sheetExit ? `translateY(${exitY}px)` : 'translateY(12px) scale(.985)', opacity: sheetExit ? 1 : 0 }
     ], {
-      duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(card).getPropertyValue('--motion-exit')) || 220),
+      duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(card).getPropertyValue('--motion-exit')) || 160),
       easing: 'cubic-bezier(.4, 0, 1, 1)',
       fill: 'forwards'
     })];
@@ -195,7 +195,7 @@ function animateModalClose(modal, onClosed) {
   }
   // Reversing an opening overlay continues from its current dim level.
   const scrim = modal.animate([{ backgroundColor: fromBackground }, { backgroundColor: 'transparent' }], {
-    duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(modal).getPropertyValue('--motion-exit')) || 220),
+    duration: reducedMotion() ? 0 : (parseFloat(getComputedStyle(modal).getPropertyValue('--motion-exit')) || 160),
     easing: 'ease-in', fill: 'forwards'
   });
   animations.push(...modal.getAnimations());

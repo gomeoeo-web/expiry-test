@@ -7691,7 +7691,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
  .dock-tab:active,.btn-modal-close:active,#btnToggleInventorySearch:active { transform:none; }
 }
 </style>
-  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22-ui8">
+  <link rel="stylesheet" href="theme-overrides.css?v=1.9.22-ui11">
   <style>
     [data-theme="light"] body {
       background-color: #f3efe6;
@@ -7745,6 +7745,37 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
 
           <!-- View Panel 1: 主頁 (Today) -->
           <div class="view-panel active-panel" id="viewPanelToday">
+            <section class="journal-heading" aria-label="生活手帳">
+              <div class="journal-heading-copy">
+                <span class="journal-eyebrow">THE EVERYDAY JOURNAL</span>
+                <h1>把日子，照顧好。</h1>
+                <p>記下物品的期限，留住生活的餘裕。</p>
+              </div>
+              <svg class="journal-botanical" viewBox="0 0 100 120" fill="none" aria-hidden="true">
+                <circle cx="56" cy="59" r="38" fill="currentColor" opacity=".07"/>
+                <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M39 106C42 84 59 55 64 17M49 79C35 76 26 64 28 53C43 56 50 67 49 79ZM57 59C72 57 82 45 80 34C66 37 57 46 57 59ZM62 37C50 33 43 22 46 12C59 17 64 27 62 37ZM42 94C57 94 68 87 70 76C55 76 46 83 42 94Z"/>
+                  <path d="M24 107H73" opacity=".35"/>
+                </g>
+              </svg>
+            </section>
+            <div class="home-overview-frame">
+            <!-- Home Filter Buttons Bar (全部 / 將到期 / 已過期) -->
+            <section class="home-filter-buttons-row" id="segmentedPillsBar">
+              <button type="button" class="home-filter-btn active" data-filter="all" id="pillAll">
+                <span class="filter-btn-text">全部</span>
+                <span class="filter-btn-badge" id="pillCountAll"><span class="filter-btn-badge-value">0</span></span>
+              </button>
+              <button type="button" class="home-filter-btn" data-filter="urgent" id="pillUrgent">
+                <span class="filter-btn-text">將到期</span>
+                <span class="filter-btn-badge urgent" id="pillCountUrgent"><span class="filter-btn-badge-value">0</span></span>
+              </button>
+              <button type="button" class="home-filter-btn" data-filter="expired" id="pillExpired">
+                <span class="filter-btn-text">已過期</span>
+                <span class="filter-btn-badge expired" id="pillCountExpired"><span class="filter-btn-badge-value">0</span></span>
+              </button>
+            </section>
+
             <!-- Status Notice Card (提醒欄：顯示週期、即將到期與已過期通知，不可點擊) -->
             <section class="status-notice-card" id="statusNoticeCard">
               <div class="notice-top-row notice-left-group" id="noticeTopRow">
@@ -7773,21 +7804,7 @@ button *, [role="button"] *, .dock-tab *, .category-chip *, .home-filter-btn *, 
               </div>
             </section>
 
-            <!-- Home Filter Buttons Bar (全部 / 將到期 / 已過期) -->
-            <section class="home-filter-buttons-row" id="segmentedPillsBar">
-              <button type="button" class="home-filter-btn active" data-filter="all" id="pillAll">
-                <span class="filter-btn-text">全部</span>
-                <span class="filter-btn-badge" id="pillCountAll"><span class="filter-btn-badge-value">0</span></span>
-              </button>
-              <button type="button" class="home-filter-btn" data-filter="urgent" id="pillUrgent">
-                <span class="filter-btn-text">將到期</span>
-                <span class="filter-btn-badge urgent" id="pillCountUrgent"><span class="filter-btn-badge-value">0</span></span>
-              </button>
-              <button type="button" class="home-filter-btn" data-filter="expired" id="pillExpired">
-                <span class="filter-btn-text">已過期</span>
-                <span class="filter-btn-badge expired" id="pillCountExpired"><span class="filter-btn-badge-value">0</span></span>
-              </button>
-            </section>
+            </div>
 
             <!-- Home Sort Toolbar (彈出式菜單) -->
             <div class="home-sort-toolbar" id="homeSortToolbar">
@@ -12682,6 +12699,10 @@ var CapacitorBridgeBundle = (() => {
   }
 
   function openActionSheet(id) {
+    // The item tap commits the incoming page before its menu locks native scrolling.
+    if (navigationInProgress) finishNavigation(pendingNavTab || navTabs[
+      Math.max(0, Math.min(navTabs.length - 1, Math.round(viewsSliderViewport.scrollLeft / Math.max(1, viewsSliderViewport.clientWidth))))
+    ]);
     const item = items.find(it => it.id === id);
     if (!item) return;
 
@@ -14683,9 +14704,45 @@ var CapacitorBridgeBundle = (() => {
   // 頂部選單按鈕（全部 / 將到期 / 已過期）點擊切換與篩選
   const homeFilterBtns = document.querySelectorAll('.home-filter-btn');
   homeFilterBtns.forEach(btn => {
+    let pressAnimation;
+    const reduceFilterMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const animateFilterPress = (pressed) => {
+      if (reduceFilterMotion()) {
+        btn.getAnimations({ subtree: true }).forEach(animation => animation.cancel());
+        return;
+      }
+      if (typeof btn.animate !== 'function') return;
+      const from = getComputedStyle(btn).transform;
+      pressAnimation?.cancel();
+      pressAnimation = btn.animate(
+        [{ transform: from === 'none' ? 'scale(1)' : from }, { transform: pressed ? 'scale(.96)' : 'scale(1)' }],
+        { duration: pressed ? 90 : 180, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' }
+      );
+      if (!pressed) {
+        const releaseAnimation = pressAnimation;
+        releaseAnimation.finished.then(() => releaseAnimation.cancel()).catch(() => {});
+      }
+    };
+    btn.addEventListener('pointerdown', () => animateFilterPress(true));
+    btn.addEventListener('pointerup', () => animateFilterPress(false));
+    btn.addEventListener('pointercancel', () => animateFilterPress(false));
+    btn.addEventListener('pointerleave', () => animateFilterPress(false));
+    btn.addEventListener('blur', () => animateFilterPress(false));
     btn.addEventListener('click', function () {
       currentPillFilter = this.dataset.filter || 'all';
       homeFilterBtns.forEach(b => b.classList.toggle('active', b === btn));
+      if (reduceFilterMotion()) {
+        homeFilterBtns.forEach(b => b.getAnimations({ subtree: true }).forEach(animation => animation.cancel()));
+      }
+      if (!reduceFilterMotion() && typeof btn.animate === 'function') {
+        btn.querySelectorAll('.filter-btn-text, .filter-btn-badge').forEach(content => {
+          content.getAnimations().forEach(animation => animation.cancel());
+          content.animate(
+            [{ transform: 'translateY(2px)', opacity: .7 }, { transform: 'translateY(0)', opacity: 1 }],
+            { duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' }
+          );
+        });
+      }
       renderCards();
     });
   });
@@ -14903,6 +14960,12 @@ var CapacitorBridgeBundle = (() => {
   let dockDrag = null;
 
   const dockMotionElement = document.querySelector('.floating-island-dock');
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Tab' || (event.key.startsWith('Arrow') && dockMotionElement.contains(event.target)))
+      dockMotionElement.classList.add('keyboard-navigation');
+  });
+  document.addEventListener('pointerdown', () => dockMotionElement.classList.remove('keyboard-navigation'), true);
+  document.addEventListener('touchstart', () => dockMotionElement.classList.remove('keyboard-navigation'), { passive: true });
   const dockMotionButtons = navTabs.map(tab => dockMotionElement.querySelector(`[data-tab="${tab}"]`));
   // Clip a white copy of the content to the moving pill, including partial overlaps.
   dockMotionButtons.forEach(button => {
@@ -14970,9 +15033,7 @@ var CapacitorBridgeBundle = (() => {
 
   function syncContainerHeight(tab) {
     if (!viewsSliderViewport) return;
-    if (tab === 'today') {
-      viewsSliderViewport.style.height = '';
-    } else if (navPanels[tab]) {
+    if (navPanels[tab]) {
       const panelH = navPanels[tab].scrollHeight;
       if (panelH > 0) {
         viewsSliderViewport.style.height = panelH + 'px';
@@ -15141,7 +15202,6 @@ var CapacitorBridgeBundle = (() => {
     const moved = dockDrag.moved;
     dockDrag = null;
     if (!moved) return;
-    viewsSliderViewport.style.scrollSnapType = '';
     const width = viewsSliderViewport.clientWidth;
     const index = Math.max(0, Math.min(navTabs.length - 1, Math.round(viewsSliderViewport.scrollLeft / width)));
     suppressDockClick = true;
@@ -16158,25 +16218,15 @@ var CapacitorBridgeBundle = (() => {
   function lockBodyScroll() {
     if (bodyScrollLock) return;
     const body = document.body;
-    const properties = ['position', 'top', 'left', 'width', 'overflow'];
-    // The transparent item sheet must leave the page in its normal painting
-    // position. Fixing body here makes iOS rebase the page and exposes the
-    // unpainted root around the safe area while the sheet opens.
-    const fixBody = actionSheet.style.display !== 'flex';
+    const properties = ['overflow'];
+    // Every overlay preserves the document painting origin, including settings.
     bodyScrollLock = {
       x: window.scrollX, y: window.scrollY,
-      fixBody,
       styles: properties.map(name => [name, body.style.getPropertyValue(name), body.style.getPropertyPriority(name)])
     };
     stopNativePageScroll();
     clearTimeout(panelSwitchSettleTimer);
     panelSwitchSettleTimer = null;
-    if (fixBody) {
-      body.style.position = 'fixed';
-      body.style.top = `-${bodyScrollLock.y}px`;
-      body.style.left = `-${bodyScrollLock.x}px`;
-      body.style.width = '100%';
-    }
     body.style.overflow = 'hidden';
     document.documentElement.classList.add('modal-open');
     body.classList.add('modal-open');
@@ -16192,7 +16242,8 @@ var CapacitorBridgeBundle = (() => {
     }
     document.body.classList.remove('modal-open');
     document.documentElement.classList.remove('modal-open');
-    if (saved.fixBody) window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' });
+    if (window.scrollX !== saved.x || window.scrollY !== saved.y)
+      window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' });
     if (navigationInProgress) switchViewTab(pendingNavTab || currentNavTab, true);
   }
 
@@ -16211,6 +16262,11 @@ var CapacitorBridgeBundle = (() => {
   document.querySelectorAll('.ios-modal-backdrop, .ios-action-backdrop').forEach(el => {
     modalObserver.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
   });
+
+  window.addEventListener('touchmove', event => {
+    if (bodyScrollLock && !event.target.closest('.ios-modal-backdrop, .ios-action-backdrop') && event.cancelable)
+      event.preventDefault();
+  }, { passive: false });
 
   // Contain edge overscroll while allowing scrolling inside each menu.
   document.querySelectorAll('.ios-modal-backdrop, .ios-action-backdrop').forEach(containModalScroll);
@@ -16244,7 +16300,7 @@ var CapacitorBridgeBundle = (() => {
       const index = pendingNavTab ? navTabs.indexOf(pendingNavTab) : Math.max(0, Math.min(navTabs.length - 1, Math.round(scrollLeft / width)));
       const targetLeft = index * width;
       const dist = Math.abs(scrollLeft - targetLeft);
-      if (dist < 1.5) {
+      if (dist < 0.5) {
         settleAttempts = 0;
         settleStableSince = 0;
         finishNavigation(navTabs[index]);
@@ -16281,7 +16337,6 @@ var CapacitorBridgeBundle = (() => {
         hasSwipedHorizontally = false;
       }
       stopNativePageScroll();
-      pendingNavTab = null;
       clearTimeout(panelSwitchSettleTimer);
     }, { passive: true });
 
@@ -16291,6 +16346,7 @@ var CapacitorBridgeBundle = (() => {
       const dx = Math.abs(touch.clientX - touchStartX);
       const dy = Math.abs(touch.clientY - touchStartY);
       if (dx > 20 && dx > dy * 1.5) {
+        pendingNavTab = null;
         hasSwipedHorizontally = true;
         prepareIncomingPanelForSwipe();
       }
@@ -16336,7 +16392,6 @@ var CapacitorBridgeBundle = (() => {
       settleAttempts = 0;
       settleStableSince = 0;
       stopNativePageScroll();
-      pendingNavTab = null;
       clearTimeout(panelSwitchSettleTimer);
     });
 
@@ -16344,6 +16399,7 @@ var CapacitorBridgeBundle = (() => {
       if (!isMouseDragging) return;
       const dx = event.pageX - mouseStartX;
       if (Math.abs(dx) > 6) {
+        pendingNavTab = null;
         mouseMoved = true;
         hasSwipedHorizontally = true;
         prepareIncomingPanelForSwipe();
@@ -16357,7 +16413,6 @@ var CapacitorBridgeBundle = (() => {
     window.addEventListener('mouseup', event => {
       if (!isMouseDragging) return;
       isMouseDragging = false;
-      viewsSliderViewport.style.scrollSnapType = '';
       if (!mouseMoved) return;
       const dx = event.pageX - mouseStartX;
       const width = viewsSliderViewport.clientWidth;
@@ -16418,7 +16473,7 @@ var CapacitorBridgeBundle = (() => {
         motions = elements.map((element, index) => element.animate([
           { transform: from[index] },
           { transform: element === stickyHeader ? `translate3d(0, ${next ? -headerDistance : 0}px, 0)` : `translate3d(-50%, ${next ? dockDistance : 0}px, 0)` }
-        ], { duration: next ? 220 : 260, easing: 'cubic-bezier(.22,.72,.18,1)' }));
+        ], { duration: next ? 380 : 300, easing: 'cubic-bezier(.4,0,.2,1)' }));
       }
       Promise.all(motions.map(animation => animation.finished.catch(() => {}))).then(() => {
         if (version !== motionVersion) return;
@@ -16528,12 +16583,12 @@ var CapacitorBridgeBundle = (() => {
       setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(-10px)';
-        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        toast.style.transition = 'opacity 160ms ease, transform 160ms ease';
         setTimeout(() => {
           toast.remove();
           visibleToastCount--;
           showQueuedToasts();
-        }, 200);
+        }, 160);
       }, 2200);
     }
   }

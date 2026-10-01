@@ -1,13 +1,13 @@
 # UI motion design
 
-The header and bottom navigation follow actual document scrolling without fading, sliding out on upward swipes and returning on downward swipes; empty pages and overscroll cannot hide it. A 12px direction threshold starts an uninterrupted compositor transition to a complete endpoint: 220ms out and 260ms back. Tiny reversals do not create another animation. Reversing a transition captures its current transform. Focus and returning to the top reveal navigation. Height-only viewport changes do not cancel navigation or page travel; geometry is measured only when the actual controls or viewport width change.
+The header and bottom navigation follow actual document scrolling without fading, sliding out on upward swipes and returning on downward swipes; empty pages and overscroll cannot hide it. A 12px direction threshold starts an uninterrupted compositor transition to a complete endpoint: 380ms out and 300ms back, with a gentle acceleration curve. Tiny reversals do not create another animation. Reversing a transition captures its current transform. Focus and returning to the top reveal navigation. Height-only viewport changes do not cancel navigation or page travel; geometry is measured only when the actual controls or viewport width change.
 
 ## Rhythm
 
 - Controls: 70ms press, 120ms release; scale 0.985 for buttons and 0.995 for cards. Dock buttons retain their size. Use one scale owner, never stack transform scaling with the scale property.
 - Pages: browser-native smooth scrolling and snap, with duration managed by the browser. On engines supporting named scroll timelines and timeline scope, the selection pill uses a native scroll timeline and transform-only keyframes. Older engines fall back to cached geometry and scroll updates. Incoming pages stay opaque. New tab clicks reset document scroll before changing panel heights; tapping the current tab scrolls to the top.
-- Dialogs: 300ms entry with 16px travel and scale 0.985; 220ms exit with 12px travel. The dimming layer animates its background independently of the content.
-- Bottom sheets: 300ms entry, 220ms exit. Keep the sheet fully opaque. Dragging follows the pointer immediately; cancellation returns over 260ms. Dismiss beyond 64px, or beyond 24px with downward velocity above 0.45px/ms.
+- Dialogs: 220ms entry with 16px travel and scale 0.985; 160ms exit with 12px travel. The dimming layer animates its background independently of the content.
+- Bottom sheets: 220ms entry, 160ms exit. Keep the sheet fully opaque. Dragging follows the pointer immediately; cancellation returns over 200ms. Dismiss beyond 64px, or beyond 24px with downward velocity above 0.45px/ms.
 - Animation interruptions retain the current position, including closing during entry and regrabbing a rebound. The dimming layer also exits from its current color.
 - Reduced motion removes CSS travel durations and press scaling. Completion and background unlocking still follow animation promises.
 
